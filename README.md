@@ -1,7 +1,7 @@
 Mobile benchmark tool (mobibench)
 ================================
 
-Written by Kisung Lee <kisunglee@hanyang.ac.kr>
+Written by Kisung Lee <kisunglee@hanyang.ac.kr> and Sooman Jeong <77smart@hanyang.ac.kr>
 
 We develop Mobibench to generate the workload, which
 represents the smartphone IO. Mobibench generates sequential
@@ -22,11 +22,11 @@ Usage
     # mobibench File size, reclen, AccessMode, Sync Mode, ThreadNum
     # mobibench 1024, 4, 2, 2, 10
     
-* File size     size of file(KByte)
-* reclen        size of reclen(KByte)
-* AccessMode    0:WRITE, 1:REWRITE, 2:RANDOM
-* Sync Mode     0:Normal, 1:O_SYNC, 2:fsync, 3:O_DIRECT, 4:Sync+direct, 5:mmap, 6:mmap+MS_ASYNC, 7:mmap+MS_SYNC
-* ThreadNum     # of Threads
+* File size : size of file(KByte)
+* reclen : size of reclen(KByte)
+* AccessMode : 0:WRITE, 1:REWRITE, 2:RANDOM
+* Sync Mode : 0:Normal, 1:O_SYNC, 2:fsync, 3:O_DIRECT, 4:Sync+direct, 5:mmap, 6:mmap+MS_ASYNC, 7:mmap+MS_SYNC
+* ThreadNum : # of Threads
 
 
-2012-09-24, Kisung Lee <kisunglee@hanyang.ac.kr>
+2012-09-24, Kisung Lee <kisunglee@hanyang.ac.kr> and Sooman Jeong <77smart@hanyang.ac.kr>
