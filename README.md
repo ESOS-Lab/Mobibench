@@ -1,5 +1,5 @@
 Mobile benchmark tool (mobibench)
-=================================
+---------------------------------
 
 Written by Kisung Lee <kisunglee@hanyang.ac.kr>
 
@@ -19,17 +19,12 @@ arm-none-linux-gnueabi-gcc mobibench.c -lpthread
 
 Usage
 -----
-Usage: mobibench File size, reclen, AccessMode, Sync Mode, ThreadNum
-
-  File size     size of file(KByte)
-
-  reclen        size of reclen(KByte)
-
-  AccessMode    0:WRITE, 1:REWRITE, 2:RANDOM
-
-  Sync Mode     0:Normal, 1:O_SYNC, 2:fsync, 3:O_DIRECT, 4:Sync+direct, 5:mmap, 6:mmap+MS_ASYNC, 7:mmap+MS_SYNC
-
-  ThreadNum     # of Threads
+*Usage: mobibench File size, reclen, AccessMode, Sync Mode, ThreadNum
+**File size     size of file(KByte)
+**reclen        size of reclen(KByte)
+**AccessMode    0:WRITE, 1:REWRITE, 2:RANDOM
+**Sync Mode     0:Normal, 1:O_SYNC, 2:fsync, 3:O_DIRECT, 4:Sync+direct, 5:mmap, 6:mmap+MS_ASYNC, 7:mmap+MS_SYNC
+**ThreadNum     # of Threads
 
 
 
