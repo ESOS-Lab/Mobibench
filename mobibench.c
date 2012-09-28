@@ -1,3 +1,12 @@
+/* mobibench.c for mobile benchmark tool(mobibench)
+ *
+ * Copyright (C) 2012 ESOS lab, Hanyang University
+ *
+ * History
+ * 2012. 1 created by Kisung Lee <kisunglee@hanyang.ac.kr>
+ * 2012. 8 modified by Sooman Jeong <77smart@hanyang.ac.kr>
+ *
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
