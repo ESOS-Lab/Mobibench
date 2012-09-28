@@ -14,7 +14,7 @@ memory mapped IO. It also supports multi-threading environment
 
 Build
 -----
-    # arm-none-linux-gnueabi-gcc mobibench.c -lpthread
+    # arm-none-linux-gnueabi-gcc -o mobibench mobibench.c -lpthread
 
 
 Usage
