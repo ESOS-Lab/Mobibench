@@ -24,7 +24,6 @@
 
 #define MERSENNE
 
-#define FILENAME "/mnt/ext/test.db"
 
 #define FILE_POS 0x38A40000 //950272000
 
@@ -42,6 +41,8 @@ int g_access, g_sync;
 char* maddr;
 long long filebytes64;
 int num_threads;
+char pathname[128] = {0, };
+
 
 typedef enum
 {
@@ -591,7 +592,7 @@ int thread_main(void* arg)
 
 	//printf("thread start\n");
 
-	sprintf(filename, "%s%d", FILENAME, thread_num);
+	sprintf(filename, "%s/test.db%d", pathname, thread_num);
 
 	init_by_array64(init, length);
 
@@ -800,9 +801,10 @@ int main( int argc, char **argv)
 	void* res;
 	int thread_info[MAX_THREADS];	
 	
-	if(argc!=6)
+	if(argc!=7)
 	{
-		printf("Usage: mobibench File size, reclen, AccessMode, Sync Mode, ThreadNum\n");
+		printf("Usage: mobibench File path, File size, reclen, AccessMode, Sync Mode, ThreadNum\n");
+		printf("  File path\tAbsolute path name(exclude filename)\n");
 		printf("  File size\tsize of file(KByte)\n");
 		printf("  reclen \tsize of reclen(KByte)\n");
 		printf("  AccessMode\t0:WRITE, 1:REWRITE, 2:RANDOM\n");
@@ -811,11 +813,12 @@ int main( int argc, char **argv)
 		return;
 	}	
   
-	kilo64 = atoi(argv[1]);
-	reclen = atoi(argv[2]);
-	g_access = atoi(argv[3]);
-	g_sync = atoi(argv[4]);
-	num_threads = atoi(argv[5]);
+    strcpy(pathname, argv[1]);
+	kilo64 = atoi(argv[2]);
+	reclen = atoi(argv[3]);
+	g_access = atoi(argv[4]);
+	g_sync = atoi(argv[5]);
+	num_threads = atoi(argv[6]);
 
 	if(num_threads > MAX_THREADS)
 		num_threads = MAX_THREADS;

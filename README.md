@@ -14,14 +14,15 @@ memory mapped IO. It also supports multi-threading environment
 
 Build
 -----
-    # arm-none-linux-gnueabi-gcc -o mobibench mobibench.c -lpthread
+    # arm-none-linux-gnueabi-gcc -o mobibench mobibench.c -lpthread -static
 
 
 Usage
 -----
-    # mobibench File size, reclen, AccessMode, Sync Mode, ThreadNum
+    # mobibench File path, File size, reclen, AccessMode, Sync Mode, ThreadNum
     # mobibench 1024, 4, 2, 2, 10
-    
+
+* File path : Absolute path name(exclude filename)
 * File size : size of file(KByte)
 * reclen : size of reclen(KByte)
 * AccessMode : 0:WRITE, 1:REWRITE, 2:RANDOM
