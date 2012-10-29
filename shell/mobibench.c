@@ -921,7 +921,7 @@ char *help[] = {
 "           -p  set path name",
 "           -f  set file size in KBytes (default=1024)",
 "           -r  set record size in KBytes (default=4)",
-"           -a  set access mode (0=Write, 1=Rewrite, 2=Random Write)",
+"           -a  set access mode (0=Write, 1=Random Write, 2=Read, 3=Random Read)",
 "           -y  set sync mode (0=Normal, 1=O_SYNC, 2=fsync, 3=O_DIRECT, 4=Sync+direct,",
 "                              5=mmap, 6=mmap+MS_ASYNC, 7=mmap+MS_SYNC)",
 "           -t  set number of thread for test (default=1)",
