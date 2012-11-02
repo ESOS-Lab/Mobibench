@@ -28,6 +28,15 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
+#ifdef ANDROID_APP
+#include <android/log.h>
+
+#define printf(fmt,args...)  __android_log_print(4  ,NULL, fmt, ##args)
+extern void send_progress(int progress);
+int progress;
+
+#endif
+
 /* Defs */
 #define SIZE_100MB 104857600
 #define SIZE_1MB 1048576
@@ -269,18 +278,17 @@ void init_by_array64(unsigned long long init_key[],
     mt[0] = 1ULL << 63; /* MSB is 1; assuring non-zero initial array */ 
 }
 
-char j_p_path[100]=  "/proc/";
-char j_p_name[100];
-unsigned int j_nr_switches[2];
-int storage_switches[2][1000];
+char j_p_name[100] = {0, };
+unsigned int j_nr_switches[2] = {0, };
+int storage_switches[2][1000] = {0, };
 int storage_count=0;
 
 void get_path(pid_t j_pid, pid_t j_tid)
 {
-//	printf("%s, %d\n", __func__, j_pid);
-	sprintf(j_p_name, "%d/task/%d", j_pid, j_tid);
-	strcat(j_p_path,j_p_name);
-	strcat(j_p_path,"/sched");
+	sprintf(j_p_name, "/proc/%d/task/%d/sched", j_pid, j_tid);
+//	strcat(j_p_path,j_p_name);
+//	strcat(j_p_path,"/sched");
+//	printf("%s %s\n", __func__, j_p_name);
 }
 
 void get_con_switches()
@@ -309,7 +317,7 @@ int single_get_nr_switches(void)
 	char j_dummy[128];
 	int ret;
 	
-	j_context_fd = open(j_p_path, O_RDONLY);
+	j_context_fd = open(j_p_name, O_RDONLY);
 	
 	if(j_context_fd < 0)
 	{
@@ -526,6 +534,13 @@ void signal_thread_status(int thread_num, thread_status_t stat, pthread_cond_t* 
 	return;
 }
 
+#ifdef ANDROID_APP
+void show_progress(int pro)
+{
+	//send_progress(pro);
+	progress = pro;
+}
+#else
 void show_progress(int pro)
 {
 	static int old_pro = -1;
@@ -536,6 +551,7 @@ void show_progress(int pro)
 	printf("%02d%c\r", pro, '%');
 	fflush(stdout);
 }
+#endif
 
 int thread_main(void* arg)
 {
@@ -564,6 +580,7 @@ int thread_main(void* arg)
 	if(num_threads == 1)
 	{
 		//get_path(getpid());
+		storage_count = 0;
 		get_path(getpid(), syscall(__NR_gettid));
 	}
 
@@ -822,6 +839,7 @@ int thread_main_db(void* arg)
 
 	if(num_threads == 1)
 	{
+		storage_count = 0;
 		get_path(getpid(), syscall(__NR_gettid));
 	}
 
@@ -948,7 +966,7 @@ int main( int argc, char **argv)
 	int ret = 0;
 	int count;
 	struct timeval T1, T2;
-	long long i = 0;
+	int i = 0;
 	char* maddr;
 	pthread_t	thread_id[MAX_THREADS];
 	void* res;
@@ -958,7 +976,7 @@ int main( int argc, char **argv)
 #if 1
 	if(argc <=1){
 		printf(USAGE);
-		exit(0);
+		return 0;
 	}
 #endif
 
@@ -972,6 +990,8 @@ int main( int argc, char **argv)
 	db_test_enable = 0;	/* DB off */
 	db_mode = 0;	/* insert */
 	db_transactions = 10;
+
+	optind = 1;
 
 	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:h")) != EOF){
 		switch(cret){
@@ -1002,10 +1022,10 @@ int main( int argc, char **argv)
 				break;
 			case 'h':
 				show_help();
-				exit(0);
+				return 0;
 				break;
 			default:
-				exit(1);
+				return 1;
 				break;
 		}
 	}
@@ -1039,11 +1059,13 @@ int main( int argc, char **argv)
 	}
 	printf("# of Threads : %d\n", num_threads);
 
+#ifndef ANDROID_APP
 	if(system("sysctl -w vm.drop_caches=3") < 0)
 	{
 		printf("fail to drop caches\n");
 		exit(1);
 	}
+#endif
  
 	/* Creating threads */
 	for(i = 0; i < num_threads; i++)
@@ -1104,4 +1126,3 @@ int main( int argc, char **argv)
 
 	return 0;
 }
-
