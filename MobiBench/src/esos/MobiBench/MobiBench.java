@@ -17,7 +17,7 @@ public class MobiBench extends Activity implements Runnable{
     
     public void run(){
     	try{
-    		Thread.sleep(0); // delay time configuration
+    		Thread.sleep(3000); // delay time configuration
     	}catch(Exception e){}
     	CDialog.hideLoading();
     	

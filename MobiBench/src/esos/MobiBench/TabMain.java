@@ -376,7 +376,7 @@ public class TabMain extends TabActivity {
 			case R.id.btn_execute:
 				set_default();
 				load_init();
-				print_values();		
+			//	print_values();		
 				break;
 			case R.id.btn_all:
 				

@@ -45,7 +45,7 @@
 			   android:layout_below="@id/position_1"
 			   android:layout_toLeftOf="@id/position_1"
 			   android:gravity="right|center_vertical"		
-			   android:textSize="15dip"	    		    
+			   android:textSize="17dip"	    		    
 			/>
 	       	<Spinner
 				android:id="@+id/sp_partition"
@@ -70,7 +70,7 @@
 			    android:layout_below="@id/txt_partition"	
 			    android:layout_alignRight="@id/txt_partition"
 			    android:layout_marginTop="3dip"			
-			    android:textSize="15dip"	    		    			    
+			    android:textSize="17dip"	    		    			    
 			/>
    			<EditText android:id="@+id/threadnum"
 	       	    android:layout_width="wrap_content"
@@ -91,7 +91,7 @@
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
    			    android:text="(1~100)"
-   			    android:textSize="13dip"
+   			    android:textSize="14dip"
    			    android:textColor="#ffffff"
    			    android:layout_toRightOf="@id/threadnum"
    			    android:layout_alignBaseline="@id/threadnum"
@@ -111,36 +111,124 @@
 			  	android:layout_width="fill_parent"
 			  	android:layout_height="wrap_content"
 			  	android:text=""
-			  	android:background="#A9A9A9"
-			  	
+			  	android:background="#A9A9A9"			  	
 			  	android:textSize="2dp"
 			  	android:layout_below="@id/file_title"
 		  	></TextView>
-
-	       
-			<CheckBox android:id="@+id/cb_sw"
+   			<CheckBox android:id="@+id/cb_sw"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:text=" Seq. Write"
-
 				android:layout_marginLeft="10dip"
 				android:checked="false"
-				android:layout_below="@id/line_1"
-				android:textSize="15dip"	    		
+				android:textSize="17dip"	
+				android:layout_below="@id/line_1"    		
 			></CheckBox>   			
-		    <TextView android:id="@+id/txt_sw"
+			<CheckBox android:id="@+id/cb_rw"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Ran. Write"
+				android:textSize="17dip"
+				android:layout_marginLeft="40dip"
+				android:checked="false"
+				android:layout_toRightOf="@id/cb_sw"
+				android:layout_below="@id/line_1"    	
+			></CheckBox>
+	 		<CheckBox android:id="@+id/cb_sr"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Seq. Read"
+				android:textSize="17dip"
+				android:layout_marginLeft="10dip"
+				android:checked="false"
+				android:layout_below="@id/cb_sw"	
+			></CheckBox>   			
+			<CheckBox android:id="@+id/cb_rr"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Ran. Read"
+				android:textSize="17dip"				
+				android:checked="false"
+				android:layout_toRightOf="@id/cb_sr"
+				android:layout_below="@id/cb_sw"	
+				android:layout_alignLeft="@id/cb_rw"
+			></CheckBox>             
+
+		    
+     		<ImageView android:id="@+id/sqlite_title"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:src="@drawable/sqlite_title"
+	            android:layout_marginTop="15dip"
+	            android:scaleType="fitXY"
+	            android:layout_marginLeft="10dip"
+	            android:layout_below="@id/cb_sr">
+	       </ImageView>					    
+   			<TextView android:id="@+id/line_2"
+			  	android:layout_width="fill_parent"
+			  	android:layout_height="wrap_content"
+			  	android:text=""
+			  	android:background="#A9A9A9"			  	
+			  	android:textSize="2dp"
+			  	android:layout_below="@id/sqlite_title"
+		  	></TextView>		    
+			<CheckBox android:id="@+id/cb_insert"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Insert"
+				android:textSize="17dip"
+				android:layout_marginLeft="10dip"
+				android:checked="false"
+				android:layout_below="@id/line_2"
+			></CheckBox>   		    
+			<CheckBox android:id="@+id/cb_update"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Update"
+				android:textSize="17dip"			
+				android:checked="false"
+				android:layout_below="@id/line_2"
+				android:layout_alignLeft="@id/cb_rr"
+			></CheckBox>  
+			<CheckBox android:id="@+id/cb_delete"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Delete"
+				android:textSize="17dip"				
+				android:checked="false"
+				android:layout_below="@id/cb_insert"
+				android:layout_alignLeft="@id/cb_insert"
+			></CheckBox>   			 
+
+     		<ImageView android:id="@+id/option_title"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:src="@drawable/etc_title"
+	            android:layout_marginTop="15dip"
+	            android:scaleType="fitXY"
+	            android:layout_marginLeft="10dip"
+	            android:layout_below="@id/cb_delete">
+	       </ImageView>					    
+   			<TextView android:id="@+id/line_3"
+			  	android:layout_width="fill_parent"
+			  	android:layout_height="wrap_content"
+			  	android:text=""
+			  	android:background="#A9A9A9"			  	
+			  	android:textSize="2dp"
+			  	android:layout_below="@id/option_title"
+		  	></TextView>		
+		  		
+			<TextView android:id="@+id/fs_w"
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
-   			    android:text="MB    "
-   			    android:singleLine="true"
-   			    android:textSize="13dip"
+   			    android:text="● File size(W) : "
+				android:textSize="17dip"	    		
    			    android:textColor="#ffffff"
-				android:gravity="right"
-  				android:layout_alignParentRight="true"
-  				android:layout_below="@id/line_1"
-  				android:layout_alignBaseline="@id/cb_sw"
-   			></TextView>  
-	    	<EditText android:id="@+id/filesize_w"
+   			    android:layout_below="@id/line_3"
+   			    android:layout_marginLeft="15dip"
+   			    android:layout_marginTop="20dip"			
+   			></TextView>    		
+   			<EditText android:id="@+id/filesize_w"
 	       	    android:layout_width="70dip"
 	            android:layout_height="40dip"  			    
    			    android:singleLine="true"
@@ -149,43 +237,31 @@
    			    android:selectAllOnFocus="true"
    			    android:text="1"
   			    android:maxLength="6"
-  			    android:layout_marginTop="2dip"
-   			    android:layout_toLeftOf="@id/txt_sw"
-				android:layout_alignBaseline="@id/txt_sw"		 
-				android:gravity="right" 
-   			></EditText>     			
-		    <TextView 
+  			    android:layout_toRightOf="@id/fs_w"
+  			    android:layout_alignBaseline="@id/fs_w"
+  			    android:gravity="right"		
+   			></EditText>     
+		    <TextView
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
-   			    android:text="● File size(w) : "
-				android:textSize="15dip"	    		
-   			    android:textColor="#ffffff"
-   			    android:layout_below="@id/line_1"
-   			    android:layout_toLeftOf="@id/filesize_w"
-				android:layout_alignBaseline="@id/cb_sw"
-   			></TextView>    	
-   			
-			<CheckBox android:id="@+id/cb_sr"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:text=" Seq. Read"
-				android:textSize="15dip"
-				android:layout_marginLeft="10dip"
-				android:checked="false"
-				android:layout_below="@id/cb_sw"
-			></CheckBox>   			
-		    <TextView android:id="@+id/txt_sr"
-     		    android:layout_width="wrap_content"
-     		    android:layout_height="wrap_content"    			    
-   			    android:text="MB    "
+   			    android:text=" MB"
    			    android:singleLine="true"
-   			    android:textSize="13dip"
+   			    android:textSize="15dip"
    			    android:textColor="#ffffff"
-				android:gravity="right"
-  				android:layout_alignParentRight="true"
-  				android:layout_below="@id/cb_sw"
-  				android:layout_alignBaseline="@id/cb_sr"
-   			></TextView>  
+   			    android:layout_toRightOf="@id/filesize_w"
+  				android:layout_alignBaseline="@id/filesize_w"
+   			></TextView>  			
+			
+		    <TextView  android:id="@+id/fs_r"
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● File size(R) : "
+				android:textSize="17dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/fs_w"
+   			    android:layout_marginTop="20dip"
+   			    android:layout_alignLeft="@id/fs_w"	
+   			></TextView>     			
 	    	<EditText android:id="@+id/filesize_r"
 	       	    android:layout_width="70dip"
 	            android:layout_height="40dip"  			    
@@ -195,43 +271,32 @@
    			    android:selectAllOnFocus="true"
    			    android:text="256"
   			    android:maxLength="6"
-  			    android:layout_marginTop="2dip"
-   			    android:layout_toLeftOf="@id/txt_sr"
-				android:layout_alignBaseline="@id/txt_sr"		 
-				android:gravity="right" 
-   			></EditText>     			
+  			    android:layout_toRightOf="@id/fs_r"
+  			    android:layout_alignBaseline="@id/fs_r"
+  			    android:layout_alignLeft="@id/filesize_w"
+  			    android:gravity="right"		
+   			></EditText>   			
 		    <TextView 
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
-   			    android:text="● File size(r) : "
-				android:textSize="15dip"
+   			    android:text=" MB"
+   			    android:singleLine="true"
+   			    android:textSize="15dip"
    			    android:textColor="#ffffff"
-   			    android:layout_below="@id/cb_sw"
-   			    android:layout_toLeftOf="@id/filesize_r"
-				android:layout_alignBaseline="@id/cb_sr"
-   			></TextView>       			
-   			
-			<CheckBox android:id="@+id/cb_rw"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:text=" Ran. Write"
-				android:textSize="15dip"
-				android:layout_marginLeft="10dip"
-				android:checked="false"
-				android:layout_below="@id/cb_sr"
-			></CheckBox>   			
-		    <TextView android:id="@+id/txt_rw"
+   			    android:layout_toRightOf="@id/filesize_r"
+  				android:layout_alignBaseline="@id/filesize_r"
+   			></TextView>  			
+			
+		    <TextView android:id="@+id/io"
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
-   			    android:text="KB    "
-   			    android:singleLine="true"
-   			    android:textSize="13dip"
+   			    android:text="● I/O size : "
+				android:textSize="17dip"
    			    android:textColor="#ffffff"
-				android:gravity="right"
-  				android:layout_alignParentRight="true"
-  				android:layout_below="@id/cb_sr"
-  				android:layout_alignBaseline="@id/cb_rw"
-   			></TextView>  
+   			    android:layout_below="@id/fs_r"
+   			    android:layout_marginTop="20dip"
+   			    android:layout_alignLeft="@id/fs_r"	
+   			></TextView>  			
 	    	<EditText android:id="@+id/io_size"
 	       	    android:layout_width="70dip"
 	            android:layout_height="40dip"  			    
@@ -241,99 +306,54 @@
    			    android:selectAllOnFocus="true"
    			    android:text="4"
   			    android:maxLength="6"
-  			    android:layout_marginTop="2dip"
-   			    android:layout_toLeftOf="@id/txt_rw"
-				android:layout_alignBaseline="@id/txt_rw"		 
-				android:gravity="right" 
-   			></EditText>     			
+  			    android:layout_toRightOf="@id/io"
+  			    android:layout_alignBaseline="@id/io"  	
+  			    android:gravity="right"		    
+   			></EditText>     					
 		    <TextView 
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
-   			    android:text="● I/O size(r) : "
-				android:textSize="15dip"
+   			    android:text=" KB"
+   			    android:singleLine="true"
+   			    android:textSize="15dip"
    			    android:textColor="#ffffff"
-   			    android:layout_below="@id/cb_sr"
-   			    android:layout_toLeftOf="@id/io_size"
-				android:layout_alignBaseline="@id/cb_rw"
-   			></TextView>      			
-   			
-			<CheckBox android:id="@+id/cb_rr"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:text=" Ran. Read"
-				android:textSize="15dip"
-				android:layout_marginLeft="10dip"
-				android:checked="false"
-				android:layout_below="@id/cb_rw"
-			></CheckBox>   			
+   			    android:layout_toRightOf="@id/io_size"
+  				android:layout_alignBaseline="@id/io_size"
+   			></TextView>  
+   				
+		    <TextView android:id="@+id/file_mode_txt"
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● Mode (File I/O) : "
+				android:textSize="17dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/io"
+   			    android:layout_marginTop="23dip"
+   			    android:layout_alignLeft="@id/io"									
+   			></TextView>    			
 			<Spinner
 				android:id="@+id/sp_file_sync"
 				android:layout_width = "wrap_content" 
 				android:layout_height="40dip"
 				android:drawSelectorOnTop = "true"
 				android:prompt="@string/sp_file_sync"
-				android:layout_below="@id/cb_rw"
-				android:gravity="center"
-  				android:layout_alignParentRight="true"
+				android:layout_below="@id/io"
+				android:gravity="center"  				
 			    android:background="@drawable/btn_dropdown_a13"			   
-			    android:layout_marginTop="5dip" 
-			></Spinner>		
-		    <TextView 
+			    android:layout_toRightOf="@id/file_mode_txt"
+			    android:layout_marginTop="17dip"
+			></Spinner>			
+			
+		    <TextView android:id="@+id/tran_txt"
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
-   			    android:text="● Mode : "
-				android:textSize="15dip"
+   			    android:text="● Transaction (SQLite) : "
+				android:textSize="17dip"
    			    android:textColor="#ffffff"
-   			    android:layout_below="@id/cb_rw"
-   			    android:layout_toLeftOf="@id/sp_file_sync"
-				android:layout_alignBaseline="@id/cb_rr"
-				
-   			></TextView>     			
-		    
-     		<ImageView android:id="@+id/sqlite_title"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:src="@drawable/sqlite_title"
-	            android:layout_marginTop="10dip"
-	            android:scaleType="fitXY"
-	            android:layout_marginLeft="10dip"
-	            android:layout_below="@id/cb_rr">
-	       </ImageView>				
-	    
-   			<TextView android:id="@+id/line_2"
-			  	android:layout_width="fill_parent"
-			  	android:layout_height="wrap_content"
-			  	android:text=""
-			  	android:background="#A9A9A9"
-			  	
-			  	android:textSize="2dp"
-			  	android:layout_below="@id/sqlite_title"
-		  	></TextView>	
-		    
-		    
-		    
-		    
-			<CheckBox android:id="@+id/cb_insert"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:text=" Insert"
-				android:textSize="15dip"
-				android:layout_marginLeft="10dip"
-				android:checked="false"
-				android:layout_below="@id/line_2"
-			></CheckBox>   			
-		    <TextView android:id="@+id/txt_tra"
-     		    android:layout_width="wrap_content"
-     		    android:layout_height="wrap_content"    			    
-   			    android:text="(1~1000)  "
-   			    android:singleLine="true"
-   			    android:textSize="11dip"
-   			    android:textColor="#ffffff"
-				android:gravity="right"
-  				android:layout_alignParentRight="true"
-  				android:layout_below="@id/line_2"
-  				android:layout_alignBaseline="@id/cb_insert"
-   			></TextView>  
+   			    android:layout_below="@id/file_mode_txt"
+   			    android:layout_marginTop="25dip"
+   			    android:layout_alignLeft="@id/file_mode_txt"		
+   			></TextView>    
 	    	<EditText android:id="@+id/transcation"
 	       	    android:layout_width="70dip"
 	            android:layout_height="40dip"  			    
@@ -342,90 +362,69 @@
    			    android:inputType="number"
    			    android:selectAllOnFocus="true"
    			    android:text="100"
-  			    android:maxLength="4"
-  			    android:layout_marginTop="2dip"
-   			    android:layout_toLeftOf="@id/txt_tra"
-				android:layout_alignBaseline="@id/txt_tra"		 
+  			    android:maxLength="4"	 
 				android:gravity="right" 
-   			></EditText>     			
-		    <TextView 
+				android:layout_toRightOf="@id/tran_txt"
+  			    android:layout_alignBaseline="@id/tran_txt"  	
+   			></EditText>  			
+		    <TextView android:id="@+id/txt_tra"
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
-   			    android:text="● Transcation : "
-				android:textSize="15dip"
+   			    android:text="(1~1000)  "
+   			    android:singleLine="true"
+   			    android:textSize="12dip"
    			    android:textColor="#ffffff"
-   			    android:layout_below="@id/line_2"
-   			    android:layout_toLeftOf="@id/transcation"
-				android:layout_alignBaseline="@id/cb_insert"
-   			></TextView>    	    
-		    
-		    
-		    
-		    
-			<CheckBox android:id="@+id/cb_update"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:text=" Update"
-				android:textSize="15dip"
-				android:layout_marginLeft="10dip"
-				android:checked="false"
-				android:layout_below="@id/cb_insert"
-			></CheckBox>   			
+				android:gravity="right"
+   			    android:layout_toRightOf="@id/transcation"
+  				android:layout_alignBaseline="@id/transcation"
+   			></TextView>  			
+			
+		    <TextView android:id="@+id/txt_sql_sync"
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● Mode (SQLite) : "
+				android:textSize="17dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/tran_txt"
+   			    android:layout_marginTop="20dip"
+   			    android:layout_alignLeft="@id/tran_txt"		
+   			></TextView>   				
 			<Spinner
 				android:id="@+id/sp_sql_sync"
 				android:layout_width = "wrap_content" 
 				android:layout_height="40dip"
 				android:drawSelectorOnTop = "true"
 				android:prompt="@string/sp_sql_sync"
-				android:layout_below="@id/cb_insert"
-			    android:layout_alignRight="@id/txt_rw"
 			    android:background="@drawable/btn_dropdown_a13"		
-			    			    android:layout_marginTop="5dip" 	    
-			></Spinner>		
-		    <TextView 
+			    android:layout_marginTop="17dip"
+			    android:layout_toRightOf="@id/txt_sql_sync"
+				android:layout_below="@id/tran_txt" 	    
+				android:gravity="center"  	
+			></Spinner>			
+			
+		    <TextView android:id="@+id/jour_txt"
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
-   			    android:text="● Sync Mode : "
-				android:textSize="15dip"
+   			    android:text="● Journal (SQLite) : "
+ 				android:textSize="17dip"
    			    android:textColor="#ffffff"
-   			    android:layout_below="@id/cb_insert"
-   			    android:layout_toLeftOf="@id/sp_sql_sync"
-				android:layout_alignBaseline="@id/cb_update"
-   			></TextView>   		    
-		    
-		    
-			<CheckBox android:id="@+id/cb_delete"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:text=" Delete"
-				android:textSize="15dip"
-				android:layout_marginLeft="10dip"
-				android:checked="false"
-				android:layout_below="@id/cb_update"
-			></CheckBox>   			
+   			    android:layout_below="@id/txt_sql_sync"
+   			    android:layout_marginTop="20dip"
+   			    android:layout_alignLeft="@id/txt_sql_sync"		
+   			></TextView>   				
+			
 			<Spinner
 				android:id="@+id/sp_journal"
 				android:layout_width = "wrap_content" 
 				android:layout_height="40dip"
 				android:drawSelectorOnTop = "true"
 				android:prompt="@string/sp_journal"
-				android:layout_below="@id/cb_update"
-			    android:layout_alignRight="@id/txt_rw"
 			    android:background="@drawable/btn_dropdown_a13"		
-			    			    android:layout_marginTop="5dip" 	    
-			></Spinner>		
-		    <TextView 
-     		    android:layout_width="wrap_content"
-     		    android:layout_height="wrap_content"    			    
-   			    android:text="● Journal : "
- 				android:textSize="15dip"
-   			    android:textColor="#ffffff"
-   			    android:layout_below="@id/cb_update"
-   			    android:layout_toLeftOf="@id/sp_journal"
-				android:layout_alignBaseline="@id/cb_delete"
-   			></TextView>   			    
- 
-		    
+			    android:layout_marginTop="17dip" 	  
+			    android:layout_toRightOf="@id/jour_txt"
+				android:layout_below="@id/txt_sql_sync" 	
+				android:gravity="center"  	   
+			></Spinner>		    
 		</RelativeLayout> 
 			<ImageButton android:id="@+id/btn_execute"
 				android:layout_width="wrap_content"
@@ -435,12 +434,16 @@
 				android:padding="0dp"
 				android:background="#00000000"
 				android:adjustViewBounds="true"	
-				android:layout_marginTop="20dip"
-				android:layout_marginBottom="30dip"
-				android:layout_gravity="center_horizontal"
+				android:layout_marginTop="25dip"
 				
-				
+				android:layout_gravity="center_horizontal"			
 			></ImageButton>
+     		<ImageView 
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:src="@drawable/last_title"
+	            android:scaleType="fitXY"            android:layout_gravity="right">
+	       </ImageView>	
 		</LinearLayout>
     </ScrollView>
 
@@ -452,23 +455,10 @@
         <ImageView
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:src="@drawable/bg_default"
+            android:src="@drawable/bg_history"
             android:scaleType="fitXY">
         </ImageView>
-        <RelativeLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            >
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="- History -"
-                android:textSize="25dip"
-                android:textColor="#ffffff"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="30dip"
-            ></TextView>
-        </RelativeLayout>
+
     </FrameLayout>
     
     <FrameLayout android:id="@+id/measure"
@@ -540,25 +530,8 @@
 				android:layout_below="@id/position_mea"
 				android:layout_toRightOf="@id/position_mea"	
 			></ImageButton>   	   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-   	       
-	       </RelativeLayout>
+
+	    </RelativeLayout>
     </FrameLayout>
 
 </FrameLayout>
