@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+<ScrollView android:id="@+id/help"
+     xmlns:android="http://schemas.android.com/apk/res/android"
+     android:layout_height="fill_parent"
+     android:layout_width="fill_parent"
+     
+    >
+    <LinearLayout
+	    android:orientation="vertical"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:background="@drawable/bg_default"
+	    android:scaleType="fitXY"
+    >
+ 	   <ImageView android:id="@+id/title_img"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/title"
+            android:layout_marginTop="5dip"
+            android:scaleType="fitXY">
+       </ImageView>
+		<RelativeLayout
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content" >
+
+
+   	       <TextView android:id="@+id/position_1" 
+	           android:layout_width="wrap_content"
+	           android:layout_height="wrap_content"
+	           android:text="1"
+	           android:layout_centerHorizontal="true"
+	           android:layout_below="@id/title_img"
+	           android:visibility="invisible">
+	       </TextView>
+	       
+	       <TextView android:id="@+id/txt_partition"
+	           android:layout_width="wrap_content"
+	           android:layout_height="40dip"
+			   android:text=" Partition"
+			   android:background="#00000000"
+			   android:textColor="#ffffff"	
+			   android:layout_below="@id/position_1"
+			   android:layout_toLeftOf="@id/position_1"
+			   android:gravity="right|center_vertical"		
+			   android:textSize="15dip"	    		    
+			/>
+	       	<Spinner
+				android:id="@+id/sp_partition"
+				android:layout_width = "wrap_content" 
+				android:layout_height="40dip"
+				android:drawSelectorOnTop = "true"
+				android:prompt="@string/sp_partition"
+				android:gravity="center"
+				android:layout_marginLeft="5dp"
+			    android:layout_below="@id/position_1"
+			    android:layout_toRightOf="@id/position_1"
+			     android:background="@drawable/btn_dropdown_a13"
+	
+			></Spinner>
+	       	
+	       	<TextView android:id="@+id/txt_thread_num"
+	       	    android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+			    android:text="Thread number"
+			    android:background="#00000000"
+			    android:textColor="#ffffff"		    
+			    android:layout_below="@id/txt_partition"	
+			    android:layout_alignRight="@id/txt_partition"
+			    android:layout_marginTop="3dip"			
+			    android:textSize="15dip"	    		    			    
+			/>
+   			<EditText android:id="@+id/threadnum"
+	       	    android:layout_width="wrap_content"
+	            android:layout_height="40dip"  			    
+   			    android:singleLine="true"
+   			    android:imeOptions="actionNext"
+   			    android:inputType="number"
+   			    android:selectAllOnFocus="true"
+   			    android:text="1"
+   			    android:maxLength="3"
+   			    android:layout_marginLeft="50dip"
+   			    android:gravity="right"
+   			    android:layout_toRightOf="@id/txt_thread_num"
+   			    android:layout_below="@id/sp_partition"
+   			      			  
+   			></EditText>
+     		<TextView  android:id="@+id/sizetxt"
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="(1~100)"
+   			    android:textSize="13dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_toRightOf="@id/threadnum"
+   			    android:layout_alignBaseline="@id/threadnum"
+   			    
+   			></TextView>   
+   			
+     		<ImageView android:id="@+id/file_title"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:src="@drawable/file_title"
+	            android:layout_marginTop="5dip"
+	            android:scaleType="fitXY"
+	            android:layout_below="@id/threadnum"
+	            android:layout_marginLeft="10dip">
+	       </ImageView>				
+   			<TextView android:id="@+id/line_1"
+			  	android:layout_width="fill_parent"
+			  	android:layout_height="wrap_content"
+			  	android:text=""
+			  	android:background="#A9A9A9"
+			  	
+			  	android:textSize="2dp"
+			  	android:layout_below="@id/file_title"
+		  	></TextView>
+
+	       
+			<CheckBox android:id="@+id/cb_sw"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Seq. Write"
+
+				android:layout_marginLeft="10dip"
+				android:checked="false"
+				android:layout_below="@id/line_1"
+				android:textSize="15dip"	    		
+			></CheckBox>   			
+		    <TextView android:id="@+id/txt_sw"
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="MB    "
+   			    android:singleLine="true"
+   			    android:textSize="13dip"
+   			    android:textColor="#ffffff"
+				android:gravity="right"
+  				android:layout_alignParentRight="true"
+  				android:layout_below="@id/line_1"
+  				android:layout_alignBaseline="@id/cb_sw"
+   			></TextView>  
+	    	<EditText android:id="@+id/filesize_w"
+	       	    android:layout_width="70dip"
+	            android:layout_height="40dip"  			    
+   			    android:singleLine="true"
+   			    android:imeOptions="actionNext"
+   			    android:inputType="number"
+   			    android:selectAllOnFocus="true"
+   			    android:text="1"
+  			    android:maxLength="6"
+  			    android:layout_marginTop="2dip"
+   			    android:layout_toLeftOf="@id/txt_sw"
+				android:layout_alignBaseline="@id/txt_sw"		 
+				android:gravity="right" 
+   			></EditText>     			
+		    <TextView 
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● File size(w) : "
+				android:textSize="15dip"	    		
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/line_1"
+   			    android:layout_toLeftOf="@id/filesize_w"
+				android:layout_alignBaseline="@id/cb_sw"
+   			></TextView>    	
+   			
+			<CheckBox android:id="@+id/cb_sr"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Seq. Read"
+				android:textSize="15dip"
+				android:layout_marginLeft="10dip"
+				android:checked="false"
+				android:layout_below="@id/cb_sw"
+			></CheckBox>   			
+		    <TextView android:id="@+id/txt_sr"
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="MB    "
+   			    android:singleLine="true"
+   			    android:textSize="13dip"
+   			    android:textColor="#ffffff"
+				android:gravity="right"
+  				android:layout_alignParentRight="true"
+  				android:layout_below="@id/cb_sw"
+  				android:layout_alignBaseline="@id/cb_sr"
+   			></TextView>  
+	    	<EditText android:id="@+id/filesize_r"
+	       	    android:layout_width="70dip"
+	            android:layout_height="40dip"  			    
+   			    android:singleLine="true"
+   			    android:imeOptions="actionNext"
+   			    android:inputType="number"
+   			    android:selectAllOnFocus="true"
+   			    android:text="256"
+  			    android:maxLength="6"
+  			    android:layout_marginTop="2dip"
+   			    android:layout_toLeftOf="@id/txt_sr"
+				android:layout_alignBaseline="@id/txt_sr"		 
+				android:gravity="right" 
+   			></EditText>     			
+		    <TextView 
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● File size(r) : "
+				android:textSize="15dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/cb_sw"
+   			    android:layout_toLeftOf="@id/filesize_r"
+				android:layout_alignBaseline="@id/cb_sr"
+   			></TextView>       			
+   			
+			<CheckBox android:id="@+id/cb_rw"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Ran. Write"
+				android:textSize="15dip"
+				android:layout_marginLeft="10dip"
+				android:checked="false"
+				android:layout_below="@id/cb_sr"
+			></CheckBox>   			
+		    <TextView android:id="@+id/txt_rw"
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="KB    "
+   			    android:singleLine="true"
+   			    android:textSize="13dip"
+   			    android:textColor="#ffffff"
+				android:gravity="right"
+  				android:layout_alignParentRight="true"
+  				android:layout_below="@id/cb_sr"
+  				android:layout_alignBaseline="@id/cb_rw"
+   			></TextView>  
+	    	<EditText android:id="@+id/io_size"
+	       	    android:layout_width="70dip"
+	            android:layout_height="40dip"  			    
+   			    android:singleLine="true"
+   			    android:imeOptions="actionNext"
+   			    android:inputType="number"
+   			    android:selectAllOnFocus="true"
+   			    android:text="4"
+  			    android:maxLength="6"
+  			    android:layout_marginTop="2dip"
+   			    android:layout_toLeftOf="@id/txt_rw"
+				android:layout_alignBaseline="@id/txt_rw"		 
+				android:gravity="right" 
+   			></EditText>     			
+		    <TextView 
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● I/O size(r) : "
+				android:textSize="15dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/cb_sr"
+   			    android:layout_toLeftOf="@id/io_size"
+				android:layout_alignBaseline="@id/cb_rw"
+   			></TextView>      			
+   			
+			<CheckBox android:id="@+id/cb_rr"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Ran. Read"
+				android:textSize="15dip"
+				android:layout_marginLeft="10dip"
+				android:checked="false"
+				android:layout_below="@id/cb_rw"
+			></CheckBox>   			
+			<Spinner
+				android:id="@+id/sp_file_sync"
+				android:layout_width = "wrap_content" 
+				android:layout_height="40dip"
+				android:drawSelectorOnTop = "true"
+				android:prompt="@string/sp_file_sync"
+				android:layout_below="@id/cb_rw"
+				android:gravity="center"
+  				android:layout_alignParentRight="true"
+			    android:background="@drawable/btn_dropdown_a13"			   
+			    android:layout_marginTop="5dip" 
+			></Spinner>		
+		    <TextView 
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● Mode : "
+				android:textSize="15dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/cb_rw"
+   			    android:layout_toLeftOf="@id/sp_file_sync"
+				android:layout_alignBaseline="@id/cb_rr"
+				
+   			></TextView>     			
+		    
+     		<ImageView android:id="@+id/sqlite_title"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:src="@drawable/sqlite_title"
+	            android:layout_marginTop="10dip"
+	            android:scaleType="fitXY"
+	            android:layout_marginLeft="10dip"
+	            android:layout_below="@id/cb_rr">
+	       </ImageView>				
+	    
+   			<TextView android:id="@+id/line_2"
+			  	android:layout_width="fill_parent"
+			  	android:layout_height="wrap_content"
+			  	android:text=""
+			  	android:background="#A9A9A9"
+			  	
+			  	android:textSize="2dp"
+			  	android:layout_below="@id/sqlite_title"
+		  	></TextView>	
+		    
+		    
+		    
+		    
+			<CheckBox android:id="@+id/cb_insert"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Insert"
+				android:textSize="15dip"
+				android:layout_marginLeft="10dip"
+				android:checked="false"
+				android:layout_below="@id/line_2"
+			></CheckBox>   			
+		    <TextView android:id="@+id/txt_tra"
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="(1~1000)  "
+   			    android:singleLine="true"
+   			    android:textSize="11dip"
+   			    android:textColor="#ffffff"
+				android:gravity="right"
+  				android:layout_alignParentRight="true"
+  				android:layout_below="@id/line_2"
+  				android:layout_alignBaseline="@id/cb_insert"
+   			></TextView>  
+	    	<EditText android:id="@+id/transcation"
+	       	    android:layout_width="70dip"
+	            android:layout_height="40dip"  			    
+   			    android:singleLine="true"
+   			    android:imeOptions="actionNext"
+   			    android:inputType="number"
+   			    android:selectAllOnFocus="true"
+   			    android:text="100"
+  			    android:maxLength="4"
+  			    android:layout_marginTop="2dip"
+   			    android:layout_toLeftOf="@id/txt_tra"
+				android:layout_alignBaseline="@id/txt_tra"		 
+				android:gravity="right" 
+   			></EditText>     			
+		    <TextView 
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● Transcation : "
+				android:textSize="15dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/line_2"
+   			    android:layout_toLeftOf="@id/transcation"
+				android:layout_alignBaseline="@id/cb_insert"
+   			></TextView>    	    
+		    
+		    
+		    
+		    
+			<CheckBox android:id="@+id/cb_update"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Update"
+				android:textSize="15dip"
+				android:layout_marginLeft="10dip"
+				android:checked="false"
+				android:layout_below="@id/cb_insert"
+			></CheckBox>   			
+			<Spinner
+				android:id="@+id/sp_sql_sync"
+				android:layout_width = "wrap_content" 
+				android:layout_height="40dip"
+				android:drawSelectorOnTop = "true"
+				android:prompt="@string/sp_sql_sync"
+				android:layout_below="@id/cb_insert"
+			    android:layout_alignRight="@id/txt_rw"
+			    android:background="@drawable/btn_dropdown_a13"		
+			    			    android:layout_marginTop="5dip" 	    
+			></Spinner>		
+		    <TextView 
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● Sync Mode : "
+				android:textSize="15dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/cb_insert"
+   			    android:layout_toLeftOf="@id/sp_sql_sync"
+				android:layout_alignBaseline="@id/cb_update"
+   			></TextView>   		    
+		    
+		    
+			<CheckBox android:id="@+id/cb_delete"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text=" Delete"
+				android:textSize="15dip"
+				android:layout_marginLeft="10dip"
+				android:checked="false"
+				android:layout_below="@id/cb_update"
+			></CheckBox>   			
+			<Spinner
+				android:id="@+id/sp_journal"
+				android:layout_width = "wrap_content" 
+				android:layout_height="40dip"
+				android:drawSelectorOnTop = "true"
+				android:prompt="@string/sp_journal"
+				android:layout_below="@id/cb_update"
+			    android:layout_alignRight="@id/txt_rw"
+			    android:background="@drawable/btn_dropdown_a13"		
+			    			    android:layout_marginTop="5dip" 	    
+			></Spinner>		
+		    <TextView 
+     		    android:layout_width="wrap_content"
+     		    android:layout_height="wrap_content"    			    
+   			    android:text="● Journal : "
+ 				android:textSize="15dip"
+   			    android:textColor="#ffffff"
+   			    android:layout_below="@id/cb_update"
+   			    android:layout_toLeftOf="@id/sp_journal"
+				android:layout_alignBaseline="@id/cb_delete"
+   			></TextView>   			    
+ 
+		    
+		</RelativeLayout> 
+			<ImageButton android:id="@+id/btn_execute"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:src="@drawable/ibtn_execute"		
+				android:scaleType="fitXY"
+				android:padding="0dp"
+				android:background="#00000000"
+				android:adjustViewBounds="true"	
+				android:layout_marginTop="20dip"
+				android:layout_marginBottom="30dip"
+				android:layout_gravity="center_horizontal"
+				
+				
+			></ImageButton>
+		</LinearLayout>
+    </ScrollView>
+
+
+    
+    <FrameLayout android:id="@+id/history"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:src="@drawable/bg_default"
+            android:scaleType="fitXY">
+        </ImageView>
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="- History -"
+                android:textSize="25dip"
+                android:textColor="#ffffff"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="30dip"
+            ></TextView>
+        </RelativeLayout>
+    </FrameLayout>
+    
+    <FrameLayout android:id="@+id/measure"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:src="@drawable/bg_measure"
+            android:scaleType="fitXY">
+        </ImageView>
+		<RelativeLayout
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent" >
+
+
+   	       <TextView android:id="@+id/position_mea" 
+	           android:layout_width="wrap_content"
+	           android:layout_height="wrap_content"
+	           android:text=" "
+	           android:textSize="1dip"
+	           android:layout_centerHorizontal="true"
+	           android:layout_centerVertical="true"
+	           android:layout_below="@id/title_img"
+	           >
+	       </TextView>
+	       
+   	       	<ImageButton android:id="@+id/btn_all"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:src="@drawable/ibtn_all"		
+				android:scaleType="fitXY"
+				android:padding="0dp"
+				android:background="#00000000"
+				android:adjustViewBounds="true"
+				android:layout_above="@id/position_mea"
+				android:layout_toLeftOf="@id/position_mea"	
+			></ImageButton>
+     	    <ImageButton android:id="@+id/btn_file"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:src="@drawable/ibtn_file"		
+				android:scaleType="fitXY"
+				android:padding="0dp"
+				android:background="#00000000"
+				android:adjustViewBounds="true"
+				android:layout_above="@id/position_mea"
+				android:layout_toRightOf="@id/position_mea"	
+			></ImageButton> 	       
+   	       	<ImageButton android:id="@+id/btn_sqlite"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:src="@drawable/ibtn_sqlite"		
+				android:scaleType="fitXY"
+				android:padding="0dp"
+				android:background="#00000000"
+				android:adjustViewBounds="true"
+				android:layout_below="@id/position_mea"
+				android:layout_toLeftOf="@id/position_mea"	
+			></ImageButton>   	       
+   	       	<ImageButton android:id="@+id/btn_custom"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:src="@drawable/ibtn_custom"		
+				android:scaleType="fitXY"
+				android:padding="0dp"
+				android:background="#00000000"
+				android:adjustViewBounds="true"
+				android:layout_below="@id/position_mea"
+				android:layout_toRightOf="@id/position_mea"	
+			></ImageButton>   	   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+   	       
+	       </RelativeLayout>
+    </FrameLayout>
+
+</FrameLayout>
