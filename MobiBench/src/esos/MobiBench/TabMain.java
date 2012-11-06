@@ -53,7 +53,7 @@ public class TabMain extends TabActivity {
 	private Spinner sp_file_sync= null;
 	private Spinner sp_sql_sync= null;
 	private Spinner sp_journal= null;
-	
+	private MobiBenchExe m_exe = null;	
 
 	static final int PROGRESS_DIALOG = 0;
 	
@@ -100,11 +100,15 @@ public class TabMain extends TabActivity {
 		prefs = getSharedPreferences("Setting", MODE_PRIVATE);
 		root_flag = prefs.getBoolean("init_flag", true);
 		editor = prefs.edit();
-	
+		
+		if(m_exe == null) {
+			m_exe = new MobiBenchExe();
+			m_exe.LoadEngine();
+		}
+		
 		if( root_flag ){
-			set_default();			
-			startActivityForResult(new Intent(TabMain.this, First.class), 0);				
-
+			set_default();				
+			startActivityForResult(new Intent(TabMain.this, First.class), 0);	
 		}else{
 			load_init();		
 		}
@@ -379,19 +383,20 @@ public class TabMain extends TabActivity {
 			//	print_values();		
 				break;
 			case R.id.btn_all:
-				
+				m_exe.RunFileIO();
+				m_exe.RunSqlite();
 				// do something here
 				break;
 			case R.id.btn_file:
-				
+				m_exe.RunFileIO();
 				// do something here
 				break;
 			case R.id.btn_sqlite:
-				
+				m_exe.RunSqlite();
 				// do something here
 				break;
 			case R.id.btn_custom:
-				
+				m_exe.RunCustom();
 				// do something here
 				break;
 			}
