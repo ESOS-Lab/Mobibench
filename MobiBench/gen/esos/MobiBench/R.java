@@ -12,6 +12,7 @@ public final class R {
         public static final int filesyncmode=0x7f040001;
         public static final int journalmode=0x7f040003;
         public static final int partition=0x7f040000;
+        public static final int partition2=0x7f040004;
         public static final int sqlsyncmode=0x7f040002;
     }
     public static final class attr {

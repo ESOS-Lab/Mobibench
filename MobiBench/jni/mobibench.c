@@ -808,6 +808,8 @@ int thread_main(void* arg)
 		}	
 	}
 
+	show_progress(100);
+
 	if(num_threads == 1)
 	{
 		single_get_nr_switches();
@@ -934,6 +936,8 @@ int thread_main_db(void* arg)
 		show_progress(i*100/db_transactions);
 	}
 
+	show_progress(100);
+
 	if(num_threads == 1)
 	{
 		single_get_nr_switches();
@@ -1006,7 +1010,7 @@ int main( int argc, char **argv)
 #endif
 
 	/* set default */
-	strcpy(pathname, "./");
+	strcpy(pathname, "./mobibench");
 	kilo64 = 1024;	/* 1MB */
 	reclen = 4;		/* 4KB */
 	g_access = 0;	/* Write */
@@ -1063,7 +1067,9 @@ int main( int argc, char **argv)
 	real_reclen = reclen*SIZE_1KB;
   
     numrecs64 = kilo64/reclen;	
-	filebytes64 = numrecs64*real_reclen; 
+	filebytes64 = numrecs64*real_reclen;
+
+	mkdir(pathname, 0766);
 	
 	printf("-----------------------------------------\n");
 	printf("[mobibench measurement setup]\n");

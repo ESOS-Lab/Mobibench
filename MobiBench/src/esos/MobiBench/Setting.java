@@ -1,25 +1,25 @@
 package esos.MobiBench;
 
 public class Setting {
-	private int target_partition;
-	private int thread_num;
+	private static int target_partition;
+	private static int thread_num;
 	
-	private int filesize_read;
-	private int filesize_write;
-	private int io_size;
-	private int file_sync_mode;
+	private static int filesize_read;
+	private static int filesize_write;
+	private static int io_size;
+	private static int file_sync_mode;
 
-	private int transaction_num;
-	private int sql_sync_mode;
-	private int journal_mode;
+	private static int transaction_num;
+	private static int sql_sync_mode;
+	private static int journal_mode;
 
-	private boolean seq_write;
-	private boolean seq_read;
-	private boolean ran_write;
-	private boolean ran_read;
-	private boolean insert;
-	private boolean update;
-	private boolean delete;
+	private static boolean seq_write;
+	private static boolean seq_read;
+	private static boolean ran_write;
+	private static boolean ran_read;
+	private static boolean insert;
+	private static boolean update;
+	private static boolean delete;
 	
 	public void set_filesize_read(int value){
 		filesize_read = value;

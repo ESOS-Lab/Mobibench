@@ -28,4 +28,8 @@
 	    <item>MEMORY</item>
 	    <item>OFF</item>
 	</string-array>
+	<string-array name="partition2">
+		<item>/data</item>
+		<item>/sdcard</item>
+	</string-array>
 </resources>

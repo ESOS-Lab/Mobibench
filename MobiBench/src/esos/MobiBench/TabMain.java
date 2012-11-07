@@ -60,6 +60,12 @@ public class TabMain extends TabActivity {
 	protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		
+		if(m_exe == null) {
+			m_exe = new MobiBenchExe();
+			m_exe.LoadEngine();
+			m_exe.SetStoragePath(this.getFilesDir().toString());
+		}		
+		
 		/* For tab layout setting */
 		TabHost tabHost = getTabHost();			
 		LayoutInflater.from(this).inflate(R.layout.tabmain,tabHost.getTabContentView(), true);			
@@ -74,7 +80,12 @@ public class TabMain extends TabActivity {
 		sp_sql_sync = (Spinner)findViewById(R.id.sp_sql_sync);
 		sp_journal = (Spinner)findViewById(R.id.sp_journal);
 		
-		ArrayAdapter ad_partition = ArrayAdapter.createFromResource(this, R.array.partition, android.R.layout.simple_spinner_item);
+		ArrayAdapter ad_partition;
+		if(StorageOptions.b_2nd_sdcard == true) {
+			ad_partition = ArrayAdapter.createFromResource(this, R.array.partition, android.R.layout.simple_spinner_item);
+		} else {	
+			ad_partition = ArrayAdapter.createFromResource(this, R.array.partition2, android.R.layout.simple_spinner_item);
+		}
 		ArrayAdapter ad_file_sync = ArrayAdapter.createFromResource(this, R.array.filesyncmode,R.layout.spinner_item);
 		ArrayAdapter ad_sql_sync = ArrayAdapter.createFromResource(this, R.array.sqlsyncmode,R.layout.spinner_item);
 		ArrayAdapter ad_journal = ArrayAdapter.createFromResource(this, R.array.journalmode,R.layout.spinner_item);
@@ -100,11 +111,6 @@ public class TabMain extends TabActivity {
 		prefs = getSharedPreferences("Setting", MODE_PRIVATE);
 		root_flag = prefs.getBoolean("init_flag", true);
 		editor = prefs.edit();
-		
-		if(m_exe == null) {
-			m_exe = new MobiBenchExe();
-			m_exe.LoadEngine();
-		}
 		
 		if( root_flag ){
 			set_default();				
