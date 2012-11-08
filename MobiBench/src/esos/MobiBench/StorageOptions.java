@@ -27,12 +27,14 @@ public class StorageOptions {
 	        //setProperties();
 	         System.out.println("mobibench secondary sdcard path final: "+ mMounts.toString() );
 	         
+	         String ret = null;
 	         if(mMounts.size() > 0) {
 	        	 b_2nd_sdcard = true;
-	        	 return mMounts.get(0);
-	         } else {
-	        	 return null;
+	        	 ret = mMounts.get(0);
+	        	 mMounts.clear();
 	         }
+	         
+	         return ret;
 	   }
 	 
 	  private static void readMountsFile() {
