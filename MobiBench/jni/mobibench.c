@@ -94,7 +94,10 @@ char pathname[128] = {0, };
 int db_test_enable;
 int db_mode;
 int db_transactions;
+int db_journal_mode;
+int db_sync_mode;
 int db_init_show = 0;
+int g_state = 0;
 
 thread_status_t thread_status[MAX_THREADS] = {0, };
 pthread_mutex_t thread_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -128,7 +131,12 @@ void print_time(struct timeval T1, struct timeval T2)
 	if(db_test_enable == 0)
 	{
 		rate = kilo64*1024*num_threads/time;
-		printf("[TIME] :%8ld sec %4ldus. %.0f B/sec, %.2f KB/sec, %.2f MB/sec. \n",sec,usec, rate, rate/1024, rate/1024/1024);
+		printf("[TIME] :%8ld sec %4ldus. %.0f B/sec, %.2f KB/sec, %.2f MB/sec.",sec,usec, rate, rate/1024, rate/1024/1024);
+		if(g_access == MODE_RND_WRITE || g_access == MODE_RND_READ)
+		{
+			printf(" %.2f IOPS(%dKB) ", rate/1024/reclen, reclen);
+		}
+		printf("\n");
 #ifdef ANDROID_APP
 		throughput = (float)rate/1024;
 #endif
@@ -578,6 +586,75 @@ void show_progress(int pro)
 }
 #endif
 
+void drop_caches(void)
+{
+#ifndef ANDROID_APP
+//	if(system("sysctl -w vm.drop_caches=3") < 0)
+	if(system("echo 3 > /proc/sys/vm/drop_caches") < 0)
+	{
+		printf("fail to drop caches\n");
+		exit(1);
+	}
+#endif
+}
+
+int init_file(char* filename, long long size)
+{
+	char* buf;
+	int ret = 0;
+	int fd;
+	long long i;
+	int rec_len = 512*1024;
+	int num_rec = size/rec_len;
+	int open_flags = O_RDWR | O_CREAT;
+
+	printf("%s\n", __func__);
+	printf("size : %d\n", (int)size);
+	printf("num_rec : %d\n", num_rec);
+	
+#ifdef ANDROID_APP
+	if(g_access == MODE_RND_WRITE)
+	{
+		open_flags |= O_DIRECT;	
+	}
+#endif
+
+	fd = open(filename, open_flags, 0766);	
+	if(fd < 0)
+	{
+		printf("%s Open failed %d\n", filename, ret);
+		exit(ret);
+	}
+
+	lseek(fd, 0, SEEK_END);
+
+	buf = malloc(512*1024);
+	memset(buf, 0xcafe, 512*1024);
+
+	for(i=0; i<num_rec; i++)
+	{		
+		if(write(fd, buf, rec_len)<0)
+		{
+			printf("File write error!!!\n");
+			exit(1);
+		}
+
+		show_progress(100*i/num_rec);
+	}	
+
+	fsync(fd);
+
+	close(fd);
+
+	show_progress(100);
+
+	printf("\ninit end\n");
+	
+	free(buf);
+
+	return 0;
+}
+
 int thread_main(void* arg)
 {
 	char* org_buf;
@@ -599,6 +676,9 @@ int thread_main(void* arg)
 	int* p_thread_num = (int*)arg;
 	int block_open = 0;
 	int page_size;
+	int open_flags = 0;
+
+	struct stat sb;
 
 	thread_num = (int)*p_thread_num;
 
@@ -625,7 +705,7 @@ int thread_main(void* arg)
 	else
 	{
 		sprintf(filename, "%s/test.dat%d", pathname, thread_num);
-		printf("open file : %s\n", filename);
+		//printf("open file : %s\n", filename);
 	}
 
 	init_by_array64(init, length);
@@ -661,21 +741,34 @@ int thread_main(void* arg)
 //			printf("Unlink %s failed\n", filename);
 	}
 
+	if(g_access == MODE_READ || g_access == MODE_RND_READ || g_access == MODE_RND_WRITE)
+	{
+		stat(filename, &sb);
+		//printf("sb.st_size: %d\n", (int)sb.st_size);
+
+		if(sb.st_size < filebytes64)
+		{
+			init_file(filename, filebytes64 - sb.st_size);
+		}
+	}
+	
+	drop_caches();	
 
 	if(block_open == 1)
-		fd = open(filename,  O_RDWR | O_CREAT);
+		open_flags = O_RDWR | O_CREAT;
 	else if(g_sync == OSYNC)
-		fd = open(filename,  O_RDWR | O_CREAT | O_SYNC);
+		open_flags = O_RDWR | O_CREAT | O_SYNC;
 	else if(g_sync == ODIRECT)
-		fd = open(filename,  O_RDWR | O_CREAT | O_DIRECT);
+		open_flags = O_RDWR | O_CREAT | O_DIRECT;
 	else if(g_sync == SYDI )
-		fd = open(filename,  O_RDWR | O_CREAT | O_SYNC | O_DIRECT);
+		open_flags = O_RDWR | O_CREAT | O_SYNC | O_DIRECT;
 	else
-		fd = open(filename,  O_RDWR | O_CREAT);
-		
-	if(fd <0)
+		open_flags = O_RDWR | O_CREAT;
+
+	fd = open(filename, open_flags, 0766);	
+	if(fd < 0)
 	{
-		printf("%s Open failed\n", filename);
+		printf("%s Open failed %d\n", filename, ret);
 		exit(ret);
 	}
 
@@ -717,16 +810,16 @@ int thread_main(void* arg)
 				}
 				else
 				{
-					wmaddr = &maddr[i*reclen];
+					wmaddr = &maddr[i*real_reclen];
 				}
 				bcopy((long long*)buf,(long long*)wmaddr,(long long)real_reclen);
 				if(g_sync == MMAP_AS)
 				{
-					msync(wmaddr,(size_t)reclen,MS_ASYNC);
+					msync(wmaddr,(size_t)real_reclen,MS_ASYNC);
 				}
 				else if(g_sync == MMAP_S)
 				{
-					msync(wmaddr,(size_t)reclen,MS_SYNC);
+					msync(wmaddr,(size_t)real_reclen,MS_SYNC);
 				}
 		 	}
 			else
@@ -780,7 +873,7 @@ int thread_main(void* arg)
 				}
 				else
 				{
-					wmaddr = &maddr[i*reclen];
+					wmaddr = &maddr[i*real_reclen];
 				}
 				bcopy((long long*)wmaddr,(long long*)buf, (long long)real_reclen);
 		 	}
@@ -849,7 +942,56 @@ int sql_cb(void* data, int ncols, char** values, char** headers)
 
 #define exec_sql(db, sql, cb)	sqlite3_exec(db, sql, cb, NULL, NULL);
 
+int init_db_for_update(sqlite3* db, char* filename, int trs)
+{
+	int i;
 
+	printf("%s\n", __func__);
+	printf("trs : %d\n", trs);
+
+	for(i = 0; i < trs; i++) 
+	{
+		exec_sql(db, "INSERT INTO tblMyList(Value) VALUES('"INSERT_STR"');", NULL);
+		show_progress(i*100/trs);
+	}
+
+	show_progress(100);
+
+	printf("\ninit end\n");
+	
+	return 0;
+}
+
+char* get_journal_mode_string(int journal_mode)
+{
+	char* ret_str;
+	
+	switch(journal_mode) {
+		case 0:
+			ret_str = "DELETE";
+			break;
+		case 1:
+			ret_str = "TRUNCATE";
+			break;
+		case 2:
+			ret_str = "PERSIST";
+			break;
+		case 3:
+			ret_str = "WAL";
+			break;
+		case 4:
+			ret_str = "MEMORY";
+			break;
+		case 5:
+			ret_str = "OFF";
+			break;
+		default:
+			ret_str = "TRUNCATE";
+			break;		
+	}
+
+	return ret_str;
+}
 
 int thread_main_db(void* arg)
 {
@@ -873,7 +1015,7 @@ int thread_main_db(void* arg)
 //	printf("db thread start\n");
 
 	sprintf(filename, "%s/test.db%d", pathname, thread_num);
-	printf("open db : %s\n", filename);
+//	printf("open db : %s\n", filename);
 
 	rc = sqlite3_open(filename, &db);
 
@@ -881,12 +1023,14 @@ int thread_main_db(void* arg)
 	{
 		fprintf(stderr, "rc = %d\n", rc);
 		fprintf(stderr, "sqlite3_open error :%s\n", sqlite3_errmsg(db));
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
 	exec_sql(db, "PRAGMA page_size = 4096;", NULL);
-	exec_sql(db, "PRAGMA journal_mode=TRUNCATE;", NULL);		
-	exec_sql(db, "PRAGMA synchronous=1;", NULL);		
+	sprintf(sql, "PRAGMA journal_mode=%s;", get_journal_mode_string(db_journal_mode));
+	exec_sql(db, sql, NULL);
+	sprintf(sql, "PRAGMA synchronous=%d;", db_sync_mode);
+	exec_sql(db, sql, NULL);
 
 	if(db_init_show == 0)
 	{
@@ -900,8 +1044,35 @@ int thread_main_db(void* arg)
 		exec_sql(db, "PRAGMA synchronous;", sql_cb);		
 	}
 
+	if(db_mode == 0)
+	{
+		exec_sql(db, "DROP TABLE IF EXISTS tblMyList;", NULL);
+	}
+
 	exec_sql(db, "CREATE TABLE IF NOT EXISTS tblMyList (id INTEGER PRIMARY KEY autoincrement, Value TEXT not null, creation_date long);", NULL);
 
+	/* check column count */
+	if(db_mode != 0)
+	{
+		char** result;
+		char* errmsg;
+		int rows, columns;
+		int column_count = 0;
+		sprintf(sql, "SELECT count(*) from tblMyList;");
+		rc = sqlite3_get_table(db, sql, &result, &rows, &columns, &errmsg);
+		column_count = atoi(result[1]);
+		//printf("existing column count : %d\n", column_count);
+		sqlite3_free_table(result);
+
+		if(column_count < db_transactions)
+		{
+			init_db_for_update(db, filename, db_transactions - column_count);
+		}
+	}
+
+	drop_caches();	
+	//sqlite3_db_release_memory(db);
+	
 	signal_thread_status(thread_num, READY, &thread_cond1);
 	wait_thread_status(thread_num, EXEC, &thread_cond2);
 
@@ -946,6 +1117,11 @@ int thread_main_db(void* arg)
 
 	signal_thread_status(thread_num, END, &thread_cond3);
 
+	if(db_mode == 2)
+	{
+		exec_sql(db, "DROP TABLE tblMyList;", NULL);
+	}
+
 	rc = sqlite3_close(db);
 
 	if(SQLITE_OK != rc)
@@ -954,6 +1130,11 @@ int thread_main_db(void* arg)
 		fprintf(stderr, "sqlite3_close error :%s\n", sqlite3_errmsg(db));
 		return -1;
 	}	
+
+	if(db_mode == 2)
+	{
+		unlink(filename);
+	}
 
 //	printf("db thread end\n");
 
@@ -965,15 +1146,18 @@ char *help[] = {
 "    Usage: mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]",
 "                     [-y sync_mode] [-t thread_num] [-d db_mode]",
 " ",
-"           -p  set path name",
+"           -p  set path name (default=./mobibench)",
 "           -f  set file size in KBytes (default=1024)",
 "           -r  set record size in KBytes (default=4)",
-"           -a  set access mode (0=Write, 1=Random Write, 2=Read, 3=Random Read)",
+"           -a  set access mode (0=Write, 1=Random Write, 2=Read, 3=Random Read) (default=0)",
 "           -y  set sync mode (0=Normal, 1=O_SYNC, 2=fsync, 3=O_DIRECT, 4=Sync+direct,",
-"                              5=mmap, 6=mmap+MS_ASYNC, 7=mmap+MS_SYNC)",
+"                              5=mmap, 6=mmap+MS_ASYNC, 7=mmap+MS_SYNC) (default=0)",
 "           -t  set number of thread for test (default=1)",
 "           -d  enable DB test mode (0=insert, 1=update, 2=delete)",
-"           -n  set number of DB transaction",
+"           -n  set number of DB transaction (default=10)",
+"           -j  set SQLite journal mode (0=DELETE, 1=TRUNCATE, 2=PERSIST, 3=WAL, 4=MEMORY, ",
+"                                        5=OFF) (default=1)",
+"           -s  set SQLite synchronous mode (0=OFF, 1=NORMAL, 2=FULL) (default=2)",
 ""
 };
 
@@ -1019,10 +1203,13 @@ int main( int argc, char **argv)
 	db_test_enable = 0;	/* DB off */
 	db_mode = 0;	/* insert */
 	db_transactions = 10;
+	db_journal_mode = 1; /* TRUNCATE */
+	db_sync_mode = 2; /* FULL */
+	db_init_show = 0;
 
 	optind = 1;
 
-	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:h")) != EOF){
+	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:h")) != EOF){
 		switch(cret){
 			case 'p':
 				strcpy(pathname, optarg);
@@ -1049,6 +1236,12 @@ int main( int argc, char **argv)
 			case 'n':
 				db_transactions = atoi(optarg);
 				break;
+			case 'j':
+				db_journal_mode = atoi(optarg);
+				break;
+			case 's':
+				db_sync_mode = atoi(optarg);
+				break;
 			case 'h':
 				show_help();
 				return 0;
@@ -1065,11 +1258,19 @@ int main( int argc, char **argv)
 		num_threads = 1;
 		
 	real_reclen = reclen*SIZE_1KB;
-  
+  	kilo64 /= num_threads;
+	db_transactions /= num_threads;
     numrecs64 = kilo64/reclen;	
 	filebytes64 = numrecs64*real_reclen;
 
-	mkdir(pathname, 0766);
+	mkdir(pathname, S_IRWXU | S_IRWXG | S_IRWXO);
+	
+#ifdef ANDROID_APP
+	if(g_access == MODE_READ || g_access == MODE_RND_READ)
+	{
+		g_sync = 3;		/* 3=O_DIRECT */
+	}
+#endif
 	
 	printf("-----------------------------------------\n");
 	printf("[mobibench measurement setup]\n");
@@ -1077,7 +1278,7 @@ int main( int argc, char **argv)
 
 	if(db_test_enable == 0)
 	{
-		printf("File size : %lld KB\n", kilo64);
+		printf("File size per thread : %lld KB\n", kilo64);
 		printf("IO size : %lld KB\n", reclen);		
 		printf("IO count : %lld \n", numrecs64);
 		printf("Access Mode %d, Sync Mode %d\n", g_access, g_sync);	
@@ -1086,17 +1287,9 @@ int main( int argc, char **argv)
 	{
 		printf("DB teset mode enabled.\n");
 		printf("Operation : %d\n", db_mode);
-		printf("Transactions : %d\n", db_transactions);
+		printf("Transactions per thread: %d\n", db_transactions);
 	}
 	printf("# of Threads : %d\n", num_threads);
-
-#ifndef ANDROID_APP
-	if(system("sysctl -w vm.drop_caches=3") < 0)
-	{
-		printf("fail to drop caches\n");
-		exit(1);
-	}
-#endif
 
 	/* Creating threads */
 	for(i = 0; i < num_threads; i++)
@@ -1118,12 +1311,16 @@ int main( int argc, char **argv)
 		//printf("pthread_create id : %d\n", (int)thread_id[i]);
 	}
 	
+	g_state = READY;
+	
 	/* Wait until all threads are ready to perform */
 	wait_thread_status(-1, READY, &thread_cond1);
 
 	/* Start measuring data for performance */
 	gettimeofday(&T1,NULL);
 	cpuUsage(START_CPU_CHECK);
+
+	g_state = EXEC;
 
 	/* Send signal to all threads to start */
 	signal_thread_status(-1, EXEC, &thread_cond2);
@@ -1154,6 +1351,8 @@ int main( int argc, char **argv)
 		}
 		free(res);
 	}
+
+	g_state = END;
 
 	return 0;
 }

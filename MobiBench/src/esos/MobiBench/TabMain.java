@@ -412,7 +412,11 @@ public class TabMain extends TabActivity {
 	/* Load : stored in preferences */
 	/* Load preferenced values */
 	private void load_init() {
-		sp_partition.setSelection(prefs.getInt("p_target_partition", 0));
+		if((StorageOptions.b_2nd_sdcard == false) && prefs.getInt("p_target_partition", 0) == 2) {
+			sp_partition.setSelection(0);
+		} else {
+			sp_partition.setSelection(prefs.getInt("p_target_partition", 0));
+		}
 		et_threadnum.setText(String.valueOf(prefs.getInt("p_threadnum", 1)));
 		et_filesize_w.setText(String.valueOf(prefs.getInt("p_filesize_w", 1)));
 		et_filesize_r.setText(String.valueOf(prefs.getInt("p_filesize_r", 256)));
@@ -422,7 +426,11 @@ public class TabMain extends TabActivity {
 		sp_sql_sync.setSelection(prefs.getInt("p_sql_sync_mode", 0));
 		sp_journal.setSelection(prefs.getInt("p_journal_mode", 0));
 		
-		set.set_target_partition(prefs.getInt("p_target_partition", 0));
+		if((StorageOptions.b_2nd_sdcard == false) && prefs.getInt("p_target_partition", 0) == 2) {
+			set.set_target_partition(0);
+		} else {
+			set.set_target_partition(prefs.getInt("p_target_partition", 0));
+		}
 		set.set_thread_num(prefs.getInt("p_threadnum", 1));	
 		set.set_filesize_write(prefs.getInt("p_filesize_w", 1));
 		set.set_filesize_read(prefs.getInt("p_filesize_r", 256));		
@@ -461,7 +469,7 @@ public class TabMain extends TabActivity {
 		
 		editor.putInt("p_transaction", 100);
 		set.set_transaction_num(100);	
-		editor.putInt("p_sql_sync_mode", 1);
+		editor.putInt("p_sql_sync_mode", 2);
 		set.set_sql_sync_mode(1);
 		editor.putInt("p_journal_mode", 1);
 		set.set_journal_mode(1);		
