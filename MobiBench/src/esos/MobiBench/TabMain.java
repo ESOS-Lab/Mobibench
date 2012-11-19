@@ -2,6 +2,7 @@ package esos.MobiBench;
 
 
 import esos.MobiBench.R;
+import esos.ResultListControl.DialogActivity;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -55,6 +56,9 @@ public class TabMain extends TabActivity {
 	private Spinner sp_journal= null;
 	private MobiBenchExe m_exe = null;	
 
+	
+	
+	
 	static final int PROGRESS_DIALOG = 0;
 	
 	protected void onCreate(Bundle savedInstanceState){
@@ -389,21 +393,26 @@ public class TabMain extends TabActivity {
 			//	print_values();		
 				break;
 			case R.id.btn_all:
-				m_exe.RunFileIO();
-				m_exe.RunSqlite();
+				//m_exe.RunFileIO();
+				//m_exe.RunSqlite();
 				// do something here
+				Intent intent = new Intent(TabMain.this, DialogActivity.class);
+				startActivity(intent); 
 				break;
 			case R.id.btn_file:
-				m_exe.RunFileIO();
+				//m_exe.RunFileIO();
 				// do something here
+		
 				break;
 			case R.id.btn_sqlite:
-				m_exe.RunSqlite();
+				//m_exe.RunSqlite();
 				// do something here
+		
 				break;
 			case R.id.btn_custom:
-				m_exe.RunCustom();
+				//m_exe.RunCustom();
 				// do something here
+	
 				break;
 			}
 		}
