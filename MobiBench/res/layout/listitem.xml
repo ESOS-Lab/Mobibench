@@ -3,6 +3,7 @@
 	android:layout_width="wrap_content" 
 	android:layout_height="wrap_content"  
  	android:orientation="horizontal"
+ 	android:padding="5dip"
  	>
  	<ImageView 
  		android:id="@+id/iconItem"  
@@ -17,35 +18,146 @@
  		android:orientation="vertical"
  		android:layout_alignParentLeft="true"
  		>
-	 	<TextView  
-	 		android:id="@+id/dataItem01"  
-		    android:layout_width="wrap_content" 
-		    android:layout_height="wrap_content"
-		    android:textStyle="bold"
-		    android:textSize="8pt"
-		    android:padding="5dip"
-		    />
 		<RelativeLayout
 			android:layout_width="wrap_content" 
 			android:layout_height="wrap_content"
-			android:padding="5dip"
+			
  			>
- 			<TextView  
-		 		android:id="@+id/dataItem02"  
+ 			<TextView android:id="@+id/tmp_txt0"
+ 			    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 			    android:text="· CPU : "
+ 			></TextView>
+ 			<TextView android:id="@+id/tmp_txt1"
+ 			    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 			    android:text="Active-"
+ 			    android:layout_toRightOf="@id/tmp_txt0"
+ 			    android:layout_alignBaseline="@id/tmp_txt0"
+ 			    ></TextView> 			
+ 			<TextView  android:id="@+id/dataItem01"  
 			    android:layout_width="wrap_content" 
 			    android:layout_height="wrap_content"
+			    android:text="30"
+			    android:layout_toRightOf="@id/tmp_txt1"
+			    android:layout_alignBaseline="@id/tmp_txt1"
 			    />
-			<TextView  
-		 		android:id="@+id/dataItem03"  
+ 			<TextView android:id="@+id/tmp_txt2"
+ 			    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 			    android:text="%, I/O wait-"
+ 			    android:layout_toRightOf="@id/dataItem01"
+			    android:layout_alignBaseline="@id/tmp_txt1"
+ 			></TextView>
+			<TextView  android:id="@+id/dataItem02"  
 			    android:layout_width="wrap_content" 
 			    android:layout_height="wrap_content"
-			    android:layout_alignParentRight="true"
-			    android:textColor="#ccf88107"
-				android:textSize="7pt"
-				android:textStyle="bold"
-				android:paddingRight="4dip"
-			    />    
+			    android:text="40"
+			    android:layout_toRightOf="@id/tmp_txt2"
+			    android:layout_alignBaseline="@id/tmp_txt1"
+			/>   
+ 			<TextView android:id="@+id/tmp_txt3"
+ 			    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 			    android:text="%"
+ 			    android:layout_toRightOf="@id/dataItem02"
+			    android:layout_alignBaseline="@id/tmp_txt1"
+ 			></TextView>			
+	 		<TextView android:id="@+id/tmp_txt4"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:text="Idle-"
+			    android:layout_below="@id/tmp_txt0"
+			    android:layout_alignLeft="@id/tmp_txt1"
+		    ></TextView>
+	 		<TextView  android:id="@+id/dataItem03"  
+			    android:layout_width="wrap_content" 
+			    android:layout_height="wrap_content"
+			    android:text="29"
+			    android:layout_toRightOf="@id/tmp_txt4"
+			    android:layout_alignBaseline="@id/tmp_txt4"
+			/>   
+ 			<TextView 
+ 			    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 			    android:text="%"
+ 			    android:layout_toRightOf="@id/dataItem03"
+			    android:layout_alignBaseline="@id/tmp_txt4"
+ 			></TextView>	
  		</RelativeLayout>   
+ 		<LinearLayout 
+ 		    android:layout_width="wrap_content"
+ 		    android:layout_height="wrap_content"
+ 		    android:orientation="horizontal"
+ 		    android:layout_alignParentLeft="true"
+ 		    >
+ 		 	<TextView
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text="· Context-Switches : "
+ 		 	></TextView>
+  		 	<TextView android:id="@+id/dataItem04"
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text="1000"
+ 		 	></TextView>		 	   
+   		 	<TextView
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text=" ("
+ 		 	></TextView>	
+ 		 	<TextView android:id="@+id/dataItem05"
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text="500"
+ 		 	></TextView>	
+ 		 	<TextView
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text=")"
+ 		 	></TextView>	
+ 		</LinearLayout>
+  		<LinearLayout 
+ 		    android:layout_width="wrap_content"
+ 		    android:layout_height="wrap_content"
+ 		    android:orientation="horizontal"
+ 		    android:layout_alignParentLeft="true"
+ 		    >
+ 		 	<TextView
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text="· Throughput : "
+ 		 	></TextView>
+  		 	<TextView android:id="@+id/dataItem06"
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text="35"
+ 		 	></TextView>		 	   
+   		 	<TextView
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text=" MB/s-file, TPS-sqlite"
+ 		 	></TextView>	
+
+ 		</LinearLayout>		
+		
+		
+		
+		
+		
+		
+		
+		
 	</LinearLayout>    
 </LinearLayout>  
+
+
+
+
+
+
+
+
+
+
  

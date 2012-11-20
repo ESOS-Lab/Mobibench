@@ -19,7 +19,7 @@ public class DialogActivity extends Activity{
 	        super.onCreate(savedInstanceState);
 	 
 	        // window feature for no title - must be set prior to calling setContentView.
-	        requestWindowFeature(Window.FEATURE_NO_TITLE);
+	        //requestWindowFeature(Window.FEATURE_NO_TITLE);
 	 
 	        // create a DataGridView instance
 	        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT);
@@ -30,17 +30,11 @@ public class DialogActivity extends Activity{
 	 
 	        // add items
 	        Resources res = getResources();
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "추억의 테트리스", "30,000 다운로드", "900 원"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "고스톱 - 강호동 버전", "26,000 다운로드", "1500 원"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "친구찾기 (Friends Seeker)", "300,000 다운로드", "900 원"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "강좌 검색", "120,000 다운로드", "900 원"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "지하철 노선도 - 서울", "4,000 다운로드", "1500 원"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "지하철 노선도 - 도쿄", "6,000 다운로드", "1500 원"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "지하철 노선도 - LA", "8,000 다운로드", "1500 원"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "지하철 노선도 - 워싱턴", "7,000 다운로드", "1500 원"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "지하철 노선도 - 파리", "9,000 다운로드", "1500 원"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "지하철 노선도 - 베를린", "38,000 다운로드", "1500 원"));
-	 
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "21", "11", "12","1000","500","30"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "20", "10", "11","999","499","29"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "14", "15", "16","929","495","21"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "14", "15", "16","929","495","21"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "14", "15", "16","929","495","21"));
 	        // call setAdapter()
 	        list.setAdapter(adapter);
 	 

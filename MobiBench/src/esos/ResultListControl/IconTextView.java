@@ -20,17 +20,12 @@ public class IconTextView extends LinearLayout {
     * TextView 01
     */
    private TextView mText01;
-
-   /**
-    * TextView 02
-    */
    private TextView mText02;
-
-   /**
-    * TextView 03
-    */
    private TextView mText03;
-
+   private TextView mText04;
+   private TextView mText05;
+   private TextView mText06;
+   
    public IconTextView(Context context, IconTextItem aItem) {
        super(context);
 
@@ -54,6 +49,17 @@ public class IconTextView extends LinearLayout {
        mText03 = (TextView) findViewById(R.id.dataItem03);
        mText03.setText(aItem.getData(2));
 
+       // Set Text 04
+       mText04 = (TextView) findViewById(R.id.dataItem04);
+       mText04.setText(aItem.getData(3));
+       
+       // Set Text 05
+       mText05 = (TextView) findViewById(R.id.dataItem05);
+       mText05.setText(aItem.getData(4));
+       
+       // Set Text 06
+       mText06 = (TextView) findViewById(R.id.dataItem06);
+       mText06.setText(aItem.getData(5));
    }
 
    /**
@@ -69,6 +75,12 @@ public class IconTextView extends LinearLayout {
            mText02.setText(data);
        } else if (index == 2) {
            mText03.setText(data);
+       } else if (index == 3) {
+           mText04.setText(data);
+       } else if (index == 4) {
+           mText05.setText(data);
+       }  else if (index == 5) {
+           mText06.setText(data);
        } else {
            throw new IllegalArgumentException();
        }

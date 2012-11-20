@@ -33,19 +33,18 @@ public class IconTextItem {
  
     /**
      * Initialize with icon and strings
-     * 
-     * @param icon
-     * @param obj01
-     * @param obj02
-     * @param obj03
+
      */
-    public IconTextItem(Drawable icon, String obj01, String obj02, String obj03) {
+    public IconTextItem(Drawable icon, String obj01, String obj02, String obj03, String obj04, String obj05, String obj06) {
         mIcon = icon;
          
-        mData = new String[3];
+        mData = new String[6];
         mData[0] = obj01;
         mData[1] = obj02;
         mData[2] = obj03;
+        mData[3] = obj04;
+        mData[4] = obj05;
+        mData[5] = obj06;
     }
      
     /**
