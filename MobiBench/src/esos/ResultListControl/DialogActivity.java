@@ -30,11 +30,14 @@ public class DialogActivity extends Activity{
 	 
 	        // add items
 	        Resources res = getResources();
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "21", "11", "12","1000","500","30"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "20", "10", "11","999","499","29"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "14", "15", "16","929","495","21"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "14", "15", "16","929","495","21"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon05), "14", "15", "16","929","495","21"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sr),"20", "10", "11","999","499","29", "Seq. read"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_rw), "14", "15", "16","929","495","21","Ran. write"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_rr),"14", "15", "16","929","495","21", "Ran. read"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_insert), "14", "15", "16","929","495","21","SQLite. insert"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_delete), "14", "15", "16","929","495","21","SQLite. delete"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_update),"14", "15", "16","929","495","21", "SQLite. update"));
+	        
 	        // call setAdapter()
 	        list.setAdapter(adapter);
 	 
@@ -48,8 +51,8 @@ public class DialogActivity extends Activity{
 	            public void onDataSelected(AdapterView parent, View v, int position, long id) {
 	                IconTextItem curItem = (IconTextItem) adapter.getItem(position);
 	                String[] curData = curItem.getData();
-	 
-	                Toast.makeText(getApplicationContext(), "Selected : " + curData[0], 2000).show();
+
+	                Toast.makeText(getApplicationContext(), "Selected : " + curData[6], 2000).show();
 	            }
 	        });
 	 

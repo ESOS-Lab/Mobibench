@@ -35,16 +35,17 @@ public class IconTextItem {
      * Initialize with icon and strings
 
      */
-    public IconTextItem(Drawable icon, String obj01, String obj02, String obj03, String obj04, String obj05, String obj06) {
+    public IconTextItem(Drawable icon, String obj01, String obj02, String obj03, String obj04, String obj05, String obj06, String obj07) {
         mIcon = icon;
          
-        mData = new String[6];
+        mData = new String[7];
         mData[0] = obj01;
         mData[1] = obj02;
         mData[2] = obj03;
         mData[3] = obj04;
         mData[4] = obj05;
         mData[5] = obj06;
+        mData[6] = obj07;
     }
      
     /**

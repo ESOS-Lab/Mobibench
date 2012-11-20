@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"  
-	android:layout_width="wrap_content" 
+	android:layout_width="fill_parent" 
 	android:layout_height="wrap_content"  
  	android:orientation="horizontal"
- 	android:padding="5dip"
+ 	android:padding="10dip"
  	>
  	<ImageView 
  		android:id="@+id/iconItem"  
@@ -18,6 +18,22 @@
  		android:orientation="vertical"
  		android:layout_alignParentLeft="true"
  		>
+ 		<LinearLayout 
+ 		    android:layout_width="wrap_content"
+ 		    android:layout_height="wrap_content"
+ 		    android:orientation="horizontal"
+ 		    android:layout_alignParentLeft="true">
+ 			<TextView
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text="· Experiment : "
+ 		 	></TextView>
+  		 	<TextView android:id="@+id/dataItem07"
+ 		 	    android:layout_width="wrap_content"
+ 			    android:layout_height="wrap_content"
+ 		 	    android:text="none"
+ 		 	></TextView>		
+ 		</LinearLayout>
 		<RelativeLayout
 			android:layout_width="wrap_content" 
 			android:layout_height="wrap_content"
@@ -133,11 +149,6 @@
  			    android:layout_height="wrap_content"
  		 	    android:text="35"
  		 	></TextView>		 	   
-   		 	<TextView
- 		 	    android:layout_width="wrap_content"
- 			    android:layout_height="wrap_content"
- 		 	    android:text=" MB/s-file, TPS-sqlite"
- 		 	></TextView>	
 
  		</LinearLayout>		
 		

@@ -25,6 +25,7 @@ public class IconTextView extends LinearLayout {
    private TextView mText04;
    private TextView mText05;
    private TextView mText06;
+   private TextView mText07; // experiment
    
    public IconTextView(Context context, IconTextItem aItem) {
        super(context);
@@ -60,6 +61,10 @@ public class IconTextView extends LinearLayout {
        // Set Text 06
        mText06 = (TextView) findViewById(R.id.dataItem06);
        mText06.setText(aItem.getData(5));
+       
+       // Set Text 06
+       mText07 = (TextView) findViewById(R.id.dataItem07);
+       mText07.setText(aItem.getData(6));
    }
 
    /**
@@ -79,8 +84,10 @@ public class IconTextView extends LinearLayout {
            mText04.setText(data);
        } else if (index == 4) {
            mText05.setText(data);
-       }  else if (index == 5) {
+       } else if (index == 5) {
            mText06.setText(data);
+       } else if (index == 6) {
+           mText07.setText(data);
        } else {
            throw new IllegalArgumentException();
        }

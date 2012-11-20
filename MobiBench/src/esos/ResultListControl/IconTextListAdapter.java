@@ -65,6 +65,7 @@ public class IconTextListAdapter extends BaseAdapter {
             itemView.setText(3, mItems.get(position).getData(3));
             itemView.setText(4, mItems.get(position).getData(4));
             itemView.setText(5, mItems.get(position).getData(5));
+            itemView.setText(6, mItems.get(position).getData(6));
         }
  
         return itemView;
