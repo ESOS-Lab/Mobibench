@@ -531,8 +531,35 @@
 				android:layout_below="@id/position_mea"
 				android:layout_centerHorizontal="true"
 				android:layout_marginTop="15dip"
-			></ImageButton>   	   	       
-
+			></ImageButton>  
+			<TextView android:id="@+id/txt_p"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:text="Progress"
+			    android:layout_below="@id/btn_custom"
+			    android:layout_alignLeft="@id/btn_sqlite"
+			    android:layout_marginTop="10dip"
+			    android:textColor="#ffffff">
+			</TextView> 	   	       
+		   	<ProgressBar android:id="@+id/progress"
+		  		android:layout_height="20dip" 
+		  		android:layout_width="wrap_content" 
+		  		style="?android:attr/progressBarStyleHorizontal"
+		  		android:progressDrawable="@drawable/progressbar_custom"
+		  		android:max="100"
+		  		android:progress="30"
+				android:layout_below="@id/txt_p"
+				android:layout_alignLeft="@id/btn_sqlite"
+				android:layout_alignRight="@id/btn_file">
+		  	</ProgressBar>
+		  	<TextView 
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:text="Random write : 34/100"
+			    android:layout_below="@id/progress"
+			    android:layout_alignRight="@id/btn_file"
+			    android:textColor="#ffffff">
+			</TextView> 
 	    </RelativeLayout>
     </FrameLayout>
 

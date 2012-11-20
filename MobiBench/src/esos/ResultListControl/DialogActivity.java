@@ -51,7 +51,6 @@ public class DialogActivity extends Activity{
 	            public void onDataSelected(AdapterView parent, View v, int position, long id) {
 	                IconTextItem curItem = (IconTextItem) adapter.getItem(position);
 	                String[] curData = curItem.getData();
-
 	                Toast.makeText(getApplicationContext(), "Selected : " + curData[6], 2000).show();
 	            }
 	        });

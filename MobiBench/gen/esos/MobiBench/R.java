@@ -67,12 +67,13 @@ public final class R {
         public static final int main_btn_file_clk=0x7f02002e;
         public static final int main_btn_sqlite=0x7f02002f;
         public static final int main_btn_sqlite_clk=0x7f020030;
-        public static final int sqlite_title=0x7f020031;
-        public static final int startbutton=0x7f020032;
-        public static final int tab_help=0x7f020033;
-        public static final int tab_history=0x7f020034;
-        public static final int tab_mea=0x7f020035;
-        public static final int title=0x7f020036;
+        public static final int progressbar_custom=0x7f020031;
+        public static final int sqlite_title=0x7f020032;
+        public static final int startbutton=0x7f020033;
+        public static final int tab_help=0x7f020034;
+        public static final int tab_history=0x7f020035;
+        public static final int tab_mea=0x7f020036;
+        public static final int title=0x7f020037;
     }
     public static final class id {
         public static final int btn_all=0x7f08003a;
@@ -112,10 +113,11 @@ public final class R {
         public static final int line_2=0x7f080021;
         public static final int line_3=0x7f080026;
         public static final int measure=0x7f080038;
-        public static final int menu_info=0x7f08003e;
+        public static final int menu_info=0x7f080040;
         public static final int option_title=0x7f080025;
         public static final int position_1=0x7f080014;
         public static final int position_mea=0x7f080039;
+        public static final int progress=0x7f08003f;
         public static final int sizetxt=0x7f080019;
         public static final int sp_file_sync=0x7f08002e;
         public static final int sp_journal=0x7f080035;
@@ -134,6 +136,7 @@ public final class R {
         public static final int transcation=0x7f080030;
         public static final int tv_item=0x7f080010;
         public static final int tv_spitem=0x7f080011;
+        public static final int txt_p=0x7f08003e;
         public static final int txt_partition=0x7f080015;
         public static final int txt_sql_sync=0x7f080032;
         public static final int txt_thread_num=0x7f080017;
