@@ -486,13 +486,13 @@ public class TabMain extends TabActivity {
 	public void storeValue() {				
 		set.set_thread_num(Integer.parseInt(et_threadnum.getText().toString()));
 		editor.putInt("p_threadnum", Integer.parseInt(et_threadnum.getText().toString()));
-		set.set_filesize_write(Integer.parseInt(et_threadnum.getText().toString()));
+		set.set_filesize_write(Integer.parseInt(et_filesize_w.getText().toString()));
 		editor.putInt("p_filesize_w", Integer.parseInt(et_filesize_w.getText().toString()));
-		set.set_filesize_read(Integer.parseInt(et_threadnum.getText().toString()));
+		set.set_filesize_read(Integer.parseInt(et_filesize_r.getText().toString()));
 		editor.putInt("p_filesize_r", Integer.parseInt(et_filesize_r.getText().toString()));
-		set.set_io_size(Integer.parseInt(et_threadnum.getText().toString()));
+		set.set_io_size(Integer.parseInt(et_io_size.getText().toString()));
 		editor.putInt("p_io_size", Integer.parseInt(et_io_size.getText().toString()));
-		set.set_transaction_num(Integer.parseInt(et_threadnum.getText().toString()));
+		set.set_transaction_num(Integer.parseInt(et_transaction.getText().toString()));
 		editor.putInt("p_transaction", Integer.parseInt(et_transaction.getText().toString()));
 		
 		editor.commit();
