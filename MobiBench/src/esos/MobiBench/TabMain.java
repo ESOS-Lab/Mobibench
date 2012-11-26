@@ -393,37 +393,59 @@ public class TabMain extends TabActivity {
 			//	print_values();		
 				break;
 			case R.id.btn_all:
-				storeValue();
-				//m_exe.RunFileIO();
-				//m_exe.RunSqlite();
-				// do something here
+				{
+					storeValue();
+					// do something here
+					DialogActivity.ClearResult();
+					
+					m_exe.RunFileIO();
+					m_exe.RunSqlite();
+					
+					//print_values();
+					Intent intent = new Intent(TabMain.this, DialogActivity.class);
+					startActivity(intent); 
 				
-				
-				
-				print_values();
-				//Intent intent = new Intent(TabMain.this, DialogActivity.class);
-				//startActivity(intent); 
-
-				break;
+					break;
+				}
 			case R.id.btn_file:
-				storeValue();
-				//m_exe.RunFileIO();
-				// do something here
-		
-				break;
+				{
+					storeValue();
+					DialogActivity.ClearResult();
+					m_exe.RunFileIO();				
+					//print_values();
+					
+					Intent intent = new Intent(TabMain.this, DialogActivity.class);
+					startActivity(intent); 
+					// do something here
+					
+					break;
+				}
 			case R.id.btn_sqlite:
-				storeValue();
-				//m_exe.RunSqlite();
-				// do something here
-		
-				break;
-				
+				{
+					storeValue();
+					DialogActivity.ClearResult();
+					
+					m_exe.RunSqlite();
+					
+					Intent intent = new Intent(TabMain.this, DialogActivity.class);
+					startActivity(intent); 
+					// do something here
+			
+					break;
+				}
 			case R.id.btn_custom:
-				storeValue();
-				//m_exe.RunCustom();
-				// do something here
-	
-				break;
+				{
+					storeValue();
+					DialogActivity.ClearResult();
+					
+					m_exe.RunCustom();
+					
+					Intent intent = new Intent(TabMain.this, DialogActivity.class);
+					startActivity(intent); 
+					// do something here
+		
+					break;
+				}
 			}
 		}
 	};
