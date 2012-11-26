@@ -118,9 +118,17 @@ public class MobiBenchExe {
     	DialogActivity.ResultCPU_idl[result_id] = String.format("%.1f", cpu_idle);
     	DialogActivity.ResultCS_tot[result_id] = ""+cs_total;
     	DialogActivity.ResultCS_vol[result_id] = ""+cs_voluntary;
-    	if(result_id < 4) {
-    		DialogActivity.ResultThrp[result_id] = String.format("%.2f KB/s", throughput);
-    	} else {
+    	if(result_id < 4) {	// File IO
+    		if(result_id < 2)	// Sequential
+    		{
+    			DialogActivity.ResultThrp[result_id] = String.format("%.2f KB/s", throughput);
+    		}
+    		else	// Random
+    		{
+    			Setting set = new Setting();
+    			DialogActivity.ResultThrp[result_id] = String.format("%.2f IOPS(%dKB)", throughput, set.get_io_size());
+    		}
+    	} else {	// SQLite
         	DialogActivity.ResultThrp[result_id] = String.format("%.2f TPS", tps);
     	}
     	DialogActivity.ResultExpName[result_id] = ExpName[result_id];
