@@ -138,7 +138,14 @@ void print_time(struct timeval T1, struct timeval T2)
 		}
 		printf("\n");
 #ifdef ANDROID_APP
-		throughput = (float)rate/1024;
+		if(g_access == MODE_RND_WRITE || g_access == MODE_RND_READ)
+		{
+			throughput = (float)rate/1024/reclen;
+		}
+		else
+		{
+		        throughput = (float)rate/1024;
+		}
 #endif
 	}
 	else
