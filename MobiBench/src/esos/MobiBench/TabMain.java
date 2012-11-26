@@ -393,23 +393,33 @@ public class TabMain extends TabActivity {
 			//	print_values();		
 				break;
 			case R.id.btn_all:
+				storeValue();
 				//m_exe.RunFileIO();
 				//m_exe.RunSqlite();
 				// do something here
-				Intent intent = new Intent(TabMain.this, DialogActivity.class);
-				startActivity(intent); 
+				
+				
+				
+				print_values();
+				//Intent intent = new Intent(TabMain.this, DialogActivity.class);
+				//startActivity(intent); 
+
 				break;
 			case R.id.btn_file:
+				storeValue();
 				//m_exe.RunFileIO();
 				// do something here
 		
 				break;
 			case R.id.btn_sqlite:
+				storeValue();
 				//m_exe.RunSqlite();
 				// do something here
 		
 				break;
+				
 			case R.id.btn_custom:
+				storeValue();
 				//m_exe.RunCustom();
 				// do something here
 	
@@ -452,11 +462,17 @@ public class TabMain extends TabActivity {
 	
 	/* Store values : To the preference */
 	public void storeValue() {				
+		set.set_thread_num(Integer.parseInt(et_threadnum.getText().toString()));
 		editor.putInt("p_threadnum", Integer.parseInt(et_threadnum.getText().toString()));
+		set.set_filesize_write(Integer.parseInt(et_threadnum.getText().toString()));
 		editor.putInt("p_filesize_w", Integer.parseInt(et_filesize_w.getText().toString()));
+		set.set_filesize_read(Integer.parseInt(et_threadnum.getText().toString()));
 		editor.putInt("p_filesize_r", Integer.parseInt(et_filesize_r.getText().toString()));
+		set.set_io_size(Integer.parseInt(et_threadnum.getText().toString()));
 		editor.putInt("p_io_size", Integer.parseInt(et_io_size.getText().toString()));
+		set.set_transaction_num(Integer.parseInt(et_threadnum.getText().toString()));
 		editor.putInt("p_transaction", Integer.parseInt(et_transaction.getText().toString()));
+		
 		editor.commit();
 	}
 

@@ -15,6 +15,7 @@ import android.view.View;
 public class DialogActivity extends Activity{
     DataListView list;
     IconTextListAdapter adapter;
+    
 	   public void onCreate(Bundle savedInstanceState) {
 	        super.onCreate(savedInstanceState);
 	 
