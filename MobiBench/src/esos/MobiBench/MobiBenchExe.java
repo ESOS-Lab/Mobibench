@@ -1,5 +1,6 @@
 package esos.MobiBench;
 
+import esos.ResultListControl.DialogActivity;
 import android.os.Environment;
 
 public class MobiBenchExe {
@@ -36,6 +37,16 @@ public class MobiBenchExe {
 	public static String data_path = null;
 	public static String sdcard_2nd_path = null;
 	
+	static String ExpName[] = {
+		"Seq.Write",
+		"Seq.read", 
+		"Rand.Write",
+		"Rand.Read",
+		"SQLite.Insert", 
+		"SQLite.Update",
+		"SQLite.Delete"
+	};
+	
 	public void SetStoragePath(String path) {
 		data_path = path;
 		sdcard_2nd_path = StorageOptions.determineStorageOptions();
@@ -70,8 +81,8 @@ public class MobiBenchExe {
 			command += " -t "+set.get_thread_num();
 		} else {
 			command += " -d "+db_mode.ordinal();
-			//command += " -n "+set.get_transaction_num();
-			command += " -n "+1000;
+			command += " -n "+set.get_transaction_num();
+			//command += " -n "+1000;
 			command += " -j "+set.get_journal_mode();
 			command += " -s "+set.get_sql_sync_mode();
 		}
@@ -83,6 +94,7 @@ public class MobiBenchExe {
 	
     native void mobibench_run(String str);
     native int getProgress();
+    native int getState();
     
     public void LoadEngine() {
     	 System.loadLibrary("mobibench");    
@@ -98,55 +110,72 @@ public class MobiBenchExe {
     	System.out.println("mobibench tps : "+ tps);   	
     }
     
+    public void SendResult(int result_id) {
+    	printResult();
+    	
+    	DialogActivity.ResultCPU_act[result_id] = String.format("%.1f", cpu_active);
+    	DialogActivity.ResultCPU_iow[result_id] = String.format("%.1f", cpu_iowait);
+    	DialogActivity.ResultCPU_idl[result_id] = String.format("%.1f", cpu_idle);
+    	DialogActivity.ResultCS_tot[result_id] = ""+cs_total;
+    	DialogActivity.ResultCS_vol[result_id] = ""+cs_voluntary;
+    	if(result_id < 4) {
+    		DialogActivity.ResultThrp[result_id] = String.format("%.2f KB/s", throughput);
+    	} else {
+        	DialogActivity.ResultThrp[result_id] = String.format("%.2f TPS", tps);
+    	}
+    	DialogActivity.ResultExpName[result_id] = ExpName[result_id];
+    	DialogActivity.bHasResult[result_id]=true;
+    }
+    
     public void RunFileIO() {
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);
-    	printResult();
-    	RunMobibench(eAccessMode.RANDOM_WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);
-    	printResult();
+    	SendResult(0);
     	RunMobibench(eAccessMode.READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
-    	printResult();
+    	SendResult(1);
+    	RunMobibench(eAccessMode.RANDOM_WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);
+    	SendResult(2);
     	RunMobibench(eAccessMode.RANDOM_READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
-    	printResult();
+    	SendResult(3);
     }
     
     public void RunSqlite() {
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.INSERT);
-    	printResult();
+    	SendResult(4);
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.UPDATE);
-    	printResult();
+    	SendResult(5);
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.DELETE);
-    	printResult();
+    	SendResult(6);
     }
     
     public void RunCustom() {
     	Setting set = new Setting();
     	if(set.get_seq_write() == true) {
     		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);
-    		printResult();
+    		SendResult(0);
+    	}  	
+    	if(set.get_seq_read() == true) {
+    		RunMobibench(eAccessMode.READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
+    		SendResult(1);
     	}
     	if(set.get_ran_write() == true) {
     		RunMobibench(eAccessMode.RANDOM_WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);
-    		printResult();
-    	}    	
-    	if(set.get_seq_read() == true) {
-    		RunMobibench(eAccessMode.READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
-    		printResult();
-    	}
+    		SendResult(2);
+    	}     	
     	if(set.get_ran_read() == true) {
     		RunMobibench(eAccessMode.RANDOM_READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
-    		printResult();
+    		SendResult(3);
     	}  
     	if(set.get_insert() == true) {
     		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.INSERT);
-    		printResult();
+    		SendResult(4);
     	}
     	if(set.get_update() == true) {
     		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.UPDATE);
-    		printResult();
+    		SendResult(5);
     	}  
     	if(set.get_delete() == true) {
     		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.DELETE);
-    		printResult();
+    		SendResult(6);
     	}    	
     }
 }
