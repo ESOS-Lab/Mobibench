@@ -15,6 +15,28 @@ import android.view.View;
 public class DialogActivity extends Activity{
     DataListView list;
     IconTextListAdapter adapter;
+    public static boolean bHasResult[] = new boolean[7];
+    public static void ClearResult() {
+    	for(int i=0; i < 7; i++) {
+    		bHasResult[i]=false;
+    		ResultCPU_act[i]=null;
+    		ResultCPU_iow[i]=null;
+    		ResultCPU_idl[i]=null;
+    		ResultCS_tot[i]=null;
+    		ResultCS_vol[i]=null;
+    		ResultThrp[i]=null;
+    		ResultExpName[i]=null;
+    	}
+    }
+    
+    public static String ResultCPU_act[] = new String[7];
+    public static String ResultCPU_iow[] = new String[7];
+    public static String ResultCPU_idl[] = new String[7];
+    public static String ResultCS_tot[] = new String[7];
+    public static String ResultCS_vol[] = new String[7];
+    public static String ResultThrp[] = new String[7];
+    public static String ResultExpName[] = new String[7];
+      
     
 	   public void onCreate(Bundle savedInstanceState) {
 	        super.onCreate(savedInstanceState);
@@ -31,13 +53,23 @@ public class DialogActivity extends Activity{
 	 
 	        // add items
 	        Resources res = getResources();
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sr),"20", "10", "11","999","499","29", "Seq. read"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_rw), "14", "15", "16","929","495","21","Ran. write"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_rr),"14", "15", "16","929","495","21", "Ran. read"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_insert), "14", "15", "16","929","495","21","SQLite. insert"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_delete), "14", "15", "16","929","495","21","SQLite. delete"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_update),"14", "15", "16","929","495","21", "SQLite. update"));
+	        
+	        int resID[] = new int[7];
+	        resID[0]=R.drawable.icon_sw;
+	        resID[1]=R.drawable.icon_sr;
+	        resID[2]=R.drawable.icon_rw;
+	        resID[3]=R.drawable.icon_rr;
+	        resID[4]=R.drawable.icon_insert;
+	        resID[5]=R.drawable.icon_update;
+	        resID[6]=R.drawable.icon_delete;
+	        
+	        
+	        for(int idx = 0; idx < 7; idx++) {
+		        if(bHasResult[idx]) {
+		        	adapter.addItem(new IconTextItem(res.getDrawable(resID[idx]), ResultCPU_act[idx], ResultCPU_iow[idx], ResultCPU_idl[idx], 
+		        			ResultCS_tot[idx], ResultCS_vol[idx], ResultThrp[idx], ResultExpName[idx]));
+		        }
+	        }
 	        
 	        // call setAdapter()
 	        list.setAdapter(adapter);
