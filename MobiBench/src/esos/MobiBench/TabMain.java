@@ -27,6 +27,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TabHost;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.view.View;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -61,6 +62,7 @@ public class TabMain extends TabActivity {
 	private Spinner sp_sql_sync= null;
 	private Spinner sp_journal= null;
 	private MobiBenchExe m_exe = null;	
+	private TextView tv_progress_txt = null;
 	
     ProgressTrd thread = null;
     MobiBenchExe mb_thread= null;
@@ -74,21 +76,19 @@ public class TabMain extends TabActivity {
 	
     Handler mHandler = new Handler(){
     	public void handleMessage(Message msg){
-    		switch(msg.what){
-    		case 0:
-    			prBar.incrementProgressBy(1);
-    		//	Log.d(DEBUG_TAG, "[TM] - reveived 0");
-    			break;
-    		case 1: // benchmarking is over
-    			btn_clk_check = true;
-    			Log.d(DEBUG_TAG, "[TM] - received" + "[" + btn_clk_check + "]");
-    		//	Log.d(DEBUG_TAG, "[TM] - received 1"); 
-    			
-    			break;
+    		
+    		if(msg.what <= 100)
+    		{
+    			prBar.setProgress(msg.what);   		
     		}
-    		
-    		
-    		
+    		else if(msg.what == 111)
+    		{
+    			btn_clk_check = (msg.arg1>0)?true:false ;
+    		}
+    		else if(msg.what == 999)
+    		{
+    			tv_progress_txt.setText((String)msg.obj);
+    		}
     	}
     };	
 	
@@ -145,6 +145,8 @@ public class TabMain extends TabActivity {
 		et_io_size = (EditText)findViewById(R.id.io_size);
 		et_transaction = (EditText)findViewById(R.id.transcation);
 		
+		tv_progress_txt = (TextView)findViewById(R.id.progress_text);
+				
 		prBar = (ProgressBar)findViewById(R.id.progress);
 		prBar.setProgress(0);
 		/* Preference Control */
@@ -426,10 +428,28 @@ public class TabMain extends TabActivity {
 		return super.onKeyDown(keyCode, event);
 	}
 	
+	private void startMobibenchExe(int type) {
+		if(btn_clk_check == false){
+			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:FALSE" + "[" + btn_clk_check + "]");
+			print_error();						
+		}else{
+			btn_clk_check = false;
+			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:TRUE" + "[" + btn_clk_check + "]");
+			storeValue();
+			DialogActivity.ClearResult();						
+			m_exe.setMobiBenchExe(type);	
+			
+			mb_thread = new MobiBenchExe(con, mHandler);
+			mb_thread.start();						
+		}
+	}
+	
 	/* Image button listener*/
 	Button.OnClickListener mClickListener = new View.OnClickListener() {
 		public void onClick(View v) {
 	//		Intent intent;		
+			int exe_type = 0;
+			
 			switch(v.getId()){
 			case R.id.btn_execute:
 				set_default();
@@ -437,71 +457,17 @@ public class TabMain extends TabActivity {
 			//	print_values();		
 				break;
 			case R.id.btn_all:
-				{
-					storeValue();
-					DialogActivity.ClearResult();					
-					m_exe.setMobiBenchExe(0);
-					//m_exe.RunFileIO();
-					//m_exe.RunSqlite();
-					
-					//print_values();
-					//Intent intent = new Intent(TabMain.this, DialogActivity.class);
-				//	startActivity(intent); 
-				
-					break;
-				}
+				startMobibenchExe(0);
+				break;
 			case R.id.btn_file:
-				{
-					storeValue();
-					DialogActivity.ClearResult();
-					
-					
-					m_exe.RunFileIO();				
-					//print_values();
-					m_exe.setMobiBenchExe(1);
-					
-					//Intent intent = new Intent(TabMain.this, DialogActivity.class);
-					//startActivity(intent); 
-					// do something here
-					
-					break;
-				}
+				startMobibenchExe(1);
+				break;
 			case R.id.btn_sqlite:
-				{
-					if(btn_clk_check == false){
-							Log.d(DEBUG_TAG, "[TM] BTN_CLICK:FALSE" + "[" + btn_clk_check + "]");
-						print_error();						
-					}else{
-						btn_clk_check = false;
-							Log.d(DEBUG_TAG, "[TM] BTN_CLICK:TRUE" + "[" + btn_clk_check + "]");
-						storeValue();
-						DialogActivity.ClearResult();						
-						m_exe.setMobiBenchExe(2);	
-						
-						thread = new ProgressTrd(mHandler);
-						thread.start();
-							Log.d(DEBUG_TAG, "[TM] progress thread start");
-						mb_thread = new MobiBenchExe(con, mHandler);
-						mb_thread.start();
-							Log.d(DEBUG_TAG, "[TM] MobiBenchExe thread start");
-
-							Log.d(DEBUG_TAG, "[TM] end btn_sqlite");
-						
-					}
-				}
+				startMobibenchExe(2);
+				break;
 			case R.id.btn_custom:
-				{
-					storeValue();
-					DialogActivity.ClearResult();
-					
-					m_exe.RunCustom();
-					
-				//	Intent intent = new Intent(TabMain.this, DialogActivity.class);
-				//	startActivity(intent); 
-					// do something here
-		
-					break;
-				}
+				startMobibenchExe(3);
+				break;
 			}
 		}
 	};
@@ -616,18 +582,7 @@ public class TabMain extends TabActivity {
     	}
     	return false;
     }
-    
-    public static void SetProgressBar(int prog) {
-    	System.out.println("Tabmain called [" + prog + "]");
-    	prBar.setProgress(prog);
-    	//prBar.incrementProgressBy(1);
-    	//prBar.refreshDrawableState();
-    }
-    
-    public void change_btn_state(boolean bl){
-    	btn_clk_check = bl;
-    	
-    }
+        
     public void print_error()
     {
     	Toast.makeText(this, "MoniBench working..", Toast.LENGTH_SHORT).show();
