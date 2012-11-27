@@ -455,7 +455,7 @@ public class TabMain extends TabActivity {
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 	    if (keyCode == KeyEvent.KEYCODE_BACK) {
 	        if(!mFlag) {
-	            Toast.makeText(TabMain.this, "'뒤로'버튼을 한번 더 누르시면 종료됩니다.", Toast.LENGTH_SHORT).show();
+	            Toast.makeText(TabMain.this, "Press the \"Back button\" again to exit", Toast.LENGTH_SHORT).show();
 	            mFlag = true;
 	            mHandler.sendEmptyMessageDelayed(666, 2000);
 	            return false;
