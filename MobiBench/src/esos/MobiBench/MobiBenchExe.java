@@ -93,8 +93,8 @@ public class MobiBenchExe {
 	}
 	
     native void mobibench_run(String str);
-    native int getProgress();
-    native int getState();
+    native int getMobibenchProgress();
+    native int getMobibenchState();
     
     public void LoadEngine() {
     	 System.loadLibrary("mobibench");    
@@ -147,8 +147,11 @@ public class MobiBenchExe {
     }
     
     public void RunSqlite() {
+    	StartThread();
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.INSERT);
+    	JoinThread();
     	SendResult(4);
+    	
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.UPDATE);
     	SendResult(5);
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.DELETE);
@@ -186,4 +189,57 @@ public class MobiBenchExe {
     		SendResult(6);
     	}    	
     }
+    
+    public boolean runflag = false;
+       
+    public class ProgThread extends Thread{
+		public void run(){
+			int prog = 0;
+			int stat = 0;
+			
+			TabMain.SetProgressBar(0);
+						
+			runflag = true;
+			while(runflag) {
+				prog = getMobibenchProgress();
+				stat = getMobibenchState();
+				/*
+				 * state
+				 * 0 : NONE
+				 * 1 : READY
+				 * 2 : EXE
+				 * 3 : END
+				 */
+				System.out.println("state : "+stat+", progress : "+prog);
+				TabMain.SetProgressBar(prog);
+								
+				try {
+					sleep(10);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			TabMain.SetProgressBar(100);
+		}
+	}
+	
+	public Thread thread;
+	
+	public void StartThread() {
+				
+		thread =  new ProgThread();
+		
+		thread.start();
+
+	}
+	
+	public void JoinThread() {
+		runflag = false;
+		try{
+			thread.join();	
+		}catch(InterruptedException e){
+			e.printStackTrace();
+		}			
+	}
 }
