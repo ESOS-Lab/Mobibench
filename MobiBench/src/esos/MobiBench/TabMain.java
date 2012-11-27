@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ProgressBar;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -55,7 +56,8 @@ public class TabMain extends TabActivity {
 	private Spinner sp_sql_sync= null;
 	private Spinner sp_journal= null;
 	private MobiBenchExe m_exe = null;	
-
+	
+	public static ProgressBar prBar = null;
 	
 	
 	
@@ -110,6 +112,7 @@ public class TabMain extends TabActivity {
 		et_io_size = (EditText)findViewById(R.id.io_size);
 		et_transaction = (EditText)findViewById(R.id.transcation);
 		
+		prBar = (ProgressBar)findViewById(R.id.progress);
 
 		/* Preference Control */
 		prefs = getSharedPreferences("Setting", MODE_PRIVATE);
@@ -561,6 +564,10 @@ public class TabMain extends TabActivity {
     	return false;
     }
     
-
+    public static void SetProgressBar(int prog) {
+    	prBar.setProgress(prog);
+    	//prBar.incrementProgressBy(1);
+    	prBar.refreshDrawableState();
+    }
 
 }
