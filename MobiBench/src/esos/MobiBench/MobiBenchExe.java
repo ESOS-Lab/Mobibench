@@ -344,5 +344,13 @@ public class MobiBenchExe extends Thread{
 				e.printStackTrace();
 			}			
 		}
+		public void stopThread(){
+			runflag = false;
+			
+			synchronized(this){
+				this.notify();
+			}
+		}
+		
 
 }

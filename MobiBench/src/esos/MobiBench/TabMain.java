@@ -21,7 +21,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
@@ -64,7 +63,10 @@ public class TabMain extends TabActivity {
 	private MobiBenchExe m_exe = null;	
 	private TextView tv_progress_txt = null;
 	
-    ProgressTrd thread = null;
+	private static int checkbox_count = 0;
+	private boolean mFlag = false; // using App stop button
+
+ //   ProgressTrd thread = null;
     MobiBenchExe mb_thread= null;
     
     
@@ -88,6 +90,10 @@ public class TabMain extends TabActivity {
     		else if(msg.what == 999)
     		{
     			tv_progress_txt.setText((String)msg.obj);
+    		}
+    		else if(msg.what == 666)
+    		{
+    			mFlag = false;
     		}
     	}
     };	
@@ -144,6 +150,17 @@ public class TabMain extends TabActivity {
 		et_filesize_r = (EditText)findViewById(R.id.filesize_r);
 		et_io_size = (EditText)findViewById(R.id.io_size);
 		et_transaction = (EditText)findViewById(R.id.transcation);
+
+		CB_SW=(CheckBox)findViewById(R.id.cb_sw);
+		CB_SR=(CheckBox)findViewById(R.id.cb_sr);
+		CB_RW=(CheckBox)findViewById(R.id.cb_rw);
+		CB_RR=(CheckBox)findViewById(R.id.cb_rr);
+		CB_INSERT=(CheckBox)findViewById(R.id.cb_insert);
+		CB_UPDATE=(CheckBox)findViewById(R.id.cb_update);
+		CB_DELETE=(CheckBox)findViewById(R.id.cb_delete);
+		
+		
+		
 		
 		tv_progress_txt = (TextView)findViewById(R.id.progress_text);
 				
@@ -323,8 +340,10 @@ public class TabMain extends TabActivity {
         			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
         				if(isChecked == true){
         					set.set_seq_write(true);
+        					checkbox_count++;
         				}else{
-        					set.set_seq_write(false);        					
+        					set.set_seq_write(false); 
+        					checkbox_count--;
         				}
         			}   	
         });	
@@ -336,8 +355,10 @@ public class TabMain extends TabActivity {
         			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
         				if(isChecked == true){
         					set.set_seq_read(true);
+        					checkbox_count++;
         				}else{
         					set.set_seq_read(false);
+        					checkbox_count--;
         				}
         			}   	
         });	
@@ -348,8 +369,10 @@ public class TabMain extends TabActivity {
         			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
         				if(isChecked == true){
         					set.set_ran_write(true);
+        					checkbox_count++;
         				}else{
         					set.set_ran_write(false);
+        					checkbox_count--;
         				}
         			}   	
         });	
@@ -361,8 +384,10 @@ public class TabMain extends TabActivity {
         			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
         				if(isChecked == true){
         					set.set_ran_read(true);
+        					checkbox_count++;
         				}else{
         					set.set_ran_read(false);
+        					checkbox_count--;
         				}
         			}   	
         });	
@@ -374,8 +399,10 @@ public class TabMain extends TabActivity {
         			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
         				if(isChecked == true){
         					set.set_insert(true);
+        					checkbox_count++;
         				}else{
         					set.set_insert(false);
+        					checkbox_count--;
         				}
         			}   	
         });	
@@ -387,8 +414,10 @@ public class TabMain extends TabActivity {
         			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
         				if(isChecked == true){
         					set.set_update(true);
+        					checkbox_count++;
         				}else{
         					set.set_update(false);
+        					checkbox_count--;
         				}
         			}   	
         });	
@@ -400,13 +429,17 @@ public class TabMain extends TabActivity {
         			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked){
         				if(isChecked == true){
         					set.set_delete(true);
+        					checkbox_count++;
         				}else{
         					set.set_delete(false);
+        					checkbox_count--;
         				}
         			}   	
         });	
         
-		// Progressbar thread control 
+
+        
+//        mb_thread.setDaemon(true);
         con = this;
 
 
@@ -418,28 +451,36 @@ public class TabMain extends TabActivity {
         	}
         }
     }
-    
-	public boolean onKeyDown(int keyCode, KeyEvent event){
-		if(keyCode == KeyEvent.KEYCODE_BACK){
-		      setResult(RESULT_CANCELED);
-		      storeValue();
-		      this.finish();
-		}
-		return super.onKeyDown(keyCode, event);
+
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	    if (keyCode == KeyEvent.KEYCODE_BACK) {
+	        if(!mFlag) {
+	            Toast.makeText(TabMain.this, "'뒤로'버튼을 한번 더 누르시면 종료됩니다.", Toast.LENGTH_SHORT).show();
+	            mFlag = true;
+	            mHandler.sendEmptyMessageDelayed(666, 2000);
+	            return false;
+	        } else {
+			      setResult(RESULT_CANCELED);
+			      storeValue();
+			      
+			      this.finish();
+	        }
+	    }
+	    return super.onKeyDown(keyCode, event);
 	}
 	
 	private void startMobibenchExe(int type) {
 		if(btn_clk_check == false){
 			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:FALSE" + "[" + btn_clk_check + "]");
-			print_error();						
+								
 		}else{
 			btn_clk_check = false;
 			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:TRUE" + "[" + btn_clk_check + "]");
 			storeValue();
 			DialogActivity.ClearResult();						
 			m_exe.setMobiBenchExe(type);	
-			
-			mb_thread = new MobiBenchExe(con, mHandler);
+			print_exp(type);
+			mb_thread = new MobiBenchExe(con, mHandler);			
 			mb_thread.start();						
 		}
 	}
@@ -456,17 +497,24 @@ public class TabMain extends TabActivity {
 				load_init();
 			//	print_values();		
 				break;
-			case R.id.btn_all:
-				startMobibenchExe(0);
+			case R.id.btn_all:				
+				startMobibenchExe(0);		
 				break;
-			case R.id.btn_file:
+			case R.id.btn_file:				
 				startMobibenchExe(1);
 				break;
-			case R.id.btn_sqlite:
+			case R.id.btn_sqlite:				
 				startMobibenchExe(2);
 				break;
 			case R.id.btn_custom:
-				startMobibenchExe(3);
+				if( btn_clk_check == true && checkbox_count == 0){
+					print_exp(4);
+				}else if(checkbox_count > 0){
+					startMobibenchExe(3);					
+				}else{
+					// error
+				}
+
 				break;
 			}
 		}
@@ -502,6 +550,27 @@ public class TabMain extends TabActivity {
 		set.set_transaction_num(prefs.getInt("p_transaction", 1));	
 		set.set_sql_sync_mode(prefs.getInt("p_sql_sync_mode", 0));
 		set.set_journal_mode(prefs.getInt("p_journal_mode", 0));
+		
+		/* Check box setting */
+		Log.d(DEBUG_TAG, "[JWGOM] start");
+		CB_SW.setChecked(prefs.getBoolean("p_cb_sw", false));
+		Log.d(DEBUG_TAG, "[JWGOM] end2");
+		CB_SR.setChecked(prefs.getBoolean("p_cb_sr", false));
+		CB_RW.setChecked(prefs.getBoolean("p_cb_rw", false));
+		CB_RR.setChecked(prefs.getBoolean("p_cb_rr", false));
+		CB_INSERT.setChecked(prefs.getBoolean("p_cb_insert", false));
+		CB_UPDATE.setChecked(prefs.getBoolean("p_cb_update", false));
+		CB_DELETE.setChecked(prefs.getBoolean("p_cb_delete", false));
+		Log.d(DEBUG_TAG, "[JWGOM] end1");
+		set.set_seq_write(prefs.getBoolean("p_cb_sw", false));
+		set.set_seq_read(prefs.getBoolean("p_cb_sr", false));
+		set.set_ran_write(prefs.getBoolean("p_cb_rw", false));
+		set.set_ran_read(prefs.getBoolean("p_cb_rr", false));
+		set.set_insert(prefs.getBoolean("p_cb_insert", false));
+		set.set_update(prefs.getBoolean("p_cb_update", false));
+		set.set_delete(prefs.getBoolean("p_cb_delete", false));
+		Log.d(DEBUG_TAG, "[JWGOM] end");
+		
 	}
 	
 	/* Store values : To the preference */
@@ -517,6 +586,23 @@ public class TabMain extends TabActivity {
 		set.set_transaction_num(Integer.parseInt(et_transaction.getText().toString()));
 		editor.putInt("p_transaction", Integer.parseInt(et_transaction.getText().toString()));
 		
+		/* Store : Checkbox */
+		set.set_seq_write(CB_SW.isChecked());
+		set.set_seq_read(CB_SR.isChecked());
+		set.set_ran_write(CB_RW.isChecked());
+		set.set_ran_read(CB_RR.isChecked());
+		set.set_insert(CB_INSERT.isChecked());
+		set.set_update(CB_UPDATE.isChecked());
+		set.set_delete(CB_DELETE.isChecked());
+		
+		editor.putBoolean("p_cb_sw", CB_SW.isChecked());
+		editor.putBoolean("p_cb_sr", CB_SR.isChecked());
+		editor.putBoolean("p_cb_rw", CB_RW.isChecked());
+		editor.putBoolean("p_cb_rr", CB_RR.isChecked());
+		editor.putBoolean("p_cb_insert", CB_INSERT.isChecked());
+		editor.putBoolean("p_cb_update", CB_UPDATE.isChecked());
+		editor.putBoolean("p_cb_delete", CB_DELETE.isChecked());
+		
 		editor.commit();
 	}
 
@@ -525,8 +611,7 @@ public class TabMain extends TabActivity {
 		editor.putInt("p_target_partition", 0);
 		set.set_target_partition(0);
 		editor.putInt("p_threadnum", 1);
-		set.set_thread_num(1);	
-		
+		set.set_thread_num(1);			
 		editor.putInt("p_filesize_w", 1);
 		set.set_filesize_write(1);
 		editor.putInt("p_filesize_r", 256);
@@ -534,8 +619,7 @@ public class TabMain extends TabActivity {
 		editor.putInt("p_io_size", 4);
 		set.set_io_size(4);
 		editor.putInt("p_file_sync_mode", 0);
-		set.set_file_sync_mode(0);
-		
+		set.set_file_sync_mode(0);		
 		editor.putInt("p_transaction", 100);
 		set.set_transaction_num(100);	
 		editor.putInt("p_sql_sync_mode", 2);
@@ -543,6 +627,25 @@ public class TabMain extends TabActivity {
 		editor.putInt("p_journal_mode", 1);
 		set.set_journal_mode(1);		
 	
+		/* Checkbox */
+		set.set_seq_write(false);
+		set.set_seq_read(false);
+		set.set_ran_write(false);
+		set.set_ran_read(false);
+		set.set_insert(false);
+		set.set_update(false);
+		set.set_delete(false);
+		
+		editor.putBoolean("p_cb_sw", false);
+		editor.putBoolean("p_cb_sr", false);
+		editor.putBoolean("p_cb_rw",false);
+		editor.putBoolean("p_cb_rr",false);
+		editor.putBoolean("p_cb_insert",false);
+		editor.putBoolean("p_cb_update",false);
+		editor.putBoolean("p_cb_delete",false);
+		
+		
+		
 		
 		editor.commit();			
 	}
@@ -586,6 +689,27 @@ public class TabMain extends TabActivity {
     public void print_error()
     {
     	Toast.makeText(this, "MoniBench working..", Toast.LENGTH_SHORT).show();
+    }
+    
+    public void print_exp(int flag){
+    	switch(flag){
+    	case 0:
+    		Toast.makeText(this, "Start Benchmark : File, SQlite", Toast.LENGTH_SHORT).show();
+    		break;
+    	case 1:
+    		Toast.makeText(this, "Start Benchmark : File", Toast.LENGTH_SHORT).show();
+    		break;
+    	case 2:
+    		Toast.makeText(this, "Start Benchmark : SQlite", Toast.LENGTH_SHORT).show();
+    		break;
+    	case 3:
+    		Toast.makeText(this, "Start Benchmark : Customized set", Toast.LENGTH_SHORT).show();
+    		break;
+    	case 4:
+    		Toast.makeText(this, "Nothing selected. Check \"Setting tab\"", Toast.LENGTH_SHORT).show();
+    		break;
+    	}
+    	
     }
 
 
