@@ -113,11 +113,12 @@ public final class R {
         public static final int line_2=0x7f080021;
         public static final int line_3=0x7f080026;
         public static final int measure=0x7f080038;
-        public static final int menu_info=0x7f080040;
+        public static final int menu_info=0x7f080041;
         public static final int option_title=0x7f080025;
         public static final int position_1=0x7f080014;
         public static final int position_mea=0x7f080039;
         public static final int progress=0x7f08003f;
+        public static final int progress_text=0x7f080040;
         public static final int sizetxt=0x7f080019;
         public static final int sp_file_sync=0x7f08002e;
         public static final int sp_journal=0x7f080035;

@@ -1,9 +1,73 @@
 package esos.MobiBench;
 
 import esos.ResultListControl.DialogActivity;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.widget.ProgressBar;
 
-public class MobiBenchExe {
+public class MobiBenchExe extends Thread{
+
+	private boolean run_flag = true;
+	private Handler mHandler;
+	private static int select_flag = 0;
+	private static final String DEBUG_TAG="progress bar";
+	private Message msg = null;
+	private Context con = null;
+	private static Intent intent = null;
+	public MobiBenchExe(Context context, Handler handler){
+		mHandler = handler;
+		con = context;
+	}
+	
+	public void run(){
+
+		while(run_flag) {     
+
+				switch(select_flag){
+				case 0:
+					this.RunFileIO();
+					this.RunSqlite();
+					intent = new Intent(con,DialogActivity.class);					
+					con.startActivity(intent);
+					break;
+				case 1:
+					this.RunFileIO();
+					intent = new Intent(con,DialogActivity.class);					
+					con.startActivity(intent);	
+					break;
+				case 2:			
+					this.RunSqlite();
+					run_flag = false;
+					//prog=getMobibenchProgress();
+					msg = Message.obtain(mHandler, 1); 
+					mHandler.sendMessage(msg);//
+					Log.d(DEBUG_TAG, "[RunSQL] - end");	
+					intent = new Intent(con,DialogActivity.class);					
+					con.startActivity(intent);
+
+					break;
+				case 3:
+					Log.d(DEBUG_TAG, "[RunSQL] - select_flag" + select_flag);	
+
+					this.RunCustom();
+					Log.d(DEBUG_TAG, "[RunSQL] - work done");
+					intent = new Intent(con,DialogActivity.class);					
+					con.startActivity(intent);					
+					break;
+				}					
+
+
+		}
+
+
+			
+	}
+	
 	MobiBenchExe() {
        
     }
@@ -147,9 +211,9 @@ public class MobiBenchExe {
     }
     
     public void RunSqlite() {
-    	StartThread();
+    	Log.d(DEBUG_TAG, "[RunSQL] - start");
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.INSERT);
-    	JoinThread();
+
     	SendResult(4);
     	
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.UPDATE);
@@ -189,57 +253,18 @@ public class MobiBenchExe {
     		SendResult(6);
     	}    	
     }
-    
-    public boolean runflag = false;
-       
-    public class ProgThread extends Thread{
-		public void run(){
-			int prog = 0;
-			int stat = 0;
-			
-			TabMain.SetProgressBar(0);
-						
-			runflag = true;
-			while(runflag) {
-				prog = getMobibenchProgress();
-				stat = getMobibenchState();
-				/*
-				 * state
-				 * 0 : NONE
-				 * 1 : READY
-				 * 2 : EXE
-				 * 3 : END
-				 */
-				System.out.println("state : "+stat+", progress : "+prog);
-				TabMain.SetProgressBar(prog);
-								
-				try {
-					sleep(10);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			TabMain.SetProgressBar(100);
+	public void stopThread(){
+		run_flag = false;
+		synchronized(this){
+			this.notify();
 		}
 	}
 	
-	public Thread thread;
-	
-	public void StartThread() {
-				
-		thread =  new ProgThread();
+	public void setMobiBenchExe(int flag){
+		select_flag = flag;
 		
-		thread.start();
+		Log.d(DEBUG_TAG, "MBE - select flag is " + select_flag);
+	}
+    
 
-	}
-	
-	public void JoinThread() {
-		runflag = false;
-		try{
-			thread.join();	
-		}catch(InterruptedException e){
-			e.printStackTrace();
-		}			
-	}
 }
