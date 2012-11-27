@@ -20,8 +20,8 @@ extern int g_state;
 #define printf(fmt,args...)  __android_log_print(4  ,NULL, fmt, ##args)
 
 void mobibench_run(JNIEnv* env, jobject obj, jstring string);
-int getProgress(JNIEnv* env, jobject obj);
-int getState(JNIEnv* env, jobject obj);
+int getMobibenchProgress(JNIEnv* env, jobject obj);
+int getMobibenchState(JNIEnv* env, jobject obj);
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
@@ -44,27 +44,27 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	nm[0].signature = "(Ljava/lang/String;)V";
 	nm[0].fnPtr = (void*)mobibench_run;
 
-	nm[1].name = "getProgress";
+	nm[1].name = "getMobibenchProgress";
 	nm[1].signature = "()I";
-	nm[1].fnPtr = (void*)getProgress;
+	nm[1].fnPtr = (void*)getMobibenchProgress;
 
-	nm[2].name = "getState";
+	nm[2].name = "getMobibenchState";
 	nm[2].signature = "()I";
-	nm[2].fnPtr = (void*)getState;
+	nm[2].fnPtr = (void*)getMobibenchState;
 
 	env->RegisterNatives(cls, nm, 3);
 
 	return JNI_VERSION_1_6;
 }
 
-int getProgress(JNIEnv* env, jobject obj)
+int getMobibenchProgress(JNIEnv* env, jobject obj)
 {
 //	printf("%s\n", __func__);
 
 	return progress;
 }
 
-int getState(JNIEnv* env, jobject obj)
+int getMobibenchState(JNIEnv* env, jobject obj)
 {
 	return g_state;
 }
