@@ -94,7 +94,7 @@ public final class R {
         public static final int dataItem04=0x7f08000c;
         public static final int dataItem05=0x7f08000d;
         public static final int dataItem06=0x7f08000e;
-        public static final int dataItem07=0x7f080003;
+        public static final int dataItem07=0x7f080004;
         public static final int file_mode_txt=0x7f08002d;
         public static final int file_title=0x7f08001a;
         public static final int filesize_r=0x7f08002a;
@@ -127,7 +127,7 @@ public final class R {
         public static final int start_button=0x7f080001;
         public static final int threadnum=0x7f080018;
         public static final int title_img=0x7f080013;
-        public static final int tmp_txt0=0x7f080004;
+        public static final int tmp_txt0=0x7f080003;
         public static final int tmp_txt1=0x7f080005;
         public static final int tmp_txt2=0x7f080007;
         public static final int tmp_txt3=0x7f080009;

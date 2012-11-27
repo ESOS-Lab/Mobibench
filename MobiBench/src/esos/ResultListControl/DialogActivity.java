@@ -70,7 +70,14 @@ public class DialogActivity extends Activity{
 		        			ResultCS_tot[idx], ResultCS_vol[idx], ResultThrp[idx], ResultExpName[idx]));
 		        }
 	        }
-	        
+	        /*
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
+	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));*/
 	        // call setAdapter()
 	        list.setAdapter(adapter);
 	 

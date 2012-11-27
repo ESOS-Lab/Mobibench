@@ -12,106 +12,110 @@
   		android:padding="8dip"
   		android:layout_gravity="center_vertical"
   		/>
+
   	<LinearLayout
 		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content"  
  		android:orientation="vertical"
  		android:layout_alignParentLeft="true"
  		>
- 		<LinearLayout 
- 		    android:layout_width="wrap_content"
- 		    android:layout_height="wrap_content"
- 		    android:orientation="horizontal"
- 		    android:layout_alignParentLeft="true">
- 			<TextView
- 		 	    android:layout_width="wrap_content"
- 			    android:layout_height="wrap_content"
- 		 	    android:text="· Experiment : "
- 		 	></TextView>
-  		 	<TextView android:id="@+id/dataItem07"
- 		 	    android:layout_width="wrap_content"
- 			    android:layout_height="wrap_content"
- 		 	    android:text="none"
- 		 	></TextView>		
- 		</LinearLayout>
-		<RelativeLayout
+		<TextView
+	 	    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+	 	    android:text="· Exp. "
+	 	></TextView>
+		<TextView android:id="@+id/tmp_txt0"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="· CPU "
+		></TextView>
+		<TextView
+	 	    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+	 	    android:text="· CTS "
+	 	></TextView>
+		<TextView
+	 	    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+	 	    android:text="· THP "
+	 	></TextView>
+	</LinearLayout>
+	
+ 	<TextView
+	  	android:layout_width="wrap_content"
+	  	android:layout_height="fill_parent"
+	  	android:text=" "
+	  	android:background="#A9A9A9"
+	  	android:textSize="2dp"
+ 	></TextView>
+ 	
+	<LinearLayout
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"	
+		android:orientation="vertical"
+		android:layout_alignParentLeft="true"		
+		>
+	    <TextView android:id="@+id/dataItem07"
+	 	    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+	 	    android:text="none"
+	 	    android:layout_marginLeft="5dip"
+	 	></TextView>
+		<LinearLayout
 			android:layout_width="wrap_content" 
-			android:layout_height="wrap_content"
-			
- 			>
- 			<TextView android:id="@+id/tmp_txt0"
+			android:layout_height="wrap_content"	
+			android:orientation="horizontal"
+			android:layout_marginLeft="5dip"		
+		    >
+			 <TextView android:id="@+id/tmp_txt1"
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text="· CPU : "
- 			></TextView>
- 			<TextView android:id="@+id/tmp_txt1"
- 			    android:layout_width="wrap_content"
- 			    android:layout_height="wrap_content"
- 			    android:text="Active-"
- 			    android:layout_toRightOf="@id/tmp_txt0"
- 			    android:layout_alignBaseline="@id/tmp_txt0"
- 			    ></TextView> 			
+ 			    android:text="Act :"
+ 			></TextView> 			
  			<TextView  android:id="@+id/dataItem01"  
 			    android:layout_width="wrap_content" 
 			    android:layout_height="wrap_content"
 			    android:text="30"
-			    android:layout_toRightOf="@id/tmp_txt1"
-			    android:layout_alignBaseline="@id/tmp_txt1"
 			    />
  			<TextView android:id="@+id/tmp_txt2"
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text="%, I/O wait-"
- 			    android:layout_toRightOf="@id/dataItem01"
-			    android:layout_alignBaseline="@id/tmp_txt1"
+ 			    android:text=", I/Ow :"
  			></TextView>
 			<TextView  android:id="@+id/dataItem02"  
 			    android:layout_width="wrap_content" 
 			    android:layout_height="wrap_content"
 			    android:text="40"
-			    android:layout_toRightOf="@id/tmp_txt2"
-			    android:layout_alignBaseline="@id/tmp_txt1"
 			/>   
  			<TextView android:id="@+id/tmp_txt3"
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text="%"
- 			    android:layout_toRightOf="@id/dataItem02"
-			    android:layout_alignBaseline="@id/tmp_txt1"
+ 			    android:text=", "
  			></TextView>			
 	 		<TextView android:id="@+id/tmp_txt4"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
-			    android:text="Idle-"
-			    android:layout_below="@id/tmp_txt0"
-			    android:layout_alignLeft="@id/tmp_txt1"
+			    android:text="Idl :"
 		    ></TextView>
 	 		<TextView  android:id="@+id/dataItem03"  
 			    android:layout_width="wrap_content" 
 			    android:layout_height="wrap_content"
 			    android:text="29"
-			    android:layout_toRightOf="@id/tmp_txt4"
-			    android:layout_alignBaseline="@id/tmp_txt4"
 			/>   
  			<TextView 
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text="%"
- 			    android:layout_toRightOf="@id/dataItem03"
-			    android:layout_alignBaseline="@id/tmp_txt4"
+ 			    android:text=" (%)"
  			></TextView>	
- 		</RelativeLayout>   
+		</LinearLayout>
  		<LinearLayout 
  		    android:layout_width="wrap_content"
  		    android:layout_height="wrap_content"
  		    android:orientation="horizontal"
  		    android:layout_alignParentLeft="true"
+ 		    android:layout_marginLeft="5dip"
  		    >
- 		 	<TextView
- 		 	    android:layout_width="wrap_content"
- 			    android:layout_height="wrap_content"
- 		 	    android:text="· Context-Switches : "
- 		 	></TextView>
+
   		 	<TextView android:id="@+id/dataItem04"
  		 	    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
@@ -138,12 +142,9 @@
  		    android:layout_height="wrap_content"
  		    android:orientation="horizontal"
  		    android:layout_alignParentLeft="true"
+ 		    android:layout_marginLeft="5dip"
  		    >
- 		 	<TextView
- 		 	    android:layout_width="wrap_content"
- 			    android:layout_height="wrap_content"
- 		 	    android:text="· Throughput : "
- 		 	></TextView>
+
   		 	<TextView android:id="@+id/dataItem06"
  		 	    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
@@ -151,14 +152,6 @@
  		 	></TextView>		 	   
 
  		</LinearLayout>		
-		
-		
-		
-		
-		
-		
-		
-		
 	</LinearLayout>    
 </LinearLayout>  
 
