@@ -113,9 +113,9 @@ public class MobiBenchExe {
     public void SendResult(int result_id) {
     	printResult();
     	
-    	DialogActivity.ResultCPU_act[result_id] = String.format("%.1f", cpu_active);
-    	DialogActivity.ResultCPU_iow[result_id] = String.format("%.1f", cpu_iowait);
-    	DialogActivity.ResultCPU_idl[result_id] = String.format("%.1f", cpu_idle);
+    	DialogActivity.ResultCPU_act[result_id] = String.format("%.0f", cpu_active);
+    	DialogActivity.ResultCPU_iow[result_id] = String.format("%.0f", cpu_iowait);
+    	DialogActivity.ResultCPU_idl[result_id] = String.format("%.0f", cpu_idle);
     	DialogActivity.ResultCS_tot[result_id] = ""+cs_total;
     	DialogActivity.ResultCS_vol[result_id] = ""+cs_voluntary;
     	if(result_id < 4) {	// File IO
