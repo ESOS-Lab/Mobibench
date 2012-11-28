@@ -62,6 +62,7 @@ public class TabMain extends TabActivity {
 	private Spinner sp_journal= null;
 	private MobiBenchExe m_exe = null;	
 	private TextView tv_progress_txt = null;
+	private TextView tv_progress_per = null;
 	
 	private static int checkbox_count = 0;
 	private boolean mFlag = false; // using App stop button
@@ -82,6 +83,7 @@ public class TabMain extends TabActivity {
     		if(msg.what <= 100)
     		{
     			prBar.setProgress(msg.what);   		
+    			tv_progress_per.setText(""+msg.what+"%");
     		}
     		else if(msg.what == 111)
     		{
@@ -94,6 +96,17 @@ public class TabMain extends TabActivity {
     		else if(msg.what == 666)
     		{
     			mFlag = false;
+    		}
+    		else if(msg.what == 444)
+    		{
+    			Log.d(DEBUG_TAG, "[JWGOM] join start");
+    			try {
+    				mb_thread.join();
+    			} catch (InterruptedException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+    			Log.d(DEBUG_TAG, "[JWGOM] join end");
     		}
     	}
     };	
@@ -163,6 +176,7 @@ public class TabMain extends TabActivity {
 		
 		
 		tv_progress_txt = (TextView)findViewById(R.id.progress_text);
+		tv_progress_per = (TextView)findViewById(R.id.progress_per);
 				
 		prBar = (ProgressBar)findViewById(R.id.progress);
 		prBar.setProgress(0);
@@ -481,7 +495,7 @@ public class TabMain extends TabActivity {
 			m_exe.setMobiBenchExe(type);	
 			print_exp(type);
 			mb_thread = new MobiBenchExe(con, mHandler);			
-			mb_thread.start();						
+			mb_thread.start();		
 		}
 	}
 	
