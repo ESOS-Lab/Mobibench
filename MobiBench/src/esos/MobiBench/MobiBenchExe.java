@@ -57,6 +57,9 @@ public class MobiBenchExe extends Thread{
 			
 			msg = Message.obtain(mHandler, 111, 1, 0, null); 
 			mHandler.sendMessage(msg);
+			
+			msg = Message.obtain(mHandler, 444, 0, 0, null); 
+			mHandler.sendMessage(msg);
 		
 	}
 	
@@ -272,12 +275,12 @@ public class MobiBenchExe extends Thread{
 			public void run(){
 				int prog = 0;
 				int stat = 0;
-				int old_prog = -1;
+				int old_prog = 0;
 				int old_stat = -1;
 				
 				msg = Message.obtain(mHandler, 0); 
 				mHandler.sendMessage(msg);
-									
+						
 				runflag = true;
 				while(runflag) {
 					prog = getMobibenchProgress();
@@ -289,26 +292,20 @@ public class MobiBenchExe extends Thread{
 					 * 2 : EXE
 					 * 3 : END
 					 */
-					
-					if(old_stat != stat || old_prog != prog) {
-						//System.out.println("state : "+stat+", progress : "+prog);
-						
+					if(prog > old_prog || prog == 0 || old_stat != stat) {
 						msg = Message.obtain(mHandler, prog); 
 						mHandler.sendMessage(msg);	
-						
-						if(old_stat != stat)
-						{
-							if(stat < 2) {
-								msg = Message.obtain(mHandler, 999, 0, 0, "Initializing for "+ExpName[exp_id]);
-							} else {
-								msg = Message.obtain(mHandler, 999, 0, 0, "Executing "+ExpName[exp_id]);
-							}
-							mHandler.sendMessage(msg);
-						}
-						
-						old_stat = stat;
 						old_prog = prog;
 					}
+										
+					if(stat < 2) {
+						msg = Message.obtain(mHandler, 999, 0, 0, "Initializing for "+ExpName[exp_id]);
+					} else {
+						msg = Message.obtain(mHandler, 999, 0, 0, "Executing "+ExpName[exp_id]);
+					}
+					mHandler.sendMessage(msg);
+					old_stat = stat;
+
 					try {
 						sleep(10);
 					} catch (InterruptedException e) {
