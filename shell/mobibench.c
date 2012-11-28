@@ -612,7 +612,7 @@ int init_file(char* filename, long long size)
 	int fd;
 	long long i;
 	int rec_len = 512*1024;
-	int num_rec = size/rec_len;
+	int num_rec = size/rec_len + 1;
 	int open_flags = O_RDWR | O_CREAT;
 
 	printf("%s\n", __func__);
@@ -1213,6 +1213,7 @@ int main( int argc, char **argv)
 	db_journal_mode = 1; /* TRUNCATE */
 	db_sync_mode = 2; /* FULL */
 	db_init_show = 0;
+	g_state = NONE;
 
 	optind = 1;
 
