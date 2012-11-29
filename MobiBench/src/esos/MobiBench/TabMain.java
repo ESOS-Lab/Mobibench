@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -85,10 +86,6 @@ public class TabMain extends TabActivity {
     			prBar.setProgress(msg.what);   		
     			tv_progress_per.setText(""+msg.what+"%");
     		}
-    		else if(msg.what == 111)
-    		{
-    			btn_clk_check = (msg.arg1>0)?true:false ;
-    		}
     		else if(msg.what == 999)
     		{
     			tv_progress_txt.setText((String)msg.obj);
@@ -99,6 +96,11 @@ public class TabMain extends TabActivity {
     		}
     		else if(msg.what == 444)
     		{
+    			if(msg.arg1 == 1)
+    			{
+    				print_error(1);
+    			}
+    			
     			Log.d(DEBUG_TAG, "[JWGOM] join start");
     			try {
     				mb_thread.join();
@@ -107,6 +109,8 @@ public class TabMain extends TabActivity {
     				e.printStackTrace();
     			}
     			Log.d(DEBUG_TAG, "[JWGOM] join end");
+    			
+    			btn_clk_check = true;
     		}
     	}
     };	
@@ -483,8 +487,10 @@ public class TabMain extends TabActivity {
 	    return super.onKeyDown(keyCode, event);
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void startMobibenchExe(int type) {
 		if(btn_clk_check == false){
+			print_error(0);
 			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:FALSE" + "[" + btn_clk_check + "]");
 								
 		}else{
@@ -700,9 +706,17 @@ public class TabMain extends TabActivity {
     	return false;
     }
         
-    public void print_error()
-    {
-    	Toast.makeText(this, "MoniBench working..", Toast.LENGTH_SHORT).show();
+    public void print_error(int type)
+    { 
+    	switch(type){
+    	case 0:
+    		Toast.makeText(this, "MoniBench working..", Toast.LENGTH_SHORT).show();
+    		break;
+    	case 1:
+    		Toast.makeText(this, "Benchmark engin exited with error", Toast.LENGTH_LONG).show();
+    		break;
+    	}
+    	
     }
     
     public void print_exp(int flag){
@@ -722,6 +736,7 @@ public class TabMain extends TabActivity {
     	case 4:
     		Toast.makeText(this, "Nothing selected. Check \"Setting tab\"", Toast.LENGTH_SHORT).show();
     		break;
+    	
     	}
     	
     }
