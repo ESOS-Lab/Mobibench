@@ -79,6 +79,7 @@ typedef enum
 	READY,
 	EXEC,
 	END,
+	ERROR,
 } thread_status_t;
 
 /* Globals */
@@ -98,6 +99,7 @@ int db_journal_mode;
 int db_sync_mode;
 int db_init_show = 0;
 int g_state = 0;
+char* g_err_string;
 
 thread_status_t thread_status[MAX_THREADS] = {0, };
 pthread_mutex_t thread_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -105,7 +107,29 @@ pthread_cond_t thread_cond1 = PTHREAD_COND_INITIALIZER;
 pthread_cond_t thread_cond2 = PTHREAD_COND_INITIALIZER;
 pthread_cond_t thread_cond3 = PTHREAD_COND_INITIALIZER;
 
+void clearState(void)
+{
+	g_state = NONE;
+	g_err_string = "No error";
+}
 
+void setState(int state, char* err_str)
+{
+	printf("%s: %d\n", __func__, state);
+	if(g_state != ERROR)
+	{
+		g_state = state;
+		if(state == ERROR)
+		{
+			g_err_string = err_str;
+		}
+	}
+}
+
+int getState(void)
+{
+	return g_state;
+}
 
 void print_time(struct timeval T1, struct timeval T2)
 {
@@ -134,7 +158,7 @@ void print_time(struct timeval T1, struct timeval T2)
 		printf("[TIME] :%8ld sec %4ldus. %.0f B/sec, %.2f KB/sec, %.2f MB/sec.",sec,usec, rate, rate/1024, rate/1024/1024);
 		if(g_access == MODE_RND_WRITE || g_access == MODE_RND_READ)
 		{
-			printf(" %.2f IOPS(%dKB) ", rate/1024/reclen, reclen);
+			printf(" %.2f IOPS(%dKB) ", rate/1024/reclen, (int)reclen);
 		}
 		printf("\n");
 #ifdef ANDROID_APP
@@ -431,7 +455,9 @@ initfile(int fd, long long filebytes,int flag,int prot, int reclen)
 			if(x < 1)
 			{
 				printf("Unable to write file\n");
-				exit(181);
+				//exit(181);
+				setState(ERROR, "Unable to write file");
+				return NULL;
 			}
 		}
 	 	free(stmp);
@@ -449,7 +475,9 @@ initfile(int fd, long long filebytes,int flag,int prot, int reclen)
 	if(pa == (char *)-1)
 	{
 		printf("Mapping failed, errno %d\n",errno);
-		exit(166);
+		//exit(166);
+		setState(ERROR, "Mapping failed");
+		return NULL;
 	}
 
 	return(pa);
@@ -477,7 +505,9 @@ void wait_thread_status(int thread_num, thread_status_t stat, pthread_cond_t* co
 	if(ret < 0)
 	{
 		perror("pthread_mutex_lock failed");
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
+		setState(ERROR, "pthread_mutex_lock failed");
+		return;
 	}
 	
 	while(1)
@@ -509,7 +539,9 @@ void wait_thread_status(int thread_num, thread_status_t stat, pthread_cond_t* co
 		if(ret < 0)
 		{
 			perror("pthread_cond_wait failed");
-			exit(EXIT_FAILURE);
+			//exit(EXIT_FAILURE);
+			setState(ERROR, "pthread_cond_wait failed");
+			return;
 		}
 	}
 	
@@ -517,7 +549,9 @@ void wait_thread_status(int thread_num, thread_status_t stat, pthread_cond_t* co
 	if(ret < 0)
 	{
 		perror("pthread_mutex_unlock failed");
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
+		setState(ERROR, "pthread_mutex_unlock failed");
+		return;
 	}
 
 //	printf("%s, %d, %d end\n", __func__, thread_num, stat);
@@ -536,7 +570,9 @@ void signal_thread_status(int thread_num, thread_status_t stat, pthread_cond_t* 
 	if(ret < 0)
 	{
 		perror("pthread_mutex_lock failed");
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
+		setState(ERROR,"pthread_mutex_lock failed" );
+		return;
 	}
 
 	if(thread_num < 0)
@@ -549,7 +585,9 @@ void signal_thread_status(int thread_num, thread_status_t stat, pthread_cond_t* 
 		if(ret < 0)
 		{
 			perror("pthread_cond_broadcast failed");
-			exit(EXIT_FAILURE);
+			//exit(EXIT_FAILURE);
+			setState(ERROR, "pthread_cond_broadcast failed");
+			return;
 		}		
 	}
 	else
@@ -559,7 +597,9 @@ void signal_thread_status(int thread_num, thread_status_t stat, pthread_cond_t* 
 		if(ret < 0)
 		{
 			perror("pthread_cond_signal failed");
-			exit(EXIT_FAILURE);
+			//exit(EXIT_FAILURE);
+			setState(ERROR, "pthread_cond_signal failed");
+			return;
 		}		
 	}
 
@@ -567,7 +607,9 @@ void signal_thread_status(int thread_num, thread_status_t stat, pthread_cond_t* 
 	if(ret < 0)
 	{
 		perror("pthread_mutex_unlock failed");
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
+		setState(ERROR, "pthread_mutex_unlock failed");
+		return;
 	}		
 
 //	printf("%s, %d, %d end\n", __func__, thread_num, stat);
@@ -600,7 +642,9 @@ void drop_caches(void)
 	if(system("echo 3 > /proc/sys/vm/drop_caches") < 0)
 	{
 		printf("fail to drop caches\n");
-		exit(1);
+		//exit(1);
+		setState(ERROR, "fail to drop caches");
+		return;
 	}
 #endif
 }
@@ -612,12 +656,14 @@ int init_file(char* filename, long long size)
 	int fd;
 	long long i;
 	int rec_len = 512*1024;
-	int num_rec = size/rec_len + 1;
+	int num_rec = size/rec_len;
+	int rest_size = size - (rec_len*num_rec);
 	int open_flags = O_RDWR | O_CREAT;
 
-	printf("%s\n", __func__);
-	printf("size : %d\n", (int)size);
-	printf("num_rec : %d\n", num_rec);
+	//printf("%s\n", __func__);
+	//printf("size : %d\n", (int)size);
+	//printf("num_rec : %d\n", num_rec);
+	//printf("rest_size : %d\n", rest_size);
 
 #ifdef ANDROID_APP
 	if(g_access == MODE_RND_WRITE)
@@ -630,7 +676,9 @@ int init_file(char* filename, long long size)
 	if(fd < 0)
 	{
 		printf("%s Open failed %d\n", filename, ret);
-		exit(ret);
+		//exit(ret);
+		setState(ERROR, "Open failed");
+		return -1;
 	}
 
 	lseek(fd, 0, SEEK_END);
@@ -643,11 +691,24 @@ int init_file(char* filename, long long size)
 		if(write(fd, buf, rec_len)<0)
 		{
 			printf("File write error!!!\n");
-			exit(1);
+			//exit(1);
+			setState(ERROR, "File write error");
+			return -1;
 		}
 
 		show_progress(100*i/num_rec);
 	}	
+
+	if(rest_size)
+	{
+		if(write(fd, buf, rest_size)<0)
+		{
+			printf("File write error!!!\n");
+			//exit(1);
+			setState(ERROR, "File write error");
+			return -1;
+		}
+	}
 
 	fsync(fd);
 
@@ -655,7 +716,7 @@ int init_file(char* filename, long long size)
 
 	show_progress(100);
 
-	printf("\ninit end\n");
+	//printf("\ninit end\n");
 	
 	free(buf);
 
@@ -759,8 +820,6 @@ int thread_main(void* arg)
 		}
 	}
 
-	drop_caches();	
-
 	if(block_open == 1)
 		open_flags = O_RDWR | O_CREAT;
 	else if(g_sync == OSYNC)
@@ -776,7 +835,10 @@ int thread_main(void* arg)
 	if(fd < 0)
 	{
 		printf("%s Open failed %d\n", filename, ret);
-		exit(ret);
+		//exit(ret);
+		setState(ERROR, "open failed");
+		signal_thread_status(thread_num, READY, &thread_cond1);
+		return -1;
 	}
 
 	if(g_sync == MMAP || g_sync == MMAP_AS || g_sync == MMAP_S)
@@ -839,14 +901,20 @@ int thread_main(void* arg)
 					if(lseek(fd, offset, SEEK_SET)==-1)
 					{
 						printf("lseek error!!!\n");
-						exit(1);
+						//exit(1);
+						setState(ERROR, "lseek error");
+						signal_thread_status(thread_num, END, &thread_cond3);
+						return -1;
 					}
 				}		
 				
 			 	if(write(fd, buf, real_reclen)<0)
 			 	{
 					printf("File write error!!!\n");
-					exit(1);
+					//exit(1);
+					setState(ERROR, "File write error");
+					signal_thread_status(thread_num, END, &thread_cond3);
+					return -1;
 			 	}
 				
 				if(g_sync == FSYNC)
@@ -894,14 +962,20 @@ int thread_main(void* arg)
 					if(lseek(fd, offset, SEEK_SET)==-1)
 					{
 						printf("lseek error!!!\n");
-						exit(1);
+						//exit(1);
+						setState(ERROR, "lseek error");
+						signal_thread_status(thread_num, END, &thread_cond3);
+						return -1;
 					}
 				}		
 				
 			 	if(read(fd, buf, real_reclen)<=0)
 			 	{
 					printf("File read error!!!\n");
-					exit(1);
+					//exit(1);
+					setState(ERROR, "File read error");
+					signal_thread_status(thread_num, END, &thread_cond3);
+					return -1;
 			 	}
 		 	}
 			show_progress(i*100/numrecs64);
@@ -1030,7 +1104,10 @@ int thread_main_db(void* arg)
 	{
 		fprintf(stderr, "rc = %d\n", rc);
 		fprintf(stderr, "sqlite3_open error :%s\n", sqlite3_errmsg(db));
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
+		setState(ERROR, "sqlite3_open error");
+		signal_thread_status(thread_num, READY, &thread_cond1);
+		return -1;
 	}
 
 	exec_sql(db, "PRAGMA page_size = 4096;", NULL);
@@ -1077,7 +1154,6 @@ int thread_main_db(void* arg)
 		}
 	}
 
-	drop_caches();	
 	//sqlite3_db_release_memory(db);
 	
 	signal_thread_status(thread_num, READY, &thread_cond1);
@@ -1109,6 +1185,8 @@ int thread_main_db(void* arg)
 		else
 		{
 			fprintf(stderr, "invaild db operation mode %d\n", db_mode);
+			setState(ERROR, "invaild db operation mode");
+			signal_thread_status(thread_num, END, &thread_cond3);
 			return -1;
 		}
 		show_progress(i*100/db_transactions);
@@ -1213,7 +1291,7 @@ int main( int argc, char **argv)
 	db_journal_mode = 1; /* TRUNCATE */
 	db_sync_mode = 2; /* FULL */
 	db_init_show = 0;
-	g_state = NONE;
+	clearState();
 
 	optind = 1;
 
@@ -1314,27 +1392,36 @@ int main( int argc, char **argv)
 		if(ret < 0)
 		{
 			perror("pthread_create failed");
-			exit(EXIT_FAILURE);
+			//exit(EXIT_FAILURE);
+			setState(ERROR, "pthread_create failed");
+			return -1;
 		}
 		//printf("pthread_create id : %d\n", (int)thread_id[i]);
 	}
 
-	g_state = READY;
+	setState(READY, NULL);
 	
 	/* Wait until all threads are ready to perform */
 	wait_thread_status(-1, READY, &thread_cond1);
+
+	drop_caches();
 
 	/* Start measuring data for performance */
 	gettimeofday(&T1,NULL);
 	cpuUsage(START_CPU_CHECK);
 
-	g_state = EXEC;
+	setState(EXEC, NULL);
 
 	/* Send signal to all threads to start */
 	signal_thread_status(-1, EXEC, &thread_cond2);
 
 	/* Wait until all threads done */
 	wait_thread_status(-1, END, &thread_cond3);
+
+	if(getState() == ERROR)
+	{
+		goto out;
+	}
 
 	printf("-----------------------------------------\n");
 	printf("[Messurement Result]\n");
@@ -1355,12 +1442,18 @@ int main( int argc, char **argv)
 		if(ret < 0)
 		{
 			perror("pthread_join failed");
-			exit(EXIT_FAILURE);
+			//exit(EXIT_FAILURE);
+			setState(ERROR, "pthread_join failed");
+			return -1;
 		}
 		free(res);
 	}
 
-	g_state = END;
+	setState(END, NULL);
+
+out:
+
+	printf("Err string : %s\n", g_err_string);
 
 	return 0;
 }
