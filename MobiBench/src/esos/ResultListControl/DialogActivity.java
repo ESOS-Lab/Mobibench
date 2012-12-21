@@ -1,8 +1,10 @@
 package esos.ResultListControl;
 
 import esos.MobiBench.R;
+import esos.Database.*;
 import esos.MobiBench.R.layout;
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.ViewGroup;
@@ -15,8 +17,15 @@ import android.view.View;
 public class DialogActivity extends Activity{
     DataListView list;
     IconTextListAdapter adapter;
+	private SharedPreferences db_prefs = null;
+	private SharedPreferences.Editor pref_editor = null;   
+    private static int db_index = 0;
+    
+    private static NotesDbAdapter db;
     public static boolean bHasResult[] = new boolean[7];
-    public static void ClearResult() {
+    
+    public static void ClearResult(NotesDbAdapter database) {
+    	db = database;
     	for(int i=0; i < 7; i++) {
     		bHasResult[i]=false;
     		ResultCPU_act[i]=null;
@@ -29,6 +38,8 @@ public class DialogActivity extends Activity{
     	}
     }
     
+    
+    public static int index_db;
     public static String ResultCPU_act[] = new String[7];
     public static String ResultCPU_iow[] = new String[7];
     public static String ResultCPU_idl[] = new String[7];
@@ -40,7 +51,11 @@ public class DialogActivity extends Activity{
     
 	   public void onCreate(Bundle savedInstanceState) {
 	        super.onCreate(savedInstanceState);
-	 
+	        
+			db_prefs = getSharedPreferences("Setting", MODE_PRIVATE);
+
+			pref_editor = db_prefs.edit();
+			
 	        // window feature for no title - must be set prior to calling setContentView.
 	        //requestWindowFeature(Window.FEATURE_NO_TITLE);
 	 
@@ -62,23 +77,24 @@ public class DialogActivity extends Activity{
 	        resID[4]=R.drawable.icon_insert;
 	        resID[5]=R.drawable.icon_update;
 	        resID[6]=R.drawable.icon_delete;
-	        
+
 	        
 	        for(int idx = 0; idx < 7; idx++) {
 		        if(bHasResult[idx]) {
 		        	adapter.addItem(new IconTextItem(res.getDrawable(resID[idx]), ResultCPU_act[idx], ResultCPU_iow[idx], ResultCPU_idl[idx], 
 		        			ResultCS_tot[idx], ResultCS_vol[idx], ResultThrp[idx], ResultExpName[idx]));
+					db_index = db_prefs.getInt("database_index", 0);
+		        	
+		        	db.insert_DB(db_index, "date", true, ResultCPU_act[idx], ResultCPU_iow[idx], ResultCPU_idl[idx],
+		        			ResultCS_tot[idx], ResultCS_vol[idx],  ResultThrp[idx], ResultExpName[idx]);
+		        	
 		        }
 	        }
-	        /*
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));
-	        adapter.addItem(new IconTextItem(res.getDrawable(R.drawable.icon_sw), "21", "11", "12","1000","500","30","Seq. write"));*/
-	        // call setAdapter()
+	        db_index++;
+	        pref_editor.putInt("database_index", db_index);
+        	pref_editor.commit();
+	        //db.insert_DB(32, "3011", true, "30", "40", "30", "1000", "700", "2000", "seq write");
+
 	        list.setAdapter(adapter);
 	 
 	 
@@ -99,4 +115,7 @@ public class DialogActivity extends Activity{
 	        // display as the main layout
 	        setContentView(list, params);
 	    }
+	   
 }
+
+

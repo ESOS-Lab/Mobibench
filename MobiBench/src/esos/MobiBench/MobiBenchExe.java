@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.widget.ProgressBar;
+import esos.Database.*;
 
 public class MobiBenchExe extends Thread{
 	
@@ -19,9 +20,11 @@ public class MobiBenchExe extends Thread{
 	private Message msg = null;
 	private Context con = null;
 	private static Intent intent = null;
+	private NotesDbAdapter db = null;
 	public MobiBenchExe(Context context, Handler handler){
 		mHandler = handler;
 		con = context;
+		
 	}
 	
 	public void run(){
@@ -30,6 +33,7 @@ public class MobiBenchExe extends Thread{
 			case 0:
 				this.RunFileIO();
 				this.RunSqlite();
+				// insert DB
 				intent = new Intent(con,DialogActivity.class);					
 				con.startActivity(intent);
 				break;

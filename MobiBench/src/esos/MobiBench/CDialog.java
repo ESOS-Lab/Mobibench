@@ -20,7 +20,7 @@ public class CDialog {
 	public static void hideLoading(){
 		if(m_loadingDialog != null){
 			m_loadingDialog.dismiss();
-			m_loadingDialog = null;
+			m_loadingDialog = null; 
 		}
 	}
 }

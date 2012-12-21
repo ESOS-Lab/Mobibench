@@ -1,5 +1,6 @@
 package esos.MobiBench;
 
+import esos.Database.*;
 import esos.MobiBench.R;
 import esos.ResultListControl.DialogActivity;
 import android.app.TabActivity;
@@ -71,6 +72,7 @@ public class TabMain extends TabActivity {
     
     
     private static final String DEBUG_TAG="progress bar";
+    
 	public static ProgressBar prBar = null;
 	private Context con;
 	
@@ -100,16 +102,24 @@ public class TabMain extends TabActivity {
 	
 	static final int PROGRESS_DIALOG = 0;
 	
-
+	// For Database
+	private NotesDbAdapter dbAdapter;
+	private static final String DEBUG_DB="debug db";
+	
 	    	
 	protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
-		
+		Log.d(DEBUG_TAG, "**********onCreate");
 		if(m_exe == null) {
 			m_exe = new MobiBenchExe();
 			m_exe.LoadEngine();
 			m_exe.SetStoragePath(this.getFilesDir().toString());
 		}		
+		
+		// For Database
+		Log.d(DEBUG_DB, "Database Test : create DB");
+		dbAdapter = new NotesDbAdapter(this);
+		dbAdapter.open();
 		
 		/* For tab layout setting */
 		TabHost tabHost = getTabHost();			
@@ -471,13 +481,14 @@ public class TabMain extends TabActivity {
 	
 	private void startMobibenchExe(int type) {
 		if(btn_clk_check == false){
-			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:FALSE" + "[" + btn_clk_check + "]");
-								
+			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:FALSE" + "[" + btn_clk_check + "]");								
 		}else{
 			btn_clk_check = false;
 			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:TRUE" + "[" + btn_clk_check + "]");
 			storeValue();
-			DialogActivity.ClearResult();						
+			
+			DialogActivity.ClearResult(dbAdapter);
+			
 			m_exe.setMobiBenchExe(type);	
 			print_exp(type);
 			mb_thread = new MobiBenchExe(con, mHandler);			
@@ -503,8 +514,11 @@ public class TabMain extends TabActivity {
 			case R.id.btn_file:				
 				startMobibenchExe(1);
 				break;
-			case R.id.btn_sqlite:				
+			case R.id.btn_sqlite:
+				// For Database
 				startMobibenchExe(2);
+			    
+
 				break;
 			case R.id.btn_custom:
 				if( btn_clk_check == true && checkbox_count == 0){
