@@ -566,6 +566,17 @@
 		  	    android:textColor="#ffffff" >
 
 			</TextView> 
+			
+		  	<TextView
+		  	    android:id="@+id/progress_per"
+		  	    android:layout_width="wrap_content"
+		  	    android:layout_height="wrap_content"
+		  	    android:layout_alignLeft="@+id/progress"
+		  	    android:layout_alignRight="@+id/txt_p"
+		  	    android:layout_below="@id/progress"
+		  	    android:textColor="#ffffff" >
+
+			</TextView>
 	    </RelativeLayout>
     </FrameLayout>
 

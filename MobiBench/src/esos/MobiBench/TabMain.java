@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -63,6 +64,7 @@ public class TabMain extends TabActivity {
 	private Spinner sp_journal= null;
 	private MobiBenchExe m_exe = null;	
 	private TextView tv_progress_txt = null;
+	private TextView tv_progress_per = null;
 	
 	private static int checkbox_count = 0;
 	private boolean mFlag = false; // using App stop button
@@ -84,10 +86,7 @@ public class TabMain extends TabActivity {
     		if(msg.what <= 100)
     		{
     			prBar.setProgress(msg.what);   		
-    		}
-    		else if(msg.what == 111)
-    		{
-    			btn_clk_check = (msg.arg1>0)?true:false ;
+    			tv_progress_per.setText(""+msg.what+"%");
     		}
     		else if(msg.what == 999)
     		{
@@ -96,6 +95,24 @@ public class TabMain extends TabActivity {
     		else if(msg.what == 666)
     		{
     			mFlag = false;
+    		}
+    		else if(msg.what == 444)
+    		{
+    			if(msg.arg1 == 1)
+    			{
+    				print_error(1);
+    			}
+    			
+    			Log.d(DEBUG_TAG, "[JWGOM] join start");
+    			try {
+    				mb_thread.join();
+    			} catch (InterruptedException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+    			Log.d(DEBUG_TAG, "[JWGOM] join end");
+    			
+    			btn_clk_check = true;
     		}
     	}
     };	
@@ -173,6 +190,7 @@ public class TabMain extends TabActivity {
 		
 		
 		tv_progress_txt = (TextView)findViewById(R.id.progress_text);
+		tv_progress_per = (TextView)findViewById(R.id.progress_per);
 				
 		prBar = (ProgressBar)findViewById(R.id.progress);
 		prBar.setProgress(0);
@@ -479,9 +497,10 @@ public class TabMain extends TabActivity {
 	    return super.onKeyDown(keyCode, event);
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void startMobibenchExe(int type) {
 		if(btn_clk_check == false){
-			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:FALSE" + "[" + btn_clk_check + "]");								
+			print_error(0);
 		}else{
 			btn_clk_check = false;
 			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:TRUE" + "[" + btn_clk_check + "]");
@@ -492,7 +511,7 @@ public class TabMain extends TabActivity {
 			m_exe.setMobiBenchExe(type);	
 			print_exp(type);
 			mb_thread = new MobiBenchExe(con, mHandler);			
-			mb_thread.start();						
+			mb_thread.start();		
 		}
 	}
 	
@@ -700,9 +719,17 @@ public class TabMain extends TabActivity {
     	return false;
     }
         
-    public void print_error()
-    {
-    	Toast.makeText(this, "MoniBench working..", Toast.LENGTH_SHORT).show();
+    public void print_error(int type)
+    { 
+    	switch(type){
+    	case 0:
+    		Toast.makeText(this, "MoniBench working..", Toast.LENGTH_SHORT).show();
+    		break;
+    	case 1:
+    		Toast.makeText(this, "Benchmark engin exited with error", Toast.LENGTH_LONG).show();
+    		break;
+    	}
+    	
     }
     
     public void print_exp(int flag){
@@ -722,6 +749,7 @@ public class TabMain extends TabActivity {
     	case 4:
     		Toast.makeText(this, "Nothing selected. Check \"Setting tab\"", Toast.LENGTH_SHORT).show();
     		break;
+    	
     	}
     	
     }

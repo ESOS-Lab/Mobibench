@@ -28,23 +28,34 @@ public class MobiBenchExe extends Thread{
 	}
 	
 	public void run(){
+		int is_error = 0;
 
 			switch(select_flag){
 			case 0:
 				this.RunFileIO();
+				is_error = (getMobibenchState()==4)?1:0;
+				if(is_error != 0) {
+					break;
+				}
 				this.RunSqlite();
-				// insert DB
 				intent = new Intent(con,DialogActivity.class);					
 				con.startActivity(intent);
 				break;
 			case 1:
 				this.RunFileIO();
+				is_error = (getMobibenchState()==4)?1:0;
+				if(is_error != 0) {
+					break;
+				}
 				intent = new Intent(con,DialogActivity.class);					
 				con.startActivity(intent);	
 				break;
 			case 2:			
 				this.RunSqlite();
-				Log.d(DEBUG_TAG, "[RunSQL] - end");	
+				is_error = (getMobibenchState()==4)?1:0;
+				if(is_error != 0) {
+					break;
+				}
 				intent = new Intent(con,DialogActivity.class);					
 				con.startActivity(intent);
 
@@ -53,13 +64,17 @@ public class MobiBenchExe extends Thread{
 				Log.d(DEBUG_TAG, "[RunSQL] - select_flag" + select_flag);	
 
 				this.RunCustom();
+				is_error = (getMobibenchState()==4)?1:0;
+				if(is_error != 0) {
+					break;
+				}
 				Log.d(DEBUG_TAG, "[RunSQL] - work done");
 				intent = new Intent(con,DialogActivity.class);					
 				con.startActivity(intent);					
 				break;
 			}	
-			
-			msg = Message.obtain(mHandler, 111, 1, 0, null); 
+												
+			msg = Message.obtain(mHandler, 444, is_error, 0, null); 
 			mHandler.sendMessage(msg);
 		
 	}
@@ -176,7 +191,7 @@ public class MobiBenchExe extends Thread{
 		mobibench_run(command);
 		
 		JoinThread();
-		
+				
 		SendResult(exp_id);
 	}
 	
@@ -224,38 +239,84 @@ public class MobiBenchExe extends Thread{
     }
     
     public void RunFileIO() {
+    	int is_error = 0;
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);
+    	is_error = (getMobibenchState()==4)?1:0;
+    	if(is_error != 0) {
+    		return;
+    	}
       	RunMobibench(eAccessMode.READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
+      	is_error = (getMobibenchState()==4)?1:0;
+    	if(is_error != 0) {
+    		return;
+    	}
       	RunMobibench(eAccessMode.RANDOM_WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);
+      	is_error = (getMobibenchState()==4)?1:0;
+    	if(is_error != 0) {
+    		return;
+    	}
       	RunMobibench(eAccessMode.RANDOM_READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
       }
     
     public void RunSqlite() {
-    	Log.d(DEBUG_TAG, "[RunSQL] - start");
+    	int is_error = 0;
       	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.INSERT);
+      	is_error = (getMobibenchState()==4)?1:0;
+    	if(is_error != 0) {
+    		return;
+    	}
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.UPDATE);
+    	is_error = (getMobibenchState()==4)?1:0;
+    	if(is_error != 0) {
+    		return;
+    	}
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.DELETE);
     }
     
     public void RunCustom() {
+    	int is_error = 0;
     	Setting set = new Setting();
     	if(set.get_seq_write() == true) {
-    		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);    		
+    		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);    
+    		is_error = (getMobibenchState()==4)?1:0;
+        	if(is_error != 0) {
+        		return;
+        	}
     	}  	
     	if(set.get_seq_read() == true) {
     		RunMobibench(eAccessMode.READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
+    		is_error = (getMobibenchState()==4)?1:0;
+        	if(is_error != 0) {
+        		return;
+        	}
     	}
     	if(set.get_ran_write() == true) {
     		RunMobibench(eAccessMode.RANDOM_WRITE, eDbEnable.DB_DISABLE, eDbMode.INSERT);
+    		is_error = (getMobibenchState()==4)?1:0;
+        	if(is_error != 0) {
+        		return;
+        	}
     	}     	
     	if(set.get_ran_read() == true) {
     		RunMobibench(eAccessMode.RANDOM_READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
+    		is_error = (getMobibenchState()==4)?1:0;
+        	if(is_error != 0) {
+        		return;
+        	}
     	}  
     	if(set.get_insert() == true) {
     		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.INSERT);
+    		is_error = (getMobibenchState()==4)?1:0;
+        	if(is_error != 0) {
+        		return;
+        	}
     	}
     	if(set.get_update() == true) {
     		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.UPDATE);
+    		is_error = (getMobibenchState()==4)?1:0;
+        	if(is_error != 0) {
+        		return;
+        	}
     	}  
     	if(set.get_delete() == true) {
     		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.DELETE);
@@ -276,12 +337,12 @@ public class MobiBenchExe extends Thread{
 			public void run(){
 				int prog = 0;
 				int stat = 0;
-				int old_prog = -1;
+				int old_prog = 0;
 				int old_stat = -1;
 				
 				msg = Message.obtain(mHandler, 0); 
 				mHandler.sendMessage(msg);
-									
+						
 				runflag = true;
 				while(runflag) {
 					prog = getMobibenchProgress();
@@ -293,26 +354,20 @@ public class MobiBenchExe extends Thread{
 					 * 2 : EXE
 					 * 3 : END
 					 */
-					
-					if(old_stat != stat || old_prog != prog) {
-						//System.out.println("state : "+stat+", progress : "+prog);
-						
+					if(prog > old_prog || prog == 0 || old_stat != stat) {
 						msg = Message.obtain(mHandler, prog); 
 						mHandler.sendMessage(msg);	
-						
-						if(old_stat != stat)
-						{
-							if(stat < 2) {
-								msg = Message.obtain(mHandler, 999, 0, 0, "Initializing for "+ExpName[exp_id]);
-							} else {
-								msg = Message.obtain(mHandler, 999, 0, 0, "Executing "+ExpName[exp_id]);
-							}
-							mHandler.sendMessage(msg);
-						}
-						
-						old_stat = stat;
 						old_prog = prog;
 					}
+										
+					if(stat < 2) {
+						msg = Message.obtain(mHandler, 999, 0, 0, "Initializing for "+ExpName[exp_id]);
+					} else {
+						msg = Message.obtain(mHandler, 999, 0, 0, "Executing "+ExpName[exp_id]);
+					}
+					mHandler.sendMessage(msg);
+					old_stat = stat;
+
 					try {
 						sleep(10);
 					} catch (InterruptedException e) {
@@ -321,11 +376,22 @@ public class MobiBenchExe extends Thread{
 					}
 				}
 				
-				msg = Message.obtain(mHandler, 100); 
-				mHandler.sendMessage(msg);
+				if (stat == 4) {
+					msg = Message.obtain(mHandler, 0); 
+					mHandler.sendMessage(msg);
+					
+					msg = Message.obtain(mHandler, 999, 0, 0, ExpName[exp_id]+" exited with error");
+					mHandler.sendMessage(msg);
+				} else {
+					msg = Message.obtain(mHandler, 100); 
+					mHandler.sendMessage(msg);
+					
+					msg = Message.obtain(mHandler, 999, 0, 0, ExpName[exp_id]+" done");
+					mHandler.sendMessage(msg);
+					
+				}
 				
-				msg = Message.obtain(mHandler, 999, 0, 0, ExpName[exp_id]+" done");
-				mHandler.sendMessage(msg);
+				
 			}
 		}
 		
