@@ -1,13 +1,15 @@
 
-#CROSS=arm-none-linux-gnueabi-
-CROSS=
+CROSS=arm-none-linux-gnueabi-
+#CROSS=
 
 EXENAME = mobibench
 
 SRCS = mobibench.c \
 	  sqlite3.c
 
-CFLAGS = -lpthread -ldl
+CFLAGS = -g -lpthread -ldl
+
+#CFLAGS += -DDEBUG_SCRIPT
 
 #for sqltie3
 CFLAGS += -DNDEBUG=1 \

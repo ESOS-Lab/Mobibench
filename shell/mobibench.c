@@ -28,6 +28,14 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
+//#define DEBUG_SCRIPT
+
+#ifdef DEBUG_SCRIPT
+#define SCRIPT_PRINT printf
+#else
+#define SCRIPT_PRINT(fmt,args...) 
+#endif
+
 #ifdef ANDROID_APP
 #include <android/log.h>
 
@@ -82,6 +90,37 @@ typedef enum
 	ERROR,
 } thread_status_t;
 
+struct script_entry {
+	int thread_num;
+	long long time;
+	char* cmd;
+	char* args[3];
+	int arg_num;
+};
+
+struct script_thread_time {
+	int thread_num;
+	int count;
+	int started;
+	int ended;
+	long long start;
+	long long end;
+	long long io_time;
+	int io_count;
+};
+
+struct script_thread_info {
+	int thread_num;
+	int line_count;
+	int open_count;
+};
+
+struct script_fd_conv {
+	int* fd_org;
+	int* fd_new;
+	int index;
+};
+
 /* Globals */
 long long kilo64; //file size
 long long reclen;
@@ -100,12 +139,24 @@ int db_sync_mode;
 int db_init_show = 0;
 int g_state = 0;
 char* g_err_string;
+int b_quiet = 0;
+int b_replay_script = 0;
+char* script_path;
+struct script_entry* gScriptEntry = {0, };
+int script_thread_num=0;
+struct script_thread_time* gScriptThreadTime = {0, };
+struct script_fd_conv gScriptFdConv = {0, };
+long long time_start;
+char* script_write_buf;
+char* script_read_buf;
 
 thread_status_t thread_status[MAX_THREADS] = {0, };
 pthread_mutex_t thread_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t thread_cond1 = PTHREAD_COND_INITIALIZER;
 pthread_cond_t thread_cond2 = PTHREAD_COND_INITIALIZER;
 pthread_cond_t thread_cond3 = PTHREAD_COND_INITIALIZER;
+
+pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
 
 void clearState(void)
 {
@@ -155,7 +206,7 @@ void print_time(struct timeval T1, struct timeval T2)
 	if(db_test_enable == 0)
 	{
 		rate = kilo64*1024*num_threads/time;
-		printf("[TIME] :%8ld sec %4ldus. %.0f B/sec, %.2f KB/sec, %.2f MB/sec.",sec,usec, rate, rate/1024, rate/1024/1024);
+		printf("[TIME] :%8ld sec %06ldus. \t%.0f B/sec, \t%.2f KB/sec, \t%.2f MB/sec.",sec,usec, rate, rate/1024, rate/1024/1024);
 		if(g_access == MODE_RND_WRITE || g_access == MODE_RND_READ)
 		{
 			printf(" %.2f IOPS(%dKB) ", rate/1024/reclen, (int)reclen);
@@ -175,7 +226,7 @@ void print_time(struct timeval T1, struct timeval T2)
 	else
 	{
 		rate = db_transactions*num_threads/time;
-		printf("[TIME] :%8ld sec %4ldus. %.2f Transactions/sec\n",sec,usec, rate);
+		printf("[TIME] :%8ld sec %06ldus. \t%.2f Transactions/sec\n",sec,usec, rate);
 #ifdef ANDROID_APP
 		tps = (float)rate;
 #endif		
@@ -627,6 +678,8 @@ void show_progress(int pro)
 {
 	static int old_pro = -1;
 
+	if(b_quiet) return;
+
 	if(old_pro == pro) return;
 
 	old_pro = pro;
@@ -739,16 +792,13 @@ int thread_main(void* arg)
 	long long offset;
 
 	char* wmaddr;
-	int thread_num;
+	int thread_num = *((int*)arg);
 	char filename[128] = {0, };
-	int* p_thread_num = (int*)arg;
 	int block_open = 0;
 	int page_size;
 	int open_flags = 0;
 
 	struct stat sb;
-
-	thread_num = (int)*p_thread_num;
 
 	if(num_threads == 1)
 	{
@@ -1077,15 +1127,12 @@ char* get_journal_mode_string(int journal_mode)
 int thread_main_db(void* arg)
 {
 
-	int thread_num;
+	int thread_num = *((int*)arg);
 	char filename[128] = {0, };
-	int* p_thread_num = (int*)arg;
 	sqlite3 *db;
 	int rc;
 	int i;
 	char sql[1024] = {0, };
-
-	thread_num = (int)*p_thread_num;
 
 	if(num_threads == 1)
 	{
@@ -1227,9 +1274,690 @@ int thread_main_db(void* arg)
 
 }
 
+int readline(FILE *f, char *buffer, size_t len)
+{
+   char c; 
+   int i;
+
+   memset(buffer, 0, len);
+
+   for (i = 0; i < len; i++)
+   {   
+      int c = fgetc(f); 
+
+      if (!feof(f)) 
+      {   
+         if (c == '\r')
+            buffer[i] = 0;
+         else if (c == '\n')
+         {   
+            buffer[i] = 0;
+
+            return i+1;
+         }   
+         else
+            buffer[i] = c; 
+      }   
+      else
+      {   
+         //fprintf(stderr, "read_line(): recv returned %d\n", c);
+         return -1; 
+      }   
+   }   
+
+   return -1; 
+}
+
+long long get_current_utime(void)
+{
+	struct timeval current;
+	
+	gettimeofday(&current,NULL);
+	
+	return (current.tv_sec*1000000 + current.tv_usec);	
+}
+
+long long get_relative_utime(long long start)
+{
+	struct timeval current;
+	
+	gettimeofday(&current,NULL);
+	
+	return (current.tv_sec*1000000 + current.tv_usec - start);		
+}
+
+int get_new_fd(int fd_org)
+{
+	int i;
+	int fd_new = -1;
+
+	//printf("org:%d, index:%d\n", fd_org, gScriptFdConv.index);
+
+	for(i = 0; i < gScriptFdConv.index; i++)
+	{
+		if(gScriptFdConv.fd_org[i] == fd_org)
+		{
+			fd_new = gScriptFdConv.fd_new[i];
+			break;
+		}
+	}
+	//printf("new:%d\n", fd_new);
+	return fd_new;
+	
+}
+
+int open_num = 0;
+
+int do_script(struct script_entry* se)
+{
+	int ret;
+	char pathname[256];
+	int flags;
+	int i;
+	int fd_ret;
+	long long io_time_start;
+	long long io_time = -1;
+	
+	//printf("thread[%d] %s\n", se->thread_num, se->cmd);
+	if( strncmp(se->cmd, "open", 4) == 0)
+	{
+		int fd_org = atoi(se->args[2]);
+		
+		//printf("open %s, %s, %d\n", se->args[0], se->args[1], fd_org);
+		if(se->args[0][0] == '"')
+		{
+			strcpy(pathname, &se->args[0][1]);
+			pathname[strlen(pathname)-1]='\0';
+		}
+		else
+		{
+			//sprintf(pathname, "./data/temp_%d_%d.dat", se->thread_num, open_num++);	
+			sprintf(pathname, "/data/test/temp_%d_%d.dat", se->thread_num, open_num++);	
+		}
+
+		if( strncmp(se->args[1], "O_RDONLY", 8) == 0)
+		{
+			flags = O_RDONLY;
+		}
+		else
+		{
+			flags = O_RDWR|O_CREAT|O_TRUNC;
+		}
+
+		io_time_start = get_current_utime();
+		fd_ret = open(pathname, flags, 0777);
+		io_time = get_relative_utime(io_time_start);
+		SCRIPT_PRINT("open %s --> %d\n", pathname, fd_ret);
+		if(fd_ret > 0)
+		{
+			ret = pthread_mutex_lock(&fd_lock);
+			if(ret < 0)
+			{
+				perror("pthread_mutex_lock failed");
+				setState(ERROR, "pthread_mutex_lock failed");
+				return -1;
+			}
+			//printf("open org:%d, new:%d, index:%d\n", fd_org, fd_ret, gScriptFdConv.index);
+			
+			gScriptFdConv.fd_org[gScriptFdConv.index] = fd_org;
+			gScriptFdConv.fd_new[gScriptFdConv.index] = fd_ret;
+			gScriptFdConv.index++;
+			
+			ret = pthread_mutex_unlock(&fd_lock);
+			if(ret < 0)
+			{
+				perror("pthread_mutex_unlock failed");
+				setState(ERROR, "pthread_mutex_unlock failed");
+				return -1;
+			}
+		}
+	}
+	else if( strncmp(se->cmd, "close", 5) == 0)
+	{
+		int fd_org = atoi(se->args[0]);
+		int fd_new = 0;
+		
+		//printf("close %d, %d\n", fd_org, atoi(se->args[1]));
+		
+		ret = pthread_mutex_lock(&fd_lock);
+		if(ret < 0)
+		{
+			perror("pthread_mutex_lock failed");
+			setState(ERROR, "pthread_mutex_lock failed");
+			return -1;
+		}
+
+		for(i = 0; i < gScriptFdConv.index; i++)
+		{
+			if(gScriptFdConv.fd_org[i] == fd_org)
+			{
+				//printf("close matched org:%d, new:%d\n", fd_org, gScriptFdConv.fd_new[i]);
+				fd_new = gScriptFdConv.fd_new[i];
+				gScriptFdConv.fd_org[i] = 0;
+				gScriptFdConv.fd_new[i] = 0;
+				break;
+			}
+		}
+		ret = pthread_mutex_unlock(&fd_lock);
+		if(ret < 0)
+		{
+			perror("pthread_mutex_unlock failed");
+			setState(ERROR, "pthread_mutex_unlock failed");
+			return -1;
+		}
+
+		if(fd_new)
+		{
+			io_time_start = get_current_utime();
+			ret = close(fd_new);
+			io_time = get_relative_utime(io_time_start);
+			SCRIPT_PRINT("close %d --> %d\n", fd_new, ret);
+		}
+		
+	}
+	else if( strncmp(se->cmd, "write", 5) == 0)
+	{
+		int fd_new = get_new_fd(atoi(se->args[0]));
+
+		if(fd_new > 0)
+		{
+			io_time_start = get_current_utime();
+			ret = write(fd_new, script_write_buf, atoi(se->args[1]));
+			io_time = get_relative_utime(io_time_start);
+			SCRIPT_PRINT("write %d, %d --> %d\n", fd_new, atoi(se->args[1]), ret);
+		}
+	}
+	else if( strncmp(se->cmd, "pwrite", 6) == 0)
+	{
+		int fd_new = get_new_fd(atoi(se->args[0]));
+
+		if(fd_new > 0)
+		{
+			io_time_start = get_current_utime();
+			ret = pwrite(fd_new, script_write_buf, atoi(se->args[2]), atoi(se->args[1]));
+			io_time = get_relative_utime(io_time_start);
+			SCRIPT_PRINT("pwrite %d, %d (at %d) --> %d\n", fd_new, atoi(se->args[2]), atoi(se->args[1]), ret);
+		}
+	}
+	else if( strncmp(se->cmd, "read", 4) == 0)
+	{
+		int fd_new = get_new_fd(atoi(se->args[0]));
+
+		if(fd_new > 0)
+		{
+			io_time_start = get_current_utime();
+			ret = read(fd_new, script_read_buf, atoi(se->args[1]));
+			io_time = get_relative_utime(io_time_start);
+			SCRIPT_PRINT("read %d, %d --> %d\n", fd_new, atoi(se->args[1]), ret);
+		}
+	}
+	else if( strncmp(se->cmd, "pread", 5) == 0)
+	{
+		int fd_new = get_new_fd(atoi(se->args[0]));
+
+		if(fd_new > 0)
+		{
+			io_time_start = get_current_utime();
+			ret = pread(fd_new, script_read_buf, atoi(se->args[2]), atoi(se->args[1]));
+			io_time = get_relative_utime(io_time_start);
+			SCRIPT_PRINT("pread %d, %d (at %d) --> %d\n", fd_new, atoi(se->args[2]), atoi(se->args[1]), ret);
+		}
+	}
+	else if( strncmp(se->cmd, "fsync", 5) == 0)
+	{
+		int fd_new = get_new_fd(atoi(se->args[0]));
+
+		if(fd_new > 0)
+		{
+			io_time_start = get_current_utime();
+			ret = fsync(fd_new);
+			io_time = get_relative_utime(io_time_start);
+			SCRIPT_PRINT("fsync %d --> %d\n", fd_new, ret);
+		}
+	}
+	else if( strncmp(se->cmd, "fdatasync", 9) == 0)
+	{
+		int fd_new = get_new_fd(atoi(se->args[0]));
+
+		if(fd_new > 0)
+		{
+			io_time_start = get_current_utime();
+			ret = fdatasync(fd_new);
+			io_time = get_relative_utime(io_time_start);
+			SCRIPT_PRINT("fdatasync %d --> %d\n", fd_new, ret);
+		}
+	}
+	else if( strncmp(se->cmd, "access", 6) == 0)
+	{
+		strcpy(pathname, &se->args[0][1]);
+		pathname[strlen(pathname)-1]='\0';
+
+		io_time_start = get_current_utime();
+		ret = access(pathname,  0777);
+		io_time = get_relative_utime(io_time_start);
+		SCRIPT_PRINT("access %s --> %d\n", pathname, ret);
+	}
+	else if( strncmp(se->cmd, "stat", 4) == 0)
+	{
+		struct stat stat_buf;
+		strcpy(pathname, &se->args[0][1]);
+		pathname[strlen(pathname)-1]='\0';
+
+		io_time_start = get_current_utime();
+		ret = stat64(pathname,  &stat_buf);
+		io_time = get_relative_utime(io_time_start);
+		SCRIPT_PRINT("stat64 %s --> %d\n", pathname, ret);
+	}
+	else if( strncmp(se->cmd, "lstat", 5) == 0)
+	{
+		struct stat stat_buf;
+		strcpy(pathname, &se->args[0][1]);
+		pathname[strlen(pathname)-1]='\0';
+
+		io_time_start = get_current_utime();
+		ret = lstat64(pathname,  &stat_buf);
+		io_time = get_relative_utime(io_time_start);
+		SCRIPT_PRINT("lstat64 %s --> %d\n", pathname, ret);
+	}
+	else if( strncmp(se->cmd, "fstat", 5) == 0)
+	{
+		struct stat stat_buf;
+		int fd_new = get_new_fd(atoi(se->args[0]));
+
+		if(fd_new > 0)
+		{
+			io_time_start = get_current_utime();
+			ret = fstat64(fd_new,  &stat_buf);
+			io_time = get_relative_utime(io_time_start);
+			SCRIPT_PRINT("fstat64 %d --> %d\n", fd_new, ret);
+		}
+	}
+	else if( strncmp(se->cmd, "unlink", 6) == 0)
+	{
+		strcpy(pathname, &se->args[0][1]);
+		pathname[strlen(pathname)-1]='\0';
+
+		io_time_start = get_current_utime();
+		ret = unlink(pathname);
+		io_time = get_relative_utime(io_time_start);
+		SCRIPT_PRINT("unlink %s --> %d\n", pathname, ret);
+	}
+
+	return io_time;
+}
+
+int script_thread_main(void* arg)
+{
+	struct script_thread_info* thread_info = (struct script_thread_info*)arg;
+	int thread_num = thread_info->thread_num;
+	int cmd_cnt = 0;
+	int i;
+	long long io_time;
+
+	gScriptThreadTime[thread_num].io_time = 0;
+	//printf("thread[%d] started at %lld, org %lld\n", thread_num, get_relative_utime(time_start), gScriptThreadTime[thread_num].start);
+
+	for(i = 0; i < thread_info->line_count; i++)
+	{
+		if(gScriptEntry[i].thread_num == thread_num)
+		{
+			long long time_diff = gScriptEntry[i].time - get_relative_utime(time_start);
+			if(time_diff > 1)
+			{
+				//printf("sleep %lld\n", time_diff);
+				usleep(time_diff-1);
+			}
+			//printf("%lld\n", get_relative_utime(time_start) - gScriptEntry[i].time);
+			io_time = do_script(&gScriptEntry[i]);
+			usleep(0);
+			if(io_time >= 0)
+			{
+				gScriptThreadTime[thread_num].io_time += io_time;
+				gScriptThreadTime[thread_num].io_count++;
+				//printf("thread[%d] %s\n", thread_num, gScriptEntry[i].cmd);
+			}
+		}
+	}
+
+	gScriptThreadTime[thread_num].end = 1;
+	//printf("thread[%d] ended at %lld, org %lld\n", thread_num, get_relative_utime(time_start), gScriptThreadTime[thread_num].end);
+}
+
+int replay_script(void)
+{
+	FILE* fp;
+	char line_buf[1024];
+	int ret = 0;
+	int line_count = 0;
+	int i, j;
+	int old_thread_num = -1;
+	int thread_index = -1;
+	long long time_current;
+	pthread_t*	thread_id;
+	struct script_thread_info* thread_info;
+	int thread_start_cnt = 0;
+	void* res;
+	int open_count = 0;
+	int max_write_size = 0;
+	int max_read_size = 0;
+	long long total_io_time;
+	int total_io_count;
+	long long real_end_time;
+	
+	printf("%s start\n", __func__);
+
+	/* 
+	* Open script file (output of MobiGen script)
+	*/
+	fp = fopen(script_path, "r");
+	if(fp == NULL)
+	{
+		printf("%s Open failed %p\n", script_path, fp);
+		setState(ERROR, "open failed");
+		return -1;
+	}
+
+	/*
+	* Scan script file and count lines
+	*/
+	do {
+		ret = readline(fp, line_buf, sizeof(line_buf));
+		if(ret > 0) {
+			line_count++;		
+		}
+	}while(ret > 0);
+	printf("line count : %d\n", line_count);
+
+	/* 
+	* Allocate memory for all script entries using line_count
+	*/
+	gScriptEntry = (struct script_entry*)malloc(line_count*sizeof(struct script_entry));
+	if(gScriptEntry == NULL)
+	{
+		printf("gScriptEntry malloc failed\n");
+		setState(ERROR, "malloc failed");
+		return -1;
+	}
+
+	/*
+	* Parse and save items from each script lines
+	*/
+	fseek(fp, 0, SEEK_SET);
+	for(i = 0; i < line_count; i++)
+	{
+		int args_num = 0;
+		char* ptr;
+		memset(line_buf, 0, sizeof(line_buf));
+		ret = readline(fp, line_buf, sizeof(line_buf));
+		
+		ptr = strtok(line_buf, " ");
+		gScriptEntry[i].thread_num = atoi(ptr);
+
+		ptr = strtok( NULL, " ");
+		gScriptEntry[i].time = atoll(ptr);
+		
+		ptr = strtok( NULL, " ");
+		gScriptEntry[i].cmd = (char*)malloc(strlen(ptr)+1);
+		strcpy(gScriptEntry[i].cmd, ptr);
+				
+		while( ptr = strtok( NULL, " "))
+		{
+			gScriptEntry[i].args[args_num] = (char*)malloc(strlen(ptr)+1);
+			strcpy(gScriptEntry[i].args[args_num], ptr);
+			args_num++;
+		}
+		gScriptEntry[i].arg_num = args_num;
+
+	}
+
+	/*
+	* Close script file
+	*/
+	fclose(fp);
+
+	/*
+	* Get additional information from script entry.
+	* : number of thread, start/end time of threads, open count, MAX R/W size and original execution time
+	*/
+
+	/* Number of thread */
+	script_thread_num = gScriptEntry[line_count-1].thread_num+1;
+	printf("script_thread_num: %d\n", script_thread_num);
+	
+	gScriptThreadTime = (struct script_thread_time*)malloc(script_thread_num*sizeof(struct script_thread_time));
+	if(gScriptThreadTime == NULL)
+	{
+		printf("gScriptThreadTime malloc failed\n");
+		setState(ERROR, "malloc failed");
+		return -1;
+	}
+
+	for(i = 0; i < line_count; i++)
+	{
+		/* Start/end time of each thread */
+		if(old_thread_num != gScriptEntry[i].thread_num)
+		{
+			thread_index++;
+			old_thread_num = gScriptEntry[i].thread_num;
+			gScriptThreadTime[thread_index].start = gScriptEntry[i].time;
+			gScriptThreadTime[thread_index].thread_num = gScriptEntry[i].thread_num;
+		}
+		else
+		{
+			gScriptThreadTime[thread_index].end = gScriptEntry[i].time;
+		}
+		
+		gScriptThreadTime[thread_index].count++;
+
+		/* Get total count of 'open' system-call */
+		if( strncmp(gScriptEntry[i].cmd, "open", 4) == 0)
+		{
+			open_count++;
+		}
+		/* Get maximum size of read/write system-call */
+		else if( (strncmp(gScriptEntry[i].cmd, "write", 5) == 0))
+		{
+			int size = atoi(gScriptEntry[i].args[1]);
+			if(size > max_write_size)
+			{
+				max_write_size= size;
+			}
+		}
+		else if( (strncmp(gScriptEntry[i].cmd, "pwrite", 6) == 0))
+		{
+			int size = atoi(gScriptEntry[i].args[2]);
+			if(size > max_write_size)
+			{
+				max_write_size= size;
+			}			
+		}	
+		else if( (strncmp(gScriptEntry[i].cmd, "read", 5) == 0))
+		{
+			int size = atoi(gScriptEntry[i].args[1]);
+			if(size > max_read_size)
+			{
+				max_read_size= size;
+			}
+		}
+		else if( (strncmp(gScriptEntry[i].cmd, "pread", 6) == 0))
+		{
+			int size = atoi(gScriptEntry[i].args[2]);
+			if(size > max_read_size)
+			{
+				max_read_size= size;
+			}			
+		}	
+
+		/* Get original execution time */
+		if(real_end_time < gScriptEntry[i].time)
+		{
+			real_end_time = gScriptEntry[i].time;
+		}
+		
+	}
+	script_thread_num = thread_index+1;	/* real number of threads */
+	printf("open count : %d\n", open_count);
+	printf("max size : W %d, R %d\n", max_write_size, max_read_size);
+	printf("original execution time : %.3f sec\n", (double)real_end_time/1000000);
+#if 0
+	for(i=0; i <= thread_index; i++)
+	{
+		printf("%d, %d, %lld, %lld\n", i, gScriptThreadTime[i].count, gScriptThreadTime[i].start, gScriptThreadTime[i].end);
+	}
+#endif	
+
+	/*
+	* Allocate memory for additional informations.
+	*/
+	thread_id = (pthread_t*)malloc(sizeof(pthread_t)*script_thread_num);
+	if(thread_id == NULL)
+	{
+		printf("thread_id malloc failed\n");
+		setState(ERROR, "malloc failed");
+		return -1;
+	}
+	thread_info = (struct script_thread_info*)malloc(sizeof(struct script_thread_info)*script_thread_num);
+	if(thread_info == NULL)
+	{
+		printf("thread_info malloc failed\n");
+		setState(ERROR, "malloc failed");
+		return -1;
+	}
+
+	gScriptFdConv.fd_org= (int*)malloc(sizeof(int)*open_count);
+	if(gScriptFdConv.fd_org == NULL)
+	{
+		printf("gScriptFdConv.fd_org malloc failed\n");
+		setState(ERROR, "malloc failed");
+		return -1;
+	}
+
+	gScriptFdConv.fd_new= (int*)malloc(sizeof(int)*open_count);
+	if(gScriptFdConv.fd_new == NULL)
+	{
+		printf("gScriptFdConv.fd_new malloc failed\n");
+		setState(ERROR, "malloc failed");
+		return -1;
+	}
+
+	script_write_buf = (char*)malloc(max_write_size);
+	script_read_buf = (char*)malloc(max_read_size);
+	memset(script_write_buf, 0xcafe,max_write_size); 
+
+	/* 
+	* Start run threads
+	*/
+
+	drop_caches();
+	
+	time_start = get_current_utime();
+	
+	while(1)
+	{
+		time_current = get_relative_utime(time_start);
+		for(i = 0; i < 	script_thread_num; i++)
+		{
+			if(gScriptThreadTime[i].started == 0)
+			{
+				/* If the start time of a thread reached, create the thread. */
+				if(gScriptThreadTime[i].start <= (time_current+1000000))	/* 1sec margin */
+				{
+					thread_info[i].thread_num = gScriptThreadTime[i].thread_num;
+					thread_info[i].line_count = line_count;
+					thread_info[i].open_count = open_count;
+					ret = pthread_create((pthread_t *)&thread_id[i], NULL, (void*)script_thread_main, &thread_info[i]);
+					gScriptThreadTime[i].started = 1;
+					thread_start_cnt++;
+				}
+			}
+		}
+		if(thread_start_cnt >= script_thread_num)
+		{
+			break;
+		}
+	}
+
+	/* 
+	* Wait until all threads complete its run
+	*/
+	while(1)
+	{
+		int not_end = 0;
+		
+		for(i = 0; i < script_thread_num; i++)
+		{
+			if(gScriptThreadTime[gScriptThreadTime[i].thread_num].end != 1)
+			{
+				not_end = 1;
+			}
+		}
+		if(not_end == 0)
+		{
+			break;
+		}
+	}
+
+	/*
+	* Compute total IO time and total IO count.
+	*/
+	total_io_time = 0;
+	total_io_count = 0;
+	for(i = 0; i < script_thread_num; i++)
+	{
+		//printf("thread[%d] %lld\n", i, gScriptThreadTime[gScriptThreadTime[i].thread_num].io_time);
+		total_io_time += gScriptThreadTime[gScriptThreadTime[i].thread_num].io_time;
+		total_io_count += gScriptThreadTime[gScriptThreadTime[i].thread_num].io_count;
+	}
+
+	//printf("join start \n");
+	
+	/* Join threads */
+	for(i = 0; i < script_thread_num; i++)
+	{
+		ret = pthread_join(thread_id[i], &res);
+		if(ret < 0)
+		{
+			perror("pthread_join failed");
+			setState(ERROR, "pthread_join failed");
+			return -1;
+		}
+		//free(res);
+	}
+	
+	printf("%s end\n", __func__);
+	printf("Total IO time : %.3f sec (%lld usec)\n", (double)total_io_time/1000000, total_io_time);
+	printf("Total IO count : %d \n", total_io_count);
+
+	/* 
+	* Free all memories 
+	*/
+	free(script_write_buf);
+	free(script_read_buf);
+
+	free(gScriptFdConv.fd_org);
+	free(gScriptFdConv.fd_new);
+	free(thread_id);
+	free(thread_info);
+
+	for(i = 0; i < line_count; i++)
+	{
+		free(gScriptEntry[i].cmd);
+		for(j = 0; j < gScriptEntry[i].arg_num ; j++)
+		{
+			free(gScriptEntry[i].args[j]);
+		}
+	}	
+	
+	free(gScriptEntry);
+	free(gScriptThreadTime);
+
+	return 0;
+}
+
 char *help[] = {
 "    Usage: mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]",
-"                     [-y sync_mode] [-t thread_num] [-d db_mode]",
+"                     [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]",
+"                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-g replay_script] [-q]",
 " ",
 "           -p  set path name (default=./mobibench)",
 "           -f  set file size in KBytes (default=1024)",
@@ -1243,6 +1971,8 @@ char *help[] = {
 "           -j  set SQLite journal mode (0=DELETE, 1=TRUNCATE, 2=PERSIST, 3=WAL, 4=MEMORY, ",
 "                                        5=OFF) (default=1)",
 "           -s  set SQLite synchronous mode (0=OFF, 1=NORMAL, 2=FULL) (default=2)",
+"           -g  set replay script (output of MobiGen)",
+"			-q  do not display progress(%) message"
 ""
 };
 
@@ -1291,11 +2021,13 @@ int main( int argc, char **argv)
 	db_journal_mode = 1; /* TRUNCATE */
 	db_sync_mode = 2; /* FULL */
 	db_init_show = 0;
+	b_quiet = 0;
+	b_replay_script = 0;
 	clearState();
 
 	optind = 1;
 
-	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:h")) != EOF){
+	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:hq")) != EOF){
 		switch(cret){
 			case 'p':
 				strcpy(pathname, optarg);
@@ -1332,11 +2064,24 @@ int main( int argc, char **argv)
 				show_help();
 				return 0;
 				break;
+			case 'q':
+				b_quiet = 1;
+				break;
+			case 'g':
+				script_path=optarg;
+				b_replay_script = 1;
+				break;
 			default:
 				return 1;
 				break;
 		}
 	}
+
+	if(b_replay_script == 1)
+	{
+		replay_script();
+		goto out;
+	}	
 
 	if(num_threads > MAX_THREADS)
 		num_threads = MAX_THREADS;
@@ -1415,6 +2160,11 @@ int main( int argc, char **argv)
 	/* Send signal to all threads to start */
 	signal_thread_status(-1, EXEC, &thread_cond2);
 
+	if(getState() == ERROR)
+	{
+		goto out;
+	}
+
 	/* Wait until all threads done */
 	wait_thread_status(-1, END, &thread_cond3);
 
@@ -1446,7 +2196,7 @@ int main( int argc, char **argv)
 			setState(ERROR, "pthread_join failed");
 			return -1;
 		}
-		free(res);
+		//free(res);
 	}
 
 	setState(END, NULL);
