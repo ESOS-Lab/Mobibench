@@ -107,6 +107,8 @@ struct script_thread_time {
 	long long end;
 	long long io_time;
 	int io_count;
+	int write_size;
+	int read_size;
 };
 
 struct script_thread_info {
@@ -1348,7 +1350,7 @@ int get_new_fd(int fd_org)
 
 int open_num = 0;
 
-int do_script(struct script_entry* se)
+int do_script(struct script_entry* se, struct script_thread_time* st)
 {
 	int ret;
 	char pathname[256];
@@ -1372,7 +1374,7 @@ int do_script(struct script_entry* se)
 		else
 		{
 			//sprintf(pathname, "./data/temp_%d_%d.dat", se->thread_num, open_num++);	
-			sprintf(pathname, "/data/test/temp_%d_%d.dat", se->thread_num, open_num++);	
+			sprintf(pathname, "/data2/test/temp_%d_%d.dat", se->thread_num, open_num++);	
 		}
 
 		if( strncmp(se->args[1], "O_RDONLY", 8) == 0)
@@ -1465,6 +1467,10 @@ int do_script(struct script_entry* se)
 			ret = write(fd_new, script_write_buf, atoi(se->args[1]));
 			io_time = get_relative_utime(io_time_start);
 			SCRIPT_PRINT("write %d, %d --> %d\n", fd_new, atoi(se->args[1]), ret);
+			if(ret > 0)
+			{
+				st->write_size += ret;
+			}
 		}
 	}
 	else if( strncmp(se->cmd, "pwrite", 6) == 0)
@@ -1477,6 +1483,10 @@ int do_script(struct script_entry* se)
 			ret = pwrite(fd_new, script_write_buf, atoi(se->args[2]), atoi(se->args[1]));
 			io_time = get_relative_utime(io_time_start);
 			SCRIPT_PRINT("pwrite %d, %d (at %d) --> %d\n", fd_new, atoi(se->args[2]), atoi(se->args[1]), ret);
+			if(ret > 0)
+			{
+				st->write_size += ret;
+			}
 		}
 	}
 	else if( strncmp(se->cmd, "read", 4) == 0)
@@ -1489,6 +1499,10 @@ int do_script(struct script_entry* se)
 			ret = read(fd_new, script_read_buf, atoi(se->args[1]));
 			io_time = get_relative_utime(io_time_start);
 			SCRIPT_PRINT("read %d, %d --> %d\n", fd_new, atoi(se->args[1]), ret);
+			if(ret > 0)
+			{
+				st->read_size += ret;
+			}
 		}
 	}
 	else if( strncmp(se->cmd, "pread", 5) == 0)
@@ -1501,6 +1515,10 @@ int do_script(struct script_entry* se)
 			ret = pread(fd_new, script_read_buf, atoi(se->args[2]), atoi(se->args[1]));
 			io_time = get_relative_utime(io_time_start);
 			SCRIPT_PRINT("pread %d, %d (at %d) --> %d\n", fd_new, atoi(se->args[2]), atoi(se->args[1]), ret);
+			if(ret > 0)
+			{
+				st->read_size += ret;
+			}
 		}
 	}
 	else if( strncmp(se->cmd, "fsync", 5) == 0)
@@ -1595,6 +1613,8 @@ int script_thread_main(void* arg)
 	long long io_time;
 
 	gScriptThreadTime[thread_num].io_time = 0;
+	gScriptThreadTime[thread_num].write_size = 0;
+	gScriptThreadTime[thread_num].read_size = 0;
 	//printf("thread[%d] started at %lld, org %lld\n", thread_num, get_relative_utime(time_start), gScriptThreadTime[thread_num].start);
 
 	for(i = 0; i < thread_info->line_count; i++)
@@ -1608,7 +1628,7 @@ int script_thread_main(void* arg)
 				usleep(time_diff-1);
 			}
 			//printf("%lld\n", get_relative_utime(time_start) - gScriptEntry[i].time);
-			io_time = do_script(&gScriptEntry[i]);
+			io_time = do_script(&gScriptEntry[i], &gScriptThreadTime[thread_num]);
 			usleep(0);
 			if(io_time >= 0)
 			{
@@ -1643,6 +1663,8 @@ int replay_script(void)
 	long long total_io_time;
 	int total_io_count;
 	long long real_end_time;
+	int total_read;
+	int total_write;
 	
 	printf("%s start\n", __func__);
 
@@ -1866,6 +1888,7 @@ int replay_script(void)
 					thread_info[i].line_count = line_count;
 					thread_info[i].open_count = open_count;
 					ret = pthread_create((pthread_t *)&thread_id[i], NULL, (void*)script_thread_main, &thread_info[i]);
+					pthread_detach(thread_id[i]);
 					gScriptThreadTime[i].started = 1;
 					thread_start_cnt++;
 				}
@@ -1902,15 +1925,19 @@ int replay_script(void)
 	*/
 	total_io_time = 0;
 	total_io_count = 0;
+	total_read = 0;
+	total_write = 0;
 	for(i = 0; i < script_thread_num; i++)
 	{
 		//printf("thread[%d] %lld\n", i, gScriptThreadTime[gScriptThreadTime[i].thread_num].io_time);
 		total_io_time += gScriptThreadTime[gScriptThreadTime[i].thread_num].io_time;
 		total_io_count += gScriptThreadTime[gScriptThreadTime[i].thread_num].io_count;
+		total_write += gScriptThreadTime[gScriptThreadTime[i].thread_num].write_size;
+		total_read += gScriptThreadTime[gScriptThreadTime[i].thread_num].read_size;
 	}
 
 	//printf("join start \n");
-	
+#if 0	
 	/* Join threads */
 	for(i = 0; i < script_thread_num; i++)
 	{
@@ -1923,10 +1950,11 @@ int replay_script(void)
 		}
 		//free(res);
 	}
-	
+#endif	
 	printf("%s end\n", __func__);
 	printf("Total IO time : %.3f sec (%lld usec)\n", (double)total_io_time/1000000, total_io_time);
 	printf("Total IO count : %d \n", total_io_count);
+	printf("Total Write: %d bytes, Read: %d bytes\n", total_write, total_read);
 
 	/* 
 	* Free all memories 
@@ -1972,7 +2000,7 @@ char *help[] = {
 "                                        5=OFF) (default=1)",
 "           -s  set SQLite synchronous mode (0=OFF, 1=NORMAL, 2=FULL) (default=2)",
 "           -g  set replay script (output of MobiGen)",
-"			-q  do not display progress(%) message"
+"           -q  do not display progress(%) message",
 ""
 };
 
