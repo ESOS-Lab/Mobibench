@@ -7,7 +7,7 @@ EXENAME = mobibench
 SRCS = mobibench.c \
 	  sqlite3.c
 
-CFLAGS = -g -lpthread -ldl
+CFLAGS = -lpthread -ldl
 
 #CFLAGS += -DDEBUG_SCRIPT
 
