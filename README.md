@@ -25,8 +25,10 @@ Build
 Usage
 -----
 	# mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]
-                [-y sync_mode] [-t thread_num] [-d db_mode]
- 
+                    [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]
+                    [-j SQLite_journalmode] [-s SQLite_syncmode] [-g replay_script] [-q]
+                                     
+                                     
 * -p  set path name (default=./mobibench)
 * -f  set file size in KBytes (default=1024)
 * -r  set record size in KBytes (default=4)
