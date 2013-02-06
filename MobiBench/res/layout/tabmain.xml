@@ -442,7 +442,8 @@
 	            android:layout_width="wrap_content"
 	            android:layout_height="wrap_content"
 	            android:src="@drawable/last_title"
-	            android:scaleType="fitXY"            android:layout_gravity="right">
+	            android:scaleType="fitXY"            
+	            android:layout_gravity="right">
 	       </ImageView>	
 		</LinearLayout>
     </ScrollView>
@@ -452,13 +453,21 @@
     <FrameLayout android:id="@+id/history"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
+
         <ImageView
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:src="@drawable/bg_history"
-            android:scaleType="fitXY">
+            android:src="@drawable/bg_default"
+            android:scaleType="fitXY"
+           >
         </ImageView>
 
+        <ListView                                    
+		 android:id="@+id/ListView01" 
+		 android:layout_height="fill_parent" 
+		 android:layout_width="fill_parent"
+		  android:scrollingCache="false"/>
+      
     </FrameLayout>
     
     <FrameLayout android:id="@+id/measure"

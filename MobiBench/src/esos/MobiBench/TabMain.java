@@ -1,12 +1,18 @@
 package esos.MobiBench;
 
+import java.util.ArrayList;
 import esos.Database.*;
 import esos.MobiBench.R;
 import esos.ResultListControl.DialogActivity;
+import esos.ResultListControl.IconTextItem;
+import esos.ResultListControl.OnDataSelectionListener;
 import android.app.TabActivity;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -17,12 +23,18 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
@@ -38,6 +50,7 @@ public class TabMain extends TabActivity {
 
 	private SharedPreferences prefs = null;
 	private SharedPreferences.Editor editor = null;
+	private int db_index = 0;
 	
 	private boolean root_flag;
 	private boolean start_flag=false;
@@ -68,10 +81,26 @@ public class TabMain extends TabActivity {
 	
 	private static int checkbox_count = 0;
 	private boolean mFlag = false; // using App stop button
-
+	
+	private Cursor result = null;
+	private String db_date = null;
+	private final ArrayList<String> arr = new ArrayList<String>();	
+	private ArrayAdapter<String> aa = null;
+	private static int result_start = 0;
+	private String tmpExpName[] = {
+			"Seq.Write",
+			"Seq.read", 
+			"Rand.Write",
+			"Rand.Read",
+			"SQLite.Insert", 
+			"SQLite.Update",
+			"SQLite.Delete"
+		};
+	
  //   ProgressTrd thread = null;
     MobiBenchExe mb_thread= null;
     
+    /*jwgom*/
     
     private static final String DEBUG_TAG="progress bar";
     
@@ -120,7 +149,7 @@ public class TabMain extends TabActivity {
 	static final int PROGRESS_DIALOG = 0;
 	
 	// For Database
-	private NotesDbAdapter dbAdapter;
+	public static NotesDbAdapter dbAdapter;
 	private static final String DEBUG_DB="debug db";
 	
 	    	
@@ -134,7 +163,6 @@ public class TabMain extends TabActivity {
 		}		
 		
 		// For Database
-		Log.d(DEBUG_DB, "Database Test : create DB");
 		dbAdapter = new NotesDbAdapter(this);
 		dbAdapter.open();
 		
@@ -145,6 +173,116 @@ public class TabMain extends TabActivity {
 		tabHost.addTab(tabHost.newTabSpec("history").setIndicator("",getResources().getDrawable(R.drawable.tab_history)).setContent(R.id.history));
 		tabHost.addTab(tabHost.newTabSpec("setting").setIndicator("",getResources().getDrawable(R.drawable.tab_help)).setContent(R.id.help));
 		
+		/* Preference Control */
+		prefs = getSharedPreferences("Setting", MODE_PRIVATE);
+		root_flag = prefs.getBoolean("init_flag", true);
+		editor = prefs.edit();
+		/*jwgom
+		 * 
+		 * ***************************************************************************************************************************************************
+		 * */
+
+		db_index = prefs.getInt("database_index", 0); // data base indexing
+		
+		result = null;
+		String db_date = null;
+		final ArrayList<String> arr = new ArrayList<String>();
+		Log.d(DEBUG_TAG, "**********onCreate before jwgom  1");
+
+		if(db_index != 0 ){
+			for(int i=0; i<db_index; i++){
+				result = dbAdapter.fetchNote(i);// 횟수 제한
+				result.moveToFirst();
+				String tmp_str01 = "▣ Test : All";
+				if( result.getString(2).equals(tmp_str01))
+				{
+					db_date = "  " + result.getString(2) + "         ( " + result.getString(1) + " )";
+				}else{
+					db_date = "  " + result.getString(2) + "    ( " + result.getString(1) + " )";
+					arr.add(db_date);
+				}
+				 //aa.notifyDataSetChanged();
+			}
+			result.close();
+		}
+
+		
+		ListView list = (ListView) findViewById(R.id.ListView01);  
+		aa = new ArrayAdapter<String> ( this, R.layout.history_listitem, arr);                  
+	    list.setAdapter(aa);                                                              // ListView에 ArrayAdapter 설정
+	        
+	   
+        list.setOnItemClickListener(new OnItemClickListener() { public void onItemClick
+        	(AdapterView<?> a, View v, int position, long id) {
+ 
+    		result = dbAdapter.fetchNote(position);
+    		result.moveToFirst();
+            	//for(int i=0; i < 7; i++) {
+    		
+    		
+    		Log.d(DEBUG_TAG, "Start cursor position " + result.getPosition());
+
+  		
+      		// clear values
+     		result_start = 0;
+        	for(int i=0; i < 7; i++) {
+        		DialogActivity.bHasResult[i]=0;
+        		DialogActivity.ResultCPU_act[i]=null;
+        		DialogActivity.ResultCPU_iow[i]=null;
+        		DialogActivity.ResultCPU_idl[i]=null;
+        		DialogActivity.ResultCS_tot[i]=null;
+        		DialogActivity.ResultCS_vol[i]=null;
+        		DialogActivity.ResultThrp[i]=null;
+        		DialogActivity.ResultExpName[i]=null;
+        		DialogActivity.ResultType[i] = null;
+        	}
+        	
+
+    		
+    		
+    		while(!result.isAfterLast()){
+    			 Log.d(DEBUG_TAG, "Create DialogActivity (position/result_start/expname) " + result.getPosition() + " " + result_start + " " + result.getString(10));
+    			
+    			 if(result.getString(10).equals(tmpExpName[0] )){ // seq write
+    				 result_start = 0;
+    			 }else if(result.getString(10).equals(tmpExpName[1] )){
+    				 result_start = 1;
+    			 }else if(result.getString(10).equals(tmpExpName[2] )){
+    				 result_start = 2;
+    			 }else if(result.getString(10).equals(tmpExpName[3] )){
+    				 result_start = 3;
+    			 }else if(result.getString(10).equals(tmpExpName[4] )){
+    				 result_start = 4;
+    			 }else if(result.getString(10).equals(tmpExpName[5] )){
+    				 result_start = 5;
+    			 }else if(result.getString(10).equals(tmpExpName[6] )){
+    				 result_start = 6;
+    			 }
+        		DialogActivity.bHasResult[result_start] = result.getInt(3);
+        		DialogActivity.ResultCPU_act[result_start]= result.getString(4);
+        		DialogActivity.ResultCPU_iow[result_start]= result.getString(5);
+        		DialogActivity.ResultCPU_idl[result_start]= result.getString(6);
+        		DialogActivity.ResultCS_tot[result_start]= result.getString(7);
+        		DialogActivity.ResultCS_vol[result_start]= result.getString(8);
+        		DialogActivity.ResultThrp[result_start]= result.getString(9);
+        		DialogActivity.ResultExpName[result_start]= result.getString(10);
+        		DialogActivity.ResultType[result_start] = result.getString(2);
+        		result.moveToNext();
+        		
+        	}
+    		
+  			Intent intent = new Intent(TabMain.this, DialogActivity.class);
+  			DialogActivity.check_using_db = 0;
+ 			startActivity(intent);              
+               
+            }
+        });
+        
+		/*jwgom
+		 * 
+		 * ***************************************************************************************************************************************************
+		 * */        
+        Log.d(DEBUG_TAG, "**********onCreate after jwgom");
 		
 		/* spinner define (total 4 spinner) */
 		sp_partition = (Spinner)findViewById(R.id.sp_partition);
@@ -194,10 +332,7 @@ public class TabMain extends TabActivity {
 				
 		prBar = (ProgressBar)findViewById(R.id.progress);
 		prBar.setProgress(0);
-		/* Preference Control */
-		prefs = getSharedPreferences("Setting", MODE_PRIVATE);
-		root_flag = prefs.getBoolean("init_flag", true);
-		editor = prefs.edit();
+
 		
 		/* First Warning message control */
 		if( root_flag ){
@@ -469,7 +604,7 @@ public class TabMain extends TabActivity {
         
 //        mb_thread.setDaemon(true);
         con = this;
-
+        Log.d(DEBUG_TAG, "**********onCreate complete");
 
 	}
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -536,8 +671,6 @@ public class TabMain extends TabActivity {
 			case R.id.btn_sqlite:
 				// For Database
 				startMobibenchExe(2);
-			    
-
 				break;
 			case R.id.btn_custom:
 				if( btn_clk_check == true && checkbox_count == 0){
@@ -752,6 +885,24 @@ public class TabMain extends TabActivity {
     	
     	}
     	
+    }
+    protected void onResume(){
+    	super.onResume();
+    	db_index = prefs.getInt("database_index", 0); // data base indexing
+    	arr.clear();
+		for(int i=0; i<db_index; i++){
+			result = dbAdapter.fetchNote(i);// 횟수 제한
+			result.moveToFirst();
+			db_date = " " + result.getString(2) + "  ( " + result.getString(1) + " )";
+			arr.add(db_date);
+			 //aa.notifyDataSetChanged();
+		}
+		
+		ListView list = (ListView) findViewById(R.id.ListView01);  
+		aa = new ArrayAdapter<String> (       // ListView에 할당할 ArrayAdapter 생성
+	               this, R.layout.history_listitem, arr);                   // 여기에 앞에서 만든 ArrayList를 사용한다
+	        list.setAdapter(aa);                                                              // ListView에 ArrayAdapter 설정
+
     }
 
 

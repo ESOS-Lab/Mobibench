@@ -14,6 +14,7 @@ public class NotesDbAdapter {
 	
     public static final String KEY_ID = "_id";
     public static final String KEY_DATE = "date";
+    public static final String KEY_TYPE = "type";
     
     public static final String KEY_HAS_RESULT = "has_result";
     public static final String KEY_ACT = "act";
@@ -35,7 +36,8 @@ public class NotesDbAdapter {
     private static final String DATABASE_CREATE = "create table mobidb " + "(" 
     		+ "_id integer, "
     		+ "date text, "
-    		+ "has_result boolean, "
+    		+ "type text, "
+    		+ "has_result integer, "
     		+ "act text, "
     		+ "io text, "
     		+ "idl text, "
@@ -86,11 +88,12 @@ public class NotesDbAdapter {
         mDbHelper.close();
     }
    
-    public long insert_DB(int _id, String date, boolean has_result, String act, 
+    public long insert_DB(int _id, String date, String type, int has_result, String act, 
     		String io, String idl, String ct_total, String ct_vol, String thrp, String exp_name) {
         ContentValues initialValues = new ContentValues();
         initialValues.put(KEY_ID, _id);
         initialValues.put(KEY_DATE, date);
+        initialValues.put(KEY_TYPE, type);
         initialValues.put(KEY_HAS_RESULT, has_result);
         initialValues.put(KEY_ACT, act);
         initialValues.put(KEY_IO, io);
@@ -112,27 +115,25 @@ public class NotesDbAdapter {
         Log.i("Delete called", "value__" + rowId);
         return mDb.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
     }
-   
+   */
     public Cursor fetchAllNotes() {
    
-        return mDb.query(DATABASE_TABLE, new String[] { KEY_ID, KEY_DATE,
-                KEY_BODY }, null, null, null, null, null);
+        return mDb.query(DATABASE_TABLE, new String[] { KEY_ID,KEY_DATE,KEY_TYPE, KEY_HAS_RESULT, KEY_ACT, KEY_IO, KEY_IDL, KEY_CT_TOTAL, KEY_CT_VOL, KEY_THRP, KEY_EXP_NAME  }, null, null, null, null, null);
     }
    
     public Cursor fetchNote(long rowId) throws SQLException {
    
-        Cursor mCursor =
-   
-        mDb.query(true, DATABASE_TABLE, new String[] { KEY_ROWID, KEY_TITLE,
-                KEY_BODY }, KEY_ROWID + "=" + rowId, null, null, null, null,
-                null);
+        Cursor mCursor =   
+        mDb.query(true, DATABASE_TABLE, new String[] 
+        		{KEY_ID,KEY_DATE,KEY_TYPE, KEY_HAS_RESULT, KEY_ACT, KEY_IO, KEY_IDL, KEY_CT_TOTAL, KEY_CT_VOL, KEY_THRP, KEY_EXP_NAME },
+        		KEY_ID + "=" + rowId, null, null, null, null, null);
         if (mCursor != null) {
             mCursor.moveToFirst();
         }
         return mCursor;
    
     }
-   
+   /*
     public boolean updateNote(long rowId, String title, String body) {
         ContentValues args = new ContentValues();
         args.put(KEY_TITLE, title);

@@ -31,36 +31,39 @@ public class MobiBenchExe extends Thread{
 		int is_error = 0;
 
 			switch(select_flag){
-			case 0:
+			case 0: // select "ALL"
 				this.RunFileIO();
 				is_error = (getMobibenchState()==4)?1:0;
 				if(is_error != 0) {
 					break;
 				}
 				this.RunSqlite();
-				intent = new Intent(con,DialogActivity.class);					
+				intent = new Intent(con,DialogActivity.class);	
+				DialogActivity.check_using_db = 1;
 				con.startActivity(intent);
 				break;
-			case 1:
+			case 1: // select "File I/O"
 				this.RunFileIO();
 				is_error = (getMobibenchState()==4)?1:0;
 				if(is_error != 0) {
 					break;
 				}
-				intent = new Intent(con,DialogActivity.class);					
+				intent = new Intent(con,DialogActivity.class);		
+				DialogActivity.check_using_db = 1;
 				con.startActivity(intent);	
 				break;
-			case 2:			
+			case 2: // select "SQLite"
 				this.RunSqlite();
 				is_error = (getMobibenchState()==4)?1:0;
 				if(is_error != 0) {
 					break;
 				}
-				intent = new Intent(con,DialogActivity.class);					
+				intent = new Intent(con,DialogActivity.class);	
+				DialogActivity.check_using_db = 1;
 				con.startActivity(intent);
 
 				break;
-			case 3:
+			case 3: // select "Custom"
 				Log.d(DEBUG_TAG, "[RunSQL] - select_flag" + select_flag);	
 
 				this.RunCustom();
@@ -69,7 +72,8 @@ public class MobiBenchExe extends Thread{
 					break;
 				}
 				Log.d(DEBUG_TAG, "[RunSQL] - work done");
-				intent = new Intent(con,DialogActivity.class);					
+				intent = new Intent(con,DialogActivity.class);		
+				DialogActivity.check_using_db = 1;
 				con.startActivity(intent);					
 				break;
 			}	
@@ -215,6 +219,20 @@ public class MobiBenchExe extends Thread{
     
     public void SendResult(int result_id) {
     	printResult();
+    	switch(select_flag){
+    	case 0:
+    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : All        "; 
+    		break;
+    	case 1:
+    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : File I/O"; 
+    		break;
+    	case 2:
+    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : SQLite"; 
+    		break;
+    	case 3:
+    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : My test";
+    		break;
+    	}
     	
     	DialogActivity.ResultCPU_act[result_id] = String.format("%.0f", cpu_active);
     	DialogActivity.ResultCPU_iow[result_id] = String.format("%.0f", cpu_iowait);
@@ -235,7 +253,7 @@ public class MobiBenchExe extends Thread{
         	DialogActivity.ResultThrp[result_id] = String.format("%.2f TPS", tps);
     	}
     	DialogActivity.ResultExpName[result_id] = ExpName[result_id];
-    	DialogActivity.bHasResult[result_id]=true;
+    	DialogActivity.bHasResult[result_id]=1;
     }
     
     public void RunFileIO() {
