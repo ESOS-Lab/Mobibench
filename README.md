@@ -12,7 +12,7 @@ IO, asynchronous memory mapped IO, and synchronous
 memory mapped IO. It also supports multi-threading environment
 and SQLite operations
 
-In addition, Mobigench can replay IO trach which is captured by
+In addition, Mobigench can replay IO trace which is captured by
 MobiGen. This function was developed in order to properly analyze
 IO characateristics of real applications.
 
