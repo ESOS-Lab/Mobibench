@@ -698,7 +698,7 @@ public class TabMain extends TabActivity {
 		et_filesize_w.setText(String.valueOf(prefs.getInt("p_filesize_w", 1)));
 		et_filesize_r.setText(String.valueOf(prefs.getInt("p_filesize_r", 256)));
 		et_io_size.setText(String.valueOf(prefs.getInt("p_io_size", 4)));
-		sp_file_sync.setSelection(prefs.getInt("p_file_sync_mode", 0));
+		sp_file_sync.setSelection(prefs.getInt("p_file_sync_mode", 3));
 		et_transaction.setText(String.valueOf(prefs.getInt("p_transaction", 1)));
 		sp_sql_sync.setSelection(prefs.getInt("p_sql_sync_mode", 0));
 		sp_journal.setSelection(prefs.getInt("p_journal_mode", 0));
@@ -712,7 +712,7 @@ public class TabMain extends TabActivity {
 		set.set_filesize_write(prefs.getInt("p_filesize_w", 1));
 		set.set_filesize_read(prefs.getInt("p_filesize_r", 256));		
 		set.set_io_size(prefs.getInt("p_io_size", 4));
-		set.set_file_sync_mode(prefs.getInt("p_file_sync_mode", 0));
+		set.set_file_sync_mode(prefs.getInt("p_file_sync_mode", 3));
 		set.set_transaction_num(prefs.getInt("p_transaction", 1));	
 		set.set_sql_sync_mode(prefs.getInt("p_sql_sync_mode", 0));
 		set.set_journal_mode(prefs.getInt("p_journal_mode", 0));
@@ -784,7 +784,7 @@ public class TabMain extends TabActivity {
 		set.set_filesize_read(256);		
 		editor.putInt("p_io_size", 4);
 		set.set_io_size(4);
-		editor.putInt("p_file_sync_mode", 0);
+		editor.putInt("p_file_sync_mode", 3);
 		set.set_file_sync_mode(0);		
 		editor.putInt("p_transaction", 100);
 		set.set_transaction_num(100);	
