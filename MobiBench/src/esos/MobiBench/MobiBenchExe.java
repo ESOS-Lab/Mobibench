@@ -224,7 +224,7 @@ public class MobiBenchExe extends Thread{
     		DialogActivity.ResultType[result_id] = "  ¢Ã Test : All        "; 
     		break;
     	case 1:
-    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : File I/O"; 
+    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : File IO"; 
     		break;
     	case 2:
     		DialogActivity.ResultType[result_id] = "  ¢Ã Test : SQLite"; 

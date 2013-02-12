@@ -80,7 +80,7 @@
  			<TextView android:id="@+id/tmp_txt2"
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text=", I/Ow :"
+ 			    android:text=", IOw :"
  			></TextView>
 			<TextView  android:id="@+id/dataItem02"  
 			    android:layout_width="wrap_content" 
