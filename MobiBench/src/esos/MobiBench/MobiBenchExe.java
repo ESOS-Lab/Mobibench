@@ -1,5 +1,7 @@
 package esos.MobiBench;
 
+import java.io.File;
+
 import esos.ResultListControl.DialogActivity;
 import android.app.Activity;
 import android.content.Context;
@@ -77,6 +79,8 @@ public class MobiBenchExe extends Thread{
 				con.startActivity(intent);					
 				break;
 			}	
+			
+			DeleteDir(exe_path);
 												
 			msg = Message.obtain(mHandler, 444, is_error, 0, null); 
 			mHandler.sendMessage(msg);
@@ -126,9 +130,29 @@ public class MobiBenchExe extends Thread{
 		"SQLite.Delete"
 	};
 	
+	private String exe_path = null;
+	
 	public void SetStoragePath(String path) {
 		data_path = path;
 		sdcard_2nd_path = StorageOptions.determineStorageOptions();
+	}
+	
+	private void DeleteDir(String path)
+	{
+		System.out.println("DeleteDir : "+path);   	
+	    File file = new File(path);
+	    File[] childFileList = file.listFiles();
+	    for(File childFile : childFileList)
+	    {
+	        if(childFile.isDirectory()) {
+	            DeleteDir(childFile.getAbsolutePath());    //하위 디렉토리 루프
+	        }
+	        else {
+	            childFile.delete();    //하위 파일삭제
+	        }
+	    }
+	     
+	    file.delete();    //root 삭제
 	}
 	
 	private void RunMobibench(eAccessMode access_mode, eDbEnable db_enable, eDbMode db_mode) {
@@ -170,7 +194,8 @@ public class MobiBenchExe extends Thread{
 		}
 					
 		String command = "mobibench";
-		command += " -p "+partition+"/mobibench";
+		exe_path = partition+"/mobibench";
+		command += " -p "+exe_path;
 		
 		if(db_enable == eDbEnable.DB_DISABLE) {
 			if(access_mode == eAccessMode.WRITE || access_mode == eAccessMode.RANDOM_WRITE) {
@@ -274,6 +299,7 @@ public class MobiBenchExe extends Thread{
     		return;
     	}
       	RunMobibench(eAccessMode.RANDOM_READ, eDbEnable.DB_DISABLE, eDbMode.INSERT);
+      	
       }
     
     public void RunSqlite() {
@@ -289,6 +315,7 @@ public class MobiBenchExe extends Thread{
     		return;
     	}
     	RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.DELETE);
+    	
     }
     
     public void RunCustom() {
@@ -338,7 +365,8 @@ public class MobiBenchExe extends Thread{
     	}  
     	if(set.get_delete() == true) {
     		RunMobibench(eAccessMode.WRITE, eDbEnable.DB_ENABLE, eDbMode.DELETE);
-    	}    	
+    	}    
+    	
     }
 	
 	public void setMobiBenchExe(int flag){
