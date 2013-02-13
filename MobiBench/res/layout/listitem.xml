@@ -19,58 +19,50 @@
  		android:orientation="vertical"
  		android:layout_alignParentLeft="true"
  		>
-		<TextView
-	 	    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-	 	    android:text="· Exp. "
-	 	></TextView>
-		<TextView android:id="@+id/tmp_txt0"
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:text="· CPU "
-		></TextView>
-		<TextView
-	 	    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-	 	    android:text="· CTX "
-	 	></TextView>
-		<TextView
-	 	    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-	 	    android:text="· THP "
-	 	></TextView>
-	</LinearLayout>
-	
- 	<TextView
-	  	android:layout_width="wrap_content"
-	  	android:layout_height="fill_parent"
-	  	android:text=" "
-	  	android:background="#A9A9A9"
-	  	android:textSize="2dp"
- 	></TextView>
- 	
-	<LinearLayout
-		android:layout_width="wrap_content" 
-		android:layout_height="wrap_content"	
-		android:orientation="vertical"
-		android:layout_alignParentLeft="true"		
-		>
-	    <TextView android:id="@+id/dataItem07"
-	 	    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-	 	    android:text="none"
-	 	    android:layout_marginLeft="5dip"
-	 	></TextView>
-		<LinearLayout
-			android:layout_width="wrap_content" 
-			android:layout_height="wrap_content"	
-			android:orientation="horizontal"
-			android:layout_marginLeft="5dip"		
-		    >
+ 		<LinearLayout
+ 		    android:layout_width="wrap_content"
+ 		    android:layout_height="wrap_content"
+ 		    android:orientation="horizontal">
+	 	    <TextView android:id="@+id/dataItem07"
+		 	    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+		 	    android:text="exp_name"
+		 	    android:textSize="17dip"
+		 	></TextView>	
+		    <TextView 
+		 	    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+		 	    android:text=" : "
+		 	    		 	    android:textSize="17dip"
+		 	></TextView>	    
+	 		<TextView android:id="@+id/dataItem06"
+		 	    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+		 	    android:text="35"
+		 	    		 	    android:textSize="17dip"
+	 		></TextView>	    
+ 		</LinearLayout>
+ 		<TextView
+		  	android:layout_width="fill_parent"
+		  	android:layout_height="wrap_content"
+		  	android:text=" "
+		  	android:background="#A9A9A9"
+		  	android:textSize="1dp"
+		  	android:layout_marginBottom="3dip"
+ 		></TextView>
+ 		<LinearLayout
+ 		    android:layout_width="wrap_content"
+ 		    android:layout_height="wrap_content"
+ 		    android:orientation="horizontal">
+	 		<TextView
+		 	    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+		 	    android:text="· CPU : "
+		 	></TextView>		    
 			 <TextView android:id="@+id/tmp_txt1"
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text="Act :"
+ 			    android:text="Busy("
  			></TextView> 			
  			<TextView  android:id="@+id/dataItem01"  
 			    android:layout_width="wrap_content" 
@@ -80,7 +72,7 @@
  			<TextView android:id="@+id/tmp_txt2"
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text=", IOw :"
+ 			    android:text="), IOwait("
  			></TextView>
 			<TextView  android:id="@+id/dataItem02"  
 			    android:layout_width="wrap_content" 
@@ -90,12 +82,12 @@
  			<TextView android:id="@+id/tmp_txt3"
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text=", "
+ 			    android:text="), "
  			></TextView>			
 	 		<TextView android:id="@+id/tmp_txt4"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
-			    android:text="Idl :"
+			    android:text="Idle("
 		    ></TextView>
 	 		<TextView  android:id="@+id/dataItem03"  
 			    android:layout_width="wrap_content" 
@@ -105,18 +97,20 @@
  			<TextView 
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text=" (%)"
- 			></TextView>	
-		</LinearLayout>
- 		<LinearLayout 
+ 			    android:text=")"
+ 			></TextView>	 		    
+ 		    
+ 		</LinearLayout>
+ 		<LinearLayout
  		    android:layout_width="wrap_content"
  		    android:layout_height="wrap_content"
- 		    android:orientation="horizontal"
- 		    android:layout_alignParentLeft="true"
- 		    android:layout_marginLeft="5dip"
- 		    >
-
-  		 	<TextView android:id="@+id/dataItem04"
+ 		    android:orientation="horizontal">
+			<TextView
+		 	    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+		 	    android:text="· Ctx "
+		 	></TextView> 		 		    
+   		 	<TextView android:id="@+id/dataItem04"
  		 	    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
  		 	    android:text="1000"
@@ -135,24 +129,11 @@
  		 	    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
  		 	    android:text=")"
- 		 	></TextView>	
- 		</LinearLayout>
-  		<LinearLayout 
- 		    android:layout_width="wrap_content"
- 		    android:layout_height="wrap_content"
- 		    android:orientation="horizontal"
- 		    android:layout_alignParentLeft="true"
- 		    android:layout_marginLeft="5dip"
- 		    >
-
-  		 	<TextView android:id="@+id/dataItem06"
- 		 	    android:layout_width="wrap_content"
- 			    android:layout_height="wrap_content"
- 		 	    android:text="35"
- 		 	></TextView>		 	   
-
- 		</LinearLayout>		
-	</LinearLayout>    
+ 		 	></TextView>			     
+ 		     
+ 		 </LinearLayout>
+	</LinearLayout>
+  
 </LinearLayout>  
 
 
