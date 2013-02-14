@@ -2,6 +2,7 @@ Mobile benchmark tool (mobibench)
 ================================
 
 Written by Kisung Lee <kisunglee@hanyang.ac.kr> and Sooman Jeong <77smart@hanyang.ac.kr>
+and Jungwoo Hwang <tearoses@hanyang.ac.kr>
 
 We develop Mobibench to generate the workload, which
 represents the smartphone IO. Mobibench generates sequential
@@ -17,13 +18,13 @@ MobiGen. This function was developed in order to properly analyze
 IO characateristics of real applications.
 
 
-Build
------
+Build shell version
+--------------------
     # cd shell && make
 
 
-Usage
------
+Usage (shell version)
+----------------------
 	# mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]
                     [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]
                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-g replay_script] [-q]
@@ -44,4 +45,3 @@ Usage
 * -g  set replay script (output of MobiGen)
 * -q  do not display progress(%) message                                                           			
 
-2012-09-24, Kisung Lee <kisunglee@hanyang.ac.kr> and Sooman Jeong <77smart@hanyang.ac.kr>
