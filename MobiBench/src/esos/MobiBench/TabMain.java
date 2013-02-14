@@ -355,8 +355,8 @@ public class TabMain extends TabActivity {
 		free_space = StorageOptions.getAvailableSize(target_path);
 		free_suffix = StorageOptions.formatSize(free_space);
 			
-		//TV_free_space = (TextView)findViewById(R.id.freespace);
-		//TV_free_space.setText(""+free_suffix+" left");
+		TV_free_space = (TextView)findViewById(R.id.freespace);
+		TV_free_space.setText("("+free_suffix+" free)");
 		
         // Activity가 실행 중인 동안 화면을 밝게 유지합니다.
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -400,7 +400,7 @@ public class TabMain extends TabActivity {
 					free_space = StorageOptions.getAvailableSize(target_path);
 					free_suffix = StorageOptions.formatSize(free_space);
 						
-					//TV_free_space.setText(""+free_suffix+" left");
+					TV_free_space.setText("("+free_suffix+" free)");
 				}
 				public void onNothingSelected(AdapterView<?> parent){
 //	
