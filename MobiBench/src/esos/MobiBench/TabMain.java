@@ -14,6 +14,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -78,6 +79,7 @@ public class TabMain extends TabActivity {
 	private MobiBenchExe m_exe = null;	
 	private TextView tv_progress_txt = null;
 	private TextView tv_progress_per = null;
+	private TextView TV_free_space = null;
 	
 	private static int checkbox_count = 0;
 	private boolean mFlag = false; // using App stop button
@@ -108,6 +110,9 @@ public class TabMain extends TabActivity {
 	private Context con;
 	
 	private static boolean btn_clk_check = true;
+	
+	private static long free_space = 0;
+	private static String free_suffix = null;
 	
     Handler mHandler = new Handler(){
     	public void handleMessage(Message msg){
@@ -315,10 +320,7 @@ public class TabMain extends TabActivity {
 		CB_RR=(CheckBox)findViewById(R.id.cb_rr);
 		CB_INSERT=(CheckBox)findViewById(R.id.cb_insert);
 		CB_UPDATE=(CheckBox)findViewById(R.id.cb_update);
-		CB_DELETE=(CheckBox)findViewById(R.id.cb_delete);
-		
-		
-		
+		CB_DELETE=(CheckBox)findViewById(R.id.cb_delete);		
 		
 		tv_progress_txt = (TextView)findViewById(R.id.progress_text);
 		tv_progress_per = (TextView)findViewById(R.id.progress_per);
@@ -334,6 +336,27 @@ public class TabMain extends TabActivity {
 		}else{
 			load_init();		
 		}
+		
+		String target_path = null;
+		
+		switch(set.get_target_partition()) {
+		case 0:
+			target_path = Environment.getDataDirectory().getPath();
+			break;
+		case 1:
+			target_path = Environment.getExternalStorageDirectory().getPath();
+			break;
+		case 2:
+			target_path = MobiBenchExe.sdcard_2nd_path;
+			break;
+		}
+			
+		
+		free_space = StorageOptions.getAvailableSize(target_path);
+		free_suffix = StorageOptions.formatSize(free_space);
+			
+		//TV_free_space = (TextView)findViewById(R.id.freespace);
+		//TV_free_space.setText(""+free_suffix+" left");
 		
         // Activity가 실행 중인 동안 화면을 밝게 유지합니다.
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -353,21 +376,31 @@ public class TabMain extends TabActivity {
 		sp_partition.setOnItemSelectedListener(
 			new OnItemSelectedListener(){
 				public void onItemSelected(AdapterView<?> parent,View view, int position, long id){
+					String target_path = null;
+					
 					switch(position){ 
 					case 0:
 						editor.putInt("p_target_partition", 0);					
 						set.set_target_partition(0);
+						target_path = Environment.getDataDirectory().getPath();
 						break;
 					case 1:
 						editor.putInt("p_target_partition", 1);	
 						set.set_target_partition(1);
+						target_path = Environment.getExternalStorageDirectory().getPath();
 						break;
 					case 2:
 						editor.putInt("p_target_partition", 2);	
 						set.set_target_partition(2);
+						target_path = m_exe.sdcard_2nd_path;
 						break;					
 					}
 					editor.commit();	
+										
+					free_space = StorageOptions.getAvailableSize(target_path);
+					free_suffix = StorageOptions.formatSize(free_space);
+						
+					//TV_free_space.setText(""+free_suffix+" left");
 				}
 				public void onNothingSelected(AdapterView<?> parent){
 //	
@@ -634,6 +667,13 @@ public class TabMain extends TabActivity {
 			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:TRUE" + "[" + btn_clk_check + "]");
 			storeValue();
 			
+			if((Integer.parseInt(et_filesize_w.getText().toString()) >= free_space/1024/1024) || (Integer.parseInt(et_filesize_r.getText().toString()) >= free_space/1024/1024))
+			{
+				print_error(2);
+				btn_clk_check = true;
+				return;
+			}
+			
 			DialogActivity.ClearResult(dbAdapter);
 			
 			m_exe.setMobiBenchExe(type);	
@@ -647,7 +687,6 @@ public class TabMain extends TabActivity {
 	Button.OnClickListener mClickListener = new View.OnClickListener() {
 		public void onClick(View v) {
 	//		Intent intent;		
-			int exe_type = 0;
 			
 			switch(v.getId()){
 			case R.id.btn_execute:
@@ -736,10 +775,18 @@ public class TabMain extends TabActivity {
 	public void storeValue() {				
 		set.set_thread_num(Integer.parseInt(et_threadnum.getText().toString()));
 		editor.putInt("p_threadnum", Integer.parseInt(et_threadnum.getText().toString()));
-		set.set_filesize_write(Integer.parseInt(et_filesize_w.getText().toString()));
-		editor.putInt("p_filesize_w", Integer.parseInt(et_filesize_w.getText().toString()));
-		set.set_filesize_read(Integer.parseInt(et_filesize_r.getText().toString()));
-		editor.putInt("p_filesize_r", Integer.parseInt(et_filesize_r.getText().toString()));
+		
+		if(Integer.parseInt(et_filesize_w.getText().toString()) >= free_space/1024/1024)
+		{
+			set.set_filesize_write(Integer.parseInt(et_filesize_w.getText().toString()));
+			editor.putInt("p_filesize_w", Integer.parseInt(et_filesize_w.getText().toString()));
+		}
+		
+		if(Integer.parseInt(et_filesize_r.getText().toString()) < free_space/1024/1024)
+		{
+			set.set_filesize_read(Integer.parseInt(et_filesize_r.getText().toString()));
+			editor.putInt("p_filesize_r", Integer.parseInt(et_filesize_r.getText().toString()));
+		}
 		set.set_io_size(Integer.parseInt(et_io_size.getText().toString()));
 		editor.putInt("p_io_size", Integer.parseInt(et_io_size.getText().toString()));
 		set.set_transaction_num(Integer.parseInt(et_transaction.getText().toString()));
@@ -853,6 +900,9 @@ public class TabMain extends TabActivity {
     		break;
     	case 1:
     		Toast.makeText(this, "Benchmark engin exited with error", Toast.LENGTH_LONG).show();
+    		break;
+    	case 2:
+    		Toast.makeText(this, "The file size must be less than the free space.", Toast.LENGTH_SHORT).show();
     		break;
     	}
     	
