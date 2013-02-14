@@ -1,7 +1,7 @@
 Mobile benchmark tool (mobibench)
 ================================
 
-Written by Kisung Lee <kisunglee@hanyang.ac.kr> and Sooman Jeong <77smart@hanyang.ac.kr>
+Written by Kisung Lee <kisunglee@hanyang.ac.kr>, Sooman Jeong <77smart@hanyang.ac.kr>, 
 and Jungwoo Hwang <tearoses@hanyang.ac.kr>
 
 We develop Mobibench to generate the workload, which
