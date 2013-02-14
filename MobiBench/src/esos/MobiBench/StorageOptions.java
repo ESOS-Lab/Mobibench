@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import android.os.Environment;
+import android.os.StatFs;
 
 public class StorageOptions {
 	   private static ArrayList<String> mMounts = new ArrayList<String>();
@@ -36,7 +37,56 @@ public class StorageOptions {
 	         
 	         return ret;
 	   }
+
+	   
+	   public static long getAvailableSize(String path) {
+			
+			System.out.println("Dir  : "+ path);
+			
+			StatFs stat = new StatFs(path);   
+	        
+	        long block_size = stat.getBlockSize();
+	        long blocks = stat.getAvailableBlocks();
+	        //System.out.println("Block Size: "+block_size+"  Blocks: "+blocks);
 	 
+	        long free_size = block_size * blocks;
+	        
+	        //System.out.println("free space : "+ free_size);
+	        
+	        return free_size;
+	   }
+	   	   
+	   public static String formatSize(long size) {
+		   String suffix = null;
+		   
+		   if (size >= 1024) {
+			   suffix = "KB";
+			   size /= 1024;
+			   if (size >= 1024) {
+				   suffix = "MB";
+				   size /= 1024;
+				   if (size >= 1024) {
+					   suffix = "GB";
+					   size /= 1024;
+				   }
+			   }
+		   }
+		   
+		   StringBuilder resultBuffer = new StringBuilder(Long.toString(size));
+		   int commaOffset = resultBuffer.length() - 3;
+		   while (commaOffset > 0) {
+			   resultBuffer.insert(commaOffset, ',');
+			   commaOffset -= 3;
+		   }
+		   if (suffix != null)
+			   resultBuffer.append(suffix);
+		   
+		   return resultBuffer.toString();
+		   
+	   }
+
+	 	   
+	   
 	  private static void readMountsFile() {
 	     /*
 	      * Scan the /proc/mounts file and look for lines like this:
