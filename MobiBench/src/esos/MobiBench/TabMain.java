@@ -185,7 +185,7 @@ public class TabMain extends TabActivity {
 		db_index = prefs.getInt("database_index", 0); // data base indexing
 		
 		result = null;
-		String db_date = null;
+		String db_data = null;
 		final ArrayList<String> arr = new ArrayList<String>();
 		Log.d(DEBUG_TAG, "**********onCreate before jwgom  1");
 
@@ -193,15 +193,8 @@ public class TabMain extends TabActivity {
 			for(int i=0; i<db_index; i++){
 				result = dbAdapter.fetchNote(i);// 횟수 제한
 				result.moveToFirst();
-				String tmp_str01 = "▣ Test : All";
-				if( result.getString(2).equals(tmp_str01))
-				{
-					db_date = "  " + result.getString(2) + "         ( " + result.getString(1) + " )";
-				}else{
-					db_date = "  " + result.getString(2) + "    ( " + result.getString(1) + " )";
-					arr.add(db_date);
-				}
-				 //aa.notifyDataSetChanged();
+				db_data = "  " + result.getString(2) + "(" + result.getString(1) + ")";
+				arr.add(db_data);
 			}
 			result.close();
 		}
@@ -210,7 +203,7 @@ public class TabMain extends TabActivity {
 		ListView list = (ListView) findViewById(R.id.ListView01);  
 		aa = new ArrayAdapter<String> ( this, R.layout.history_listitem, arr);                  
 	    list.setAdapter(aa);                                                              // ListView에 ArrayAdapter 설정
-	        
+	    
 	   
         list.setOnItemClickListener(new OnItemClickListener() { public void onItemClick
         	(AdapterView<?> a, View v, int position, long id) {

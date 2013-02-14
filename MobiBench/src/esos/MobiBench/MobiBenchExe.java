@@ -246,16 +246,16 @@ public class MobiBenchExe extends Thread{
     	printResult();
     	switch(select_flag){
     	case 0:
-    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : All        "; 
+    		DialogActivity.ResultType[result_id] = " ¢Ã Test: All        "; 
     		break;
     	case 1:
-    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : File IO"; 
+    		DialogActivity.ResultType[result_id] = " ¢Ã Test: File IO"; 
     		break;
     	case 2:
-    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : SQLite"; 
+    		DialogActivity.ResultType[result_id] = " ¢Ã Test: SQLite"; 
     		break;
     	case 3:
-    		DialogActivity.ResultType[result_id] = "  ¢Ã Test : My test";
+    		DialogActivity.ResultType[result_id] = " ¢Ã Test: My test";
     		break;
     	}
     	

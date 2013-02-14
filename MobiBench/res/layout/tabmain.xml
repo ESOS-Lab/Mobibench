@@ -240,8 +240,9 @@
   			    android:layout_toRightOf="@id/fs_w"
   			    android:layout_alignBaseline="@id/fs_w"
   			    android:gravity="right"		
-   			></EditText>     
-		    <TextView
+   			></EditText>    
+ 
+		    <TextView android:id="@+id/tmp_txtmb"
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
    			    android:text=" MB"
@@ -250,7 +251,17 @@
    			    android:textColor="#ffffff"
    			    android:layout_toRightOf="@id/filesize_w"
   				android:layout_alignBaseline="@id/filesize_w"
-   			></TextView>  			
+   			></TextView>  	
+   			 <TextView android:id="@+id/freespace"
+   			    android:layout_width="wrap_content"
+   			    android:layout_height="wrap_content"
+   			    android:layout_toRightOf="@id/tmp_txtmb"
+   			    android:text="315MB"
+   			    android:layout_marginLeft="5dip"
+   			    android:layout_below="@id/line_3"
+   			    android:layout_alignBaseline="@id/tmp_txtmb"
+   			       			    android:textColor="#ffffff"
+   			    />			
 			
 		    <TextView  android:id="@+id/fs_r"
      		    android:layout_width="wrap_content"
@@ -275,7 +286,8 @@
   			    android:layout_alignBaseline="@id/fs_r"
   			    android:layout_alignLeft="@id/filesize_w"
   			    android:gravity="right"		
-   			></EditText>   			
+   			></EditText>   		
+
 		    <TextView 
      		    android:layout_width="wrap_content"
      		    android:layout_height="wrap_content"    			    
@@ -463,10 +475,11 @@
         </ImageView>
 
         <ListView                                    
-		 android:id="@+id/ListView01" 
-		 android:layout_height="fill_parent" 
-		 android:layout_width="fill_parent"
-		  android:scrollingCache="false"/>
+			android:id="@+id/ListView01" 
+			android:layout_height="fill_parent" 
+			android:layout_width="fill_parent"
+			android:scrollingCache="false">            
+        </ListView>
       
     </FrameLayout>
     

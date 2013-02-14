@@ -28,25 +28,28 @@
 			    android:layout_height="wrap_content"
 		 	    android:text="exp_name"
 		 	    android:textSize="17dip"
+		 	    android:textColor="#ffffff"
 		 	></TextView>	
 		    <TextView 
 		 	    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 		 	    android:text=" : "
 		 	    		 	    android:textSize="17dip"
+		 	    android:textColor="#ffffff"		 	    
 		 	></TextView>	    
 	 		<TextView android:id="@+id/dataItem06"
 		 	    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 		 	    android:text="35"
 		 	    		 	    android:textSize="17dip"
+		 	    		 	    android:textColor="#ffffff"
 	 		></TextView>	    
  		</LinearLayout>
  		<TextView
 		  	android:layout_width="fill_parent"
 		  	android:layout_height="wrap_content"
 		  	android:text=" "
-		  	android:background="#A9A9A9"
+		  	android:background="#E0FFFF"
 		  	android:textSize="1dp"
 		  	android:layout_marginBottom="3dip"
  		></TextView>
@@ -58,6 +61,7 @@
 		 	    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 		 	    android:text="· CPU : "
+		 	    		 	    android:textColor="#ffffff"
 		 	></TextView>		    
 			 <TextView android:id="@+id/tmp_txt1"
  			    android:layout_width="wrap_content"
@@ -72,7 +76,7 @@
  			<TextView android:id="@+id/tmp_txt2"
  			    android:layout_width="wrap_content"
  			    android:layout_height="wrap_content"
- 			    android:text="), IOwait("
+ 			    android:text="), IOw("
  			></TextView>
 			<TextView  android:id="@+id/dataItem02"  
 			    android:layout_width="wrap_content" 
@@ -108,7 +112,8 @@
 			<TextView
 		 	    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
-		 	    android:text="· Ctx "
+		 	    android:text="· Ctx SW : "
+		 	    		 	    android:textColor="#ffffff"
 		 	></TextView> 		 		    
    		 	<TextView android:id="@+id/dataItem04"
  		 	    android:layout_width="wrap_content"
