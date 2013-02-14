@@ -257,7 +257,7 @@
    			    android:layout_height="wrap_content"
    			    android:layout_toRightOf="@id/tmp_txtmb"
    			    android:text="315MB"
-   			    android:layout_marginLeft="5dip"
+   			    android:layout_marginLeft="15dip"
    			    android:layout_below="@id/line_3"
    			    android:layout_alignBaseline="@id/tmp_txtmb"
    			       			    android:textColor="#ffffff"
