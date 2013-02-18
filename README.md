@@ -4,6 +4,11 @@ Mobile benchmark tool (mobibench)
 Written by Kisung Lee <kisunglee@hanyang.ac.kr>, Sooman Jeong <77smart@hanyang.ac.kr>, 
 and Jungwoo Hwang <tearoses@hanyang.ac.kr>
 
+
+Reference: Sooman Jeong, Kisung Lee, Jungwoo Hwang, Seongjin Lee, Youjip Won, "AndroStep: Android Storage Performance Analysis Tool", The 1st European Workshop on Mobile Engineering (ME'13), Feb. 26, 2013, Aachen, Germany 
+<http://www.esos.hanyang.ac.kr/files/publication/conferences/international/AndroStep.pdf>
+
+
 We develop Mobibench to generate the workload, which
 represents the smartphone IO. Mobibench generates sequential
 and random IO requests to the storage device
