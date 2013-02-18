@@ -42,7 +42,26 @@ public class Setting {
 		return ;
 	}
 	public int get_io_size(){
-		return io_size;		
+		int ret = 0;
+		
+		switch(io_size) {
+		case 0:
+			ret = 4;
+			break;
+		case 1:
+			ret = 8;
+			break;
+		case 2:
+			ret = 16;
+			break;
+		case 3:
+			ret = 128;
+			break;
+		case 4:
+			ret = 512;
+			break;
+		}
+		return ret;		
 	}
 	
 	public void set_target_partition(int value){

@@ -5,6 +5,13 @@
 		<item>/sdcard</item>
 		<item>/extSdCard</item>
 	</string-array>
+	<string-array name="iosize">
+		<item>4 KB</item>
+		<item>8 KB</item>
+		<item>16 KB</item>
+		<item>128 KB</item>
+		<item>512 KB</item>
+	</string-array>
 	<string-array name="filesyncmode">
 	    <item>Normal</item>
 	    <item>O_SYNC</item>

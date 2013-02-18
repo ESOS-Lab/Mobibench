@@ -69,11 +69,12 @@ public class TabMain extends TabActivity {
 	private EditText et_threadnum = null;
 	private EditText et_filesize_w = null;
 	private EditText et_filesize_r = null;
-	private EditText et_io_size = null;
+	//private EditText et_io_size = null;
 	private EditText et_transaction = null;
 	
 	private Spinner sp_partition = null;
 	private Spinner sp_file_sync= null;
+	private Spinner sp_io_size=null;
 	private Spinner sp_sql_sync= null;
 	private Spinner sp_journal= null;
 	private MobiBenchExe m_exe = null;	
@@ -282,9 +283,10 @@ public class TabMain extends TabActivity {
 		 * */        
         Log.d(DEBUG_TAG, "**********onCreate after jwgom");
 		
-		/* spinner define (total 4 spinner) */
+		/* spinner define (total 5 spinner) */
 		sp_partition = (Spinner)findViewById(R.id.sp_partition);
 		sp_file_sync = (Spinner)findViewById(R.id.sp_file_sync);
+		sp_io_size = (Spinner)findViewById(R.id.sp_io_size);
 		sp_sql_sync = (Spinner)findViewById(R.id.sp_sql_sync);
 		sp_journal = (Spinner)findViewById(R.id.sp_journal);
 		
@@ -295,23 +297,26 @@ public class TabMain extends TabActivity {
 			ad_partition = ArrayAdapter.createFromResource(this, R.array.partition2, android.R.layout.simple_spinner_item);
 		}
 		ArrayAdapter ad_file_sync = ArrayAdapter.createFromResource(this, R.array.filesyncmode,R.layout.spinner_item);
+		ArrayAdapter ad_io_size = ArrayAdapter.createFromResource(this, R.array.iosize,R.layout.spinner_item);
 		ArrayAdapter ad_sql_sync = ArrayAdapter.createFromResource(this, R.array.sqlsyncmode,R.layout.spinner_item);
 		ArrayAdapter ad_journal = ArrayAdapter.createFromResource(this, R.array.journalmode,R.layout.spinner_item);
 //		
 		ad_partition.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		ad_file_sync.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		ad_io_size.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		ad_sql_sync.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		ad_journal.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		
 		sp_partition.setAdapter(ad_partition);
 		sp_file_sync.setAdapter(ad_file_sync);
+		sp_io_size.setAdapter(ad_io_size);
 		sp_sql_sync.setAdapter(ad_sql_sync);
 		sp_journal.setAdapter(ad_journal);
 		
 		et_threadnum = (EditText)findViewById(R.id.threadnum);
 		et_filesize_w = (EditText)findViewById(R.id.filesize_w);
 		et_filesize_r = (EditText)findViewById(R.id.filesize_r);
-		et_io_size = (EditText)findViewById(R.id.io_size);
+		//et_io_size = (EditText)findViewById(R.id.io_size);
 		et_transaction = (EditText)findViewById(R.id.transcation);
 
 		CB_SW=(CheckBox)findViewById(R.id.cb_sw);
@@ -356,7 +361,7 @@ public class TabMain extends TabActivity {
 		free_suffix = StorageOptions.formatSize(free_space);
 			
 		TV_free_space = (TextView)findViewById(R.id.freespace);
-		TV_free_space.setText("("+free_suffix+" free)");
+		TV_free_space.setText("("+free_suffix+" free)"); 	
 		
         // Activity가 실행 중인 동안 화면을 밝게 유지합니다.
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -452,7 +457,41 @@ public class TabMain extends TabActivity {
 //	
 				}
 			}
-		);		
+		);
+		
+		// IO size spinner
+				sp_io_size.setOnItemSelectedListener(
+					new OnItemSelectedListener(){
+						public void onItemSelected(AdapterView<?> parent,View view, int position, long id){
+							switch(position){ 
+							case 0:
+								editor.putInt("p_io_size", 0);	
+								set.set_io_size(0);
+								break;
+							case 1:
+								editor.putInt("p_io_size", 1);	
+								set.set_io_size(1);
+								break;
+							case 2:
+								editor.putInt("p_io_size", 2);	
+								set.set_io_size(2);
+								break;
+							case 3:
+								editor.putInt("p_io_size", 3);	
+								set.set_io_size(3);
+								break;
+							case 4:
+								editor.putInt("p_io_size", 4);	
+								set.set_io_size(4);
+								break;
+							}
+							editor.commit();
+						}
+						public void onNothingSelected(AdapterView<?> parent){
+		//	
+						}
+					}
+				);		
 		
 		// SQLite synchronization spinner
 		sp_sql_sync.setOnItemSelectedListener(
@@ -728,8 +767,9 @@ public class TabMain extends TabActivity {
 		}
 		et_threadnum.setText(String.valueOf(prefs.getInt("p_threadnum", 1)));
 		et_filesize_w.setText(String.valueOf(prefs.getInt("p_filesize_w", 1)));
-		et_filesize_r.setText(String.valueOf(prefs.getInt("p_filesize_r", 256)));
-		et_io_size.setText(String.valueOf(prefs.getInt("p_io_size", 4)));
+		et_filesize_r.setText(String.valueOf(prefs.getInt("p_filesize_r", 32)));
+		//et_io_size.setText(String.valueOf(prefs.getInt("p_io_size", 4)));
+		sp_io_size.setSelection(prefs.getInt("p_io_size", 0));
 		sp_file_sync.setSelection(prefs.getInt("p_file_sync_mode", 3));
 		et_transaction.setText(String.valueOf(prefs.getInt("p_transaction", 1)));
 		sp_sql_sync.setSelection(prefs.getInt("p_sql_sync_mode", 0));
@@ -742,8 +782,8 @@ public class TabMain extends TabActivity {
 		}
 		set.set_thread_num(prefs.getInt("p_threadnum", 1));	
 		set.set_filesize_write(prefs.getInt("p_filesize_w", 1));
-		set.set_filesize_read(prefs.getInt("p_filesize_r", 256));		
-		set.set_io_size(prefs.getInt("p_io_size", 4));
+		set.set_filesize_read(prefs.getInt("p_filesize_r", 32));		
+		set.set_io_size(prefs.getInt("p_io_size", 0));
 		set.set_file_sync_mode(prefs.getInt("p_file_sync_mode", 3));
 		set.set_transaction_num(prefs.getInt("p_transaction", 1));	
 		set.set_sql_sync_mode(prefs.getInt("p_sql_sync_mode", 0));
@@ -787,8 +827,8 @@ public class TabMain extends TabActivity {
 			set.set_filesize_read(Integer.parseInt(et_filesize_r.getText().toString()));
 			editor.putInt("p_filesize_r", Integer.parseInt(et_filesize_r.getText().toString()));
 		}
-		set.set_io_size(Integer.parseInt(et_io_size.getText().toString()));
-		editor.putInt("p_io_size", Integer.parseInt(et_io_size.getText().toString()));
+		//set.set_io_size(Integer.parseInt(et_io_size.getText().toString()));
+		//editor.putInt("p_io_size", Integer.parseInt(et_io_size.getText().toString()));
 		set.set_transaction_num(Integer.parseInt(et_transaction.getText().toString()));
 		editor.putInt("p_transaction", Integer.parseInt(et_transaction.getText().toString()));
 		
@@ -820,10 +860,10 @@ public class TabMain extends TabActivity {
 		set.set_thread_num(1);			
 		editor.putInt("p_filesize_w", 1);
 		set.set_filesize_write(1);
-		editor.putInt("p_filesize_r", 256);
-		set.set_filesize_read(256);		
-		editor.putInt("p_io_size", 4);
-		set.set_io_size(4);
+		editor.putInt("p_filesize_r", 32);
+		set.set_filesize_read(32);		
+		editor.putInt("p_io_size", 0);
+		set.set_io_size(0);
 		editor.putInt("p_file_sync_mode", 3);
 		set.set_file_sync_mode(0);		
 		editor.putInt("p_transaction", 100);
@@ -896,7 +936,7 @@ public class TabMain extends TabActivity {
     { 
     	switch(type){
     	case 0:
-    		Toast.makeText(this, "MoniBench working..", Toast.LENGTH_SHORT).show();
+    		Toast.makeText(this, "MobiBench working..", Toast.LENGTH_SHORT).show();
     		break;
     	case 1:
     		Toast.makeText(this, "Benchmark engin exited with error", Toast.LENGTH_LONG).show();

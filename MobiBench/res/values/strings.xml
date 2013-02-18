@@ -7,5 +7,6 @@
     <string name="sp_file_sync">File Sync Mode</string>
     <string name="sp_sql_sync">File Sql Mode</string>
     <string name="sp_journal">File Journal Mode</string>
+    <string name="sp_io_size">IO Size</string>
 
 </resources>
