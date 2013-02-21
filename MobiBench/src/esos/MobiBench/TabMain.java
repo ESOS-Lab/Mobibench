@@ -224,6 +224,7 @@ public class TabMain extends TabActivity {
   		
       		// clear values
      		result_start = 0;
+     		DialogActivity.ResultDate = null;
         	for(int i=0; i < 7; i++) {
         		DialogActivity.bHasResult[i]=0;
         		DialogActivity.ResultCPU_act[i]=null;
@@ -238,7 +239,7 @@ public class TabMain extends TabActivity {
         	
 
     		
-    		
+        	DialogActivity.ResultDate = result.getString(1);
     		while(!result.isAfterLast()){
     			 Log.d(DEBUG_TAG, "Create DialogActivity (position/result_start/expname) " + result.getPosition() + " " + result_start + " " + result.getString(10));
     			
