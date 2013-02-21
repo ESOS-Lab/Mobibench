@@ -7,9 +7,13 @@ import esos.MobiBench.R;
 import esos.MobiBench.TabMain;
 import esos.Database.*;
 import esos.MobiBench.R.layout;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ViewGroup;
@@ -21,6 +25,7 @@ import android.widget.Toast;
 import android.view.View;
 
 
+@TargetApi(11)
 public class DialogActivity extends Activity{
     DataListView list;
     IconTextListAdapter adapter;
@@ -58,6 +63,7 @@ public class DialogActivity extends Activity{
     public static String ResultThrp[] = new String[7];
     public static String ResultExpName[] = new String[7];
     public static String ResultType[] = new String[7];
+    public static String ResultDate;
 	public static int check_using_db = 0;
     
 	   public void onCreate(Bundle savedInstanceState) {
@@ -88,21 +94,24 @@ public class DialogActivity extends Activity{
 	        resID[4]=R.drawable.icon_insert;
 	        resID[5]=R.drawable.icon_update;
 	        resID[6]=R.drawable.icon_delete;
-	                
-	    	String tmp_str_date = dateFormat.format(calendar.getTime()); // for data base date
+	       
+	        if(ResultDate == null) {
+	        	ResultDate = dateFormat.format(calendar.getTime()); // for data base date
+	        }
 	    	db_index = db_prefs.getInt("database_index", 0); // data base indexing
-	    	
+	        String clip_text = Build.MANUFACTURER.toUpperCase()+" "+Build.MODEL+"("+ResultDate+")\n";
+	        
 	        for(int idx = 0; idx < 7; idx++) {
 		        if(bHasResult[idx] != 0) {
 		        	adapter.addItem(new IconTextItem(res.getDrawable(resID[idx]), ResultCPU_act[idx], ResultCPU_iow[idx], ResultCPU_idl[idx], 
 		        			ResultCS_tot[idx], ResultCS_vol[idx], ResultThrp[idx], ResultExpName[idx]));
 		        	Log.d(DEBUG_TAG, "addItem : idx/expname " + idx + " " + ResultExpName[idx]);	
+		        	clip_text+=ResultExpName[idx]+": "+ResultThrp[idx]+"\n"+"\tCPU: "+ResultCPU_act[idx]+","+ResultCPU_iow[idx]+","+ResultCPU_idl[idx]+"\n"+"\tCTX_SW: "+ResultCS_tot[idx]+"("+ResultCS_vol[idx]+")\n";
 		        	if(check_using_db == 1){
 		        		Log.d(DEBUG_TAG, "addItem / checkusing is 1 : idx/expname " + idx + " " + ResultExpName[idx]);	
-			        	db.insert_DB(db_index, tmp_str_date, ResultType[idx], 1, ResultCPU_act[idx], ResultCPU_iow[idx], ResultCPU_idl[idx],
+			        	db.insert_DB(db_index, ResultDate, ResultType[idx], 1, ResultCPU_act[idx], ResultCPU_iow[idx], ResultCPU_idl[idx],
 			        			ResultCS_tot[idx], ResultCS_vol[idx],  ResultThrp[idx], ResultExpName[idx]);
 		        	}
-     	
 		        }
 	        }
         	if(check_using_db == 1){
@@ -114,7 +123,11 @@ public class DialogActivity extends Activity{
 	        //db.insert_DB(32, "3011", true, "30", "40", "30", "1000", "700", "2000", "seq write");
 
 	        list.setAdapter(adapter);
-	 
+	        
+	        /*Copy result(clip_text) to clip-board */
+	        ClipboardManager clipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+	        clipboard.setPrimaryClip(ClipData.newPlainText(CLIPBOARD_SERVICE, clip_text));
+	        Toast.makeText(this, "The result was copied to clip-board.", Toast.LENGTH_SHORT).show();
 	 
 	        // use adapter.notifyDataSetChanged() to apply changes after adding items dynamically
 	        // adapter.notifyDataSetChanged();
@@ -128,7 +141,7 @@ public class DialogActivity extends Activity{
 	                Toast.makeText(getApplicationContext(), "Selected : " + curData[6], 2000).show();
 	            }
 	        });
-	        
+	        	        
 	        // display as the main layout
 	        setContentView(list, params);
 	    }
