@@ -9,11 +9,12 @@ package esos.MobiBench;
 
 public final class R {
     public static final class array {
-        public static final int filesyncmode=0x7f040001;
-        public static final int journalmode=0x7f040003;
+        public static final int filesyncmode=0x7f040002;
+        public static final int iosize=0x7f040001;
+        public static final int journalmode=0x7f040004;
         public static final int partition=0x7f040000;
-        public static final int partition2=0x7f040004;
-        public static final int sqlsyncmode=0x7f040002;
+        public static final int partition2=0x7f040005;
+        public static final int sqlsyncmode=0x7f040003;
     }
     public static final class attr {
     }
@@ -114,7 +115,6 @@ public final class R {
         public static final int history=0x7f080038;
         public static final int iconItem=0x7f080002;
         public static final int io=0x7f08002c;
-        public static final int io_size=0x7f08002d;
         public static final int iv_image=0x7f08000e;
         public static final int jour_txt=0x7f080035;
         public static final int line_1=0x7f08001a;
@@ -130,6 +130,7 @@ public final class R {
         public static final int progress_text=0x7f080042;
         public static final int sizetxt=0x7f080018;
         public static final int sp_file_sync=0x7f08002f;
+        public static final int sp_io_size=0x7f08002d;
         public static final int sp_journal=0x7f080036;
         public static final int sp_partition=0x7f080015;
         public static final int sp_sql_sync=0x7f080034;
@@ -169,6 +170,7 @@ public final class R {
         public static final int app_name=0x7f050001;
         public static final int hello=0x7f050000;
         public static final int sp_file_sync=0x7f050003;
+        public static final int sp_io_size=0x7f050006;
         public static final int sp_journal=0x7f050005;
         public static final int sp_partition=0x7f050002;
         public static final int sp_sql_sync=0x7f050004;
