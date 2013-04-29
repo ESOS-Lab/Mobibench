@@ -137,7 +137,11 @@ def parse_line(line, pid, new_id)
 	  return
 	elsif(parsed_line.include?("syscall"))
 	  return
+	elsif(parsed_line.include?("+++"))
+	  return
 	end
+
+	#puts(parsed_line)
     
   #########################################
   # split parsed_line and find return_value
@@ -267,26 +271,25 @@ end #end of method "parse_line"
 #main code
 $fo=File.open($file_out, "w+")
 
-for i in $input_name
-
-	f=File.open(i+"", "r+")
+#for i in $input_name
+  
+	f=File.open($input_name, "r+")
 	# parse pid from each line
 		f.each_line do |line|
-			parse_pid(line)
+		parse_pid(line.unpack("C*").pack("U*"))
 		end
 	
 	# parse command from each pid
 	$pids.each do |id|
 		f.seek(0, IO::SEEK_SET)
 		f.each_line do |line|
-			parse_line(line, id, $new_id)
-			#parse_line(line, 5508)
+			parse_line(line.unpack("C*").pack("U*"), id, $new_id)
 		end
 		$new_id += 1
 	end
 
 	f.close
 	
-end #end of for loop
+#end #end of for loop
 
 $fo.close
