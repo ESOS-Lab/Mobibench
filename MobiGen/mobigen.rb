@@ -113,6 +113,9 @@ def parse_line(line, pid, new_id)
 
 	parsed_line=nil;
 	str=line.split(" ")
+	if(str[0].to_i == 0)
+		return
+	end
 	if(str[0].to_i != pid)
 		return
 	end
@@ -258,8 +261,10 @@ def parse_line(line, pid, new_id)
       insert_open_fd(fd)
     elsif(cmd.include?("write") || cmd.include?("pwrite") || cmd.include?("read") || cmd.include?("pread") || cmd.include?("sync") || cmd.include?("fstat"))
       if(check_open_fd(fd) == 0)
-        insert_open_fd(fd)
-        $fo.print new_id," ", time," open /data/data O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE ",fd,"\n"
+	  	if(fd != nil)
+        	insert_open_fd(fd)
+        	$fo.print new_id," ", time," open /data/data O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE ",fd,"\n"
+		end
       end
     end
 
