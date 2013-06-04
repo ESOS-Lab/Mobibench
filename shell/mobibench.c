@@ -30,6 +30,8 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
+#define VERSION_NUM	"1.0.0"
+
 //#define DEBUG_SCRIPT
 
 #ifdef DEBUG_SCRIPT
@@ -1995,6 +1997,8 @@ int replay_script(void)
 }
 
 char *help[] = {
+" Mobibench "VERSION_NUM,
+" ",
 "    Usage: mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]",
 "                     [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]",
 "                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-g replay_script] [-q]",
@@ -2027,7 +2031,7 @@ void show_help()
 }
 
 extern char *optarg;
-#define USAGE  "\tUsage: For usage information type mobibench -h \n\n"
+#define USAGE  "\tMobibench "VERSION_NUM"\n\n\tUsage: For usage information type mobibench -h \n\n"
 
 int main( int argc, char **argv)
 {
