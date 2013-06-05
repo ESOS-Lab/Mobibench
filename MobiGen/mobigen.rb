@@ -1,4 +1,4 @@
-$file_out = "mobigen.out"
+﻿#Last modified : 20130503 13:25
 
 $input_name = ARGV[0]
 $pids = []
@@ -83,7 +83,6 @@ end
 
 def add_unfinished(line)
 	tmp_line = line
-	tmp_line=line
 	tmp_line=tmp_line[0..(tmp_line.index("<")-2)]
 	$unfinished.push(tmp_line);
 	#puts($unfinished[$unfinished.size-1])
@@ -93,6 +92,10 @@ def get_unfinished(line)
 	if($unfinished.size == 0)
 		return nil
 	end
+	if($unfinished.size > 1)
+    $unfinished.delete_at(0)
+  end
+	#puts($unfinished.size)
 	str=$unfinished[0].split
 	cmd1 = str[2][0..(str[2].index("(")-1)]
 	cmd2 = line[(line.index("<")+5)..(line.index(">")-9)]
@@ -110,9 +113,34 @@ def parse_line(line, pid, new_id)
 
 	parsed_line=nil;
 	str=line.split(" ")
+	if(str[0].to_i == 0)
+		return
+	end
 	if(str[0].to_i != pid)
 		return
 	end
+  #puts(line)
+  
+  #########################################
+  # skip useless line
+  #########################################
+  if(line == nil) 
+   return
+  elsif(str[2] == "---")
+    return
+  elsif(line.include?("interrupted"))
+   return
+  elsif(line.include?("detached"))
+   return
+  elsif(line.include?("+++"))
+    return
+  end
+  
+  
+  if($is_first_time==0)
+     $is_first_time=1
+     $first_time=str[1].to_f
+  end 
 
   #########################################
   # combine "unfinished" + "resumed" line
@@ -133,11 +161,9 @@ def parse_line(line, pid, new_id)
 	#########################################
 	if(parsed_line == nil) 
 	 return
-	elsif(str[2] == "---")
-	  return
-	elsif(parsed_line.include?("syscall"))
-	  return
 	end
+
+	#puts(parsed_line)
     
   #########################################
   # split parsed_line and find return_value
@@ -167,6 +193,10 @@ def parse_line(line, pid, new_id)
 		 parsed_line =parsed_line[0..(parsed_line.index("...")-1)].concat(parsed_line[parsed_line.index("...")+3..parsed_line.size])
 		end
 		
+		if(parsed_line.include?("[") && parsed_line.include?("]"))
+      parsed_line =parsed_line[0..(parsed_line.index("[")-1)].concat(parsed_line[parsed_line.index("]")+1..parsed_line.size])
+    end
+		
 		if(parsed_line.include?("{") && parsed_line.include?("}"))
 		  parsed_line =parsed_line[0..(parsed_line.index("{")-1)].concat(parsed_line[parsed_line.index("}")+1..parsed_line.size])
 		end
@@ -174,11 +204,19 @@ def parse_line(line, pid, new_id)
 	#########################################
   # get items from splitted str
   #########################################
+   
+  	#puts(parsed_line)
+	if(str[0] == nil) 
+	     return
+	end 
 		time = str[1]
 		cmd = str[2][0..(str[2].index("(")-1)]
 		args = parsed_line[(parsed_line.index("(")+1)..(parsed_line.index(")")-1)]
     args_str = args.split(", ")
-    partition = args_str[0].split("/")
+    #puts(args)
+    if(args_str[0] != nil)
+      partition = args_str[0].split("/")
+    end
   
 		if(cmd.include?("open") || cmd.include?("access") || cmd.include?("stat") || cmd.include?("unlink") || cmd.include?("close")) || cmd.include?("sync")
 			#puts("nofd")
@@ -197,21 +235,23 @@ def parse_line(line, pid, new_id)
 			  end
 			end
 		else
-			fd = str[2][(str[2].index("(")+1)..(str[2].index(",")-1)]
-			if(check_fd(fd) == 1)
-			  #puts(parsed_line)
-			  return
-			end
+		  if(str[2].include?(","))
+  			fd = str[2][(str[2].index("(")+1)..(str[2].index(",")-1)]
+  			if(check_fd(fd) == 1)
+  			  #puts(parsed_line)
+  			  return
+  			end
+  		end
 		end
 			
 	#########################################
   # get relative time : usecs
   #########################################
-    time = str[1]
-		if($is_first_time==0)
-		  $is_first_time=1
-		  $first_time=time.to_f
-		end	
+  #  time = str[1]
+	#	if($is_first_time==0)
+	#	  $is_first_time=1
+	#	  $first_time=time.to_f
+	#	end	
 			time=(((time.to_f-$first_time)*1000000).round).to_s
 
   #########################################
@@ -221,8 +261,10 @@ def parse_line(line, pid, new_id)
       insert_open_fd(fd)
     elsif(cmd.include?("write") || cmd.include?("pwrite") || cmd.include?("read") || cmd.include?("pread") || cmd.include?("sync") || cmd.include?("fstat"))
       if(check_open_fd(fd) == 0)
-        insert_open_fd(fd)
-        $fo.print new_id," ", time," open /data/data O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE ",fd,"\n"
+	  	if(fd != nil)
+        	insert_open_fd(fd)
+        	$fo.print new_id," ", time," open /data/data O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE ",fd,"\n"
+		end
       end
     end
 
@@ -265,28 +307,27 @@ end #end of method "parse_line"
 
 
 #main code
-$fo=File.open($file_out, "w+")
+$fo=File.open($input_name+"_mg.out", "w+")
 
-for i in $input_name
-
-	f=File.open(i+"", "r+")
+#for i in $input_name
+  
+	f=File.open($input_name, "r+")
 	# parse pid from each line
 		f.each_line do |line|
-			parse_pid(line)
+		parse_pid(line.unpack("C*").pack("U*"))
 		end
 	
 	# parse command from each pid
 	$pids.each do |id|
 		f.seek(0, IO::SEEK_SET)
 		f.each_line do |line|
-			parse_line(line, id, $new_id)
-			#parse_line(line, 5508)
+			parse_line(line.unpack("C*").pack("U*"), id, $new_id)
 		end
 		$new_id += 1
 	end
 
 	f.close
 	
-end #end of for loop
+#end #end of for loop
 
 $fo.close

@@ -26,11 +26,16 @@ Get strace output on target system
     # strace -f -t -tt -e trace=file,write,read,close,fsync,fdatasync -p 15476 -o /mnt/ext/twitter
 
 
-Run MobiGen 
------------
+Run MobiGen (On Host PC)
+------------------------
 	# ruby mobigen.rb [strace_out]
  
 * strace_out : trace output
+
+Replay MobiGen
+--------------
+	# mobibench -p /data/test -g [mobigen_out]
+
 
 
 2013-01-10, Sooman Jeong <77smart@hanyang.ac.kr>

@@ -715,15 +715,15 @@ int init_file(char* filename, long long size)
 	int rest_size = size - (rec_len*num_rec);
 	int open_flags = O_RDWR | O_CREAT;
 
-	//printf("%s\n", __func__);
-	//printf("size : %d\n", (int)size);
-	//printf("num_rec : %d\n", num_rec);
-	//printf("rest_size : %d\n", rest_size);
+	printf("%s\n", __func__);
+	printf("size : %d\n", (int)size);
+	printf("num_rec : %d\n", num_rec);
+	printf("rest_size : %d\n", rest_size);
 
 #ifdef ANDROID_APP
 	if(g_access == MODE_RND_WRITE)
 	{
-		open_flags |= O_DIRECT;	
+		//open_flags |= O_DIRECT;
 	}
 #endif
 
@@ -864,7 +864,7 @@ int thread_main(void* arg)
 	if(g_access == MODE_READ || g_access == MODE_RND_READ || g_access == MODE_RND_WRITE)
 	{
 		stat(filename, &sb);
-		//printf("sb.st_size: %d\n", (int)sb.st_size);
+		printf("sb.st_size: %d\n", (int)sb.st_size);
 
 		if(sb.st_size < filebytes64)
 		{

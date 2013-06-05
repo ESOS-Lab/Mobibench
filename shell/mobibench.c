@@ -24,9 +24,13 @@
 #include <errno.h>
 #include <pthread.h>
 #include <sys/syscall.h>
+#include <dirent.h>
+
 
 /* for sqlite3 */
 #include "sqlite3.h"
+
+#define VERSION_NUM	"1.0.0"
 
 //#define DEBUG_SCRIPT
 
@@ -139,6 +143,7 @@ int db_transactions;
 int db_journal_mode;
 int db_sync_mode;
 int db_init_show = 0;
+int db_interval = 0;
 int g_state = 0;
 char* g_err_string;
 int b_quiet = 0;
@@ -1238,6 +1243,12 @@ int thread_main_db(void* arg)
 			signal_thread_status(thread_num, END, &thread_cond3);
 			return -1;
 		}
+
+		if(db_interval)
+		{
+			sleep(db_interval);
+		}
+		
 		show_progress(i*100/db_transactions);
 	}
 
@@ -1353,7 +1364,7 @@ int open_num = 0;
 int do_script(struct script_entry* se, struct script_thread_time* st)
 {
 	int ret;
-	char pathname[256];
+	char replay_pathname[256];
 	int flags;
 	int i;
 	int fd_ret;
@@ -1368,13 +1379,14 @@ int do_script(struct script_entry* se, struct script_thread_time* st)
 		//printf("open %s, %s, %d\n", se->args[0], se->args[1], fd_org);
 		if(se->args[0][0] == '"')
 		{
-			strcpy(pathname, &se->args[0][1]);
-			pathname[strlen(pathname)-1]='\0';
+			strcpy(replay_pathname, &se->args[0][1]);
+			replay_pathname[strlen(replay_pathname)-1]='\0';
 		}
 		else
 		{
 			//sprintf(pathname, "./data/temp_%d_%d.dat", se->thread_num, open_num++);	
-			sprintf(pathname, "/data2/test/temp_%d_%d.dat", se->thread_num, open_num++);	
+			//sprintf(pathname, "/data2/test/temp_%d_%d.dat", se->thread_num, open_num++);	
+			sprintf(replay_pathname, "%s/temp_%d_%d.dat", pathname, se->thread_num, open_num++);	
 		}
 
 		if( strncmp(se->args[1], "O_RDONLY", 8) == 0)
@@ -1387,9 +1399,9 @@ int do_script(struct script_entry* se, struct script_thread_time* st)
 		}
 
 		io_time_start = get_current_utime();
-		fd_ret = open(pathname, flags, 0777);
+		fd_ret = open(replay_pathname, flags, 0777);
 		io_time = get_relative_utime(io_time_start);
-		SCRIPT_PRINT("open %s --> %d\n", pathname, fd_ret);
+		SCRIPT_PRINT("open %s --> %d\n", replay_pathname, fd_ret);
 		if(fd_ret > 0)
 		{
 			ret = pthread_mutex_lock(&fd_lock);
@@ -1547,35 +1559,35 @@ int do_script(struct script_entry* se, struct script_thread_time* st)
 	}
 	else if( strncmp(se->cmd, "access", 6) == 0)
 	{
-		strcpy(pathname, &se->args[0][1]);
-		pathname[strlen(pathname)-1]='\0';
+		strcpy(replay_pathname, &se->args[0][1]);
+		replay_pathname[strlen(replay_pathname)-1]='\0';
 
 		io_time_start = get_current_utime();
-		ret = access(pathname,  0777);
+		ret = access(replay_pathname,  0777);
 		io_time = get_relative_utime(io_time_start);
-		SCRIPT_PRINT("access %s --> %d\n", pathname, ret);
+		SCRIPT_PRINT("access %s --> %d\n", replay_pathname, ret);
 	}
 	else if( strncmp(se->cmd, "stat", 4) == 0)
 	{
 		struct stat stat_buf;
-		strcpy(pathname, &se->args[0][1]);
-		pathname[strlen(pathname)-1]='\0';
+		strcpy(replay_pathname, &se->args[0][1]);
+		replay_pathname[strlen(replay_pathname)-1]='\0';
 
 		io_time_start = get_current_utime();
-		ret = stat64(pathname,  &stat_buf);
+		ret = stat64(replay_pathname,  &stat_buf);
 		io_time = get_relative_utime(io_time_start);
-		SCRIPT_PRINT("stat64 %s --> %d\n", pathname, ret);
+		SCRIPT_PRINT("stat64 %s --> %d\n", replay_pathname, ret);
 	}
 	else if( strncmp(se->cmd, "lstat", 5) == 0)
 	{
 		struct stat stat_buf;
-		strcpy(pathname, &se->args[0][1]);
-		pathname[strlen(pathname)-1]='\0';
+		strcpy(replay_pathname, &se->args[0][1]);
+		replay_pathname[strlen(replay_pathname)-1]='\0';
 
 		io_time_start = get_current_utime();
-		ret = lstat64(pathname,  &stat_buf);
+		ret = lstat64(replay_pathname,  &stat_buf);
 		io_time = get_relative_utime(io_time_start);
-		SCRIPT_PRINT("lstat64 %s --> %d\n", pathname, ret);
+		SCRIPT_PRINT("lstat64 %s --> %d\n", replay_pathname, ret);
 	}
 	else if( strncmp(se->cmd, "fstat", 5) == 0)
 	{
@@ -1592,13 +1604,13 @@ int do_script(struct script_entry* se, struct script_thread_time* st)
 	}
 	else if( strncmp(se->cmd, "unlink", 6) == 0)
 	{
-		strcpy(pathname, &se->args[0][1]);
-		pathname[strlen(pathname)-1]='\0';
+		strcpy(replay_pathname, &se->args[0][1]);
+		replay_pathname[strlen(replay_pathname)-1]='\0';
 
 		io_time_start = get_current_utime();
-		ret = unlink(pathname);
+		ret = unlink(replay_pathname);
 		io_time = get_relative_utime(io_time_start);
-		SCRIPT_PRINT("unlink %s --> %d\n", pathname, ret);
+		SCRIPT_PRINT("unlink %s --> %d\n", replay_pathname, ret);
 	}
 
 	return io_time;
@@ -1641,6 +1653,7 @@ int script_thread_main(void* arg)
 
 	gScriptThreadTime[thread_num].end = 1;
 	//printf("thread[%d] ended at %lld, org %lld\n", thread_num, get_relative_utime(time_start), gScriptThreadTime[thread_num].end);
+	return 0;
 }
 
 int replay_script(void)
@@ -1667,6 +1680,7 @@ int replay_script(void)
 	int total_write;
 	
 	printf("%s start\n", __func__);
+	printf("Write target : %s\n", pathname);
 
 	/* 
 	* Open script file (output of MobiGen script)
@@ -1983,6 +1997,8 @@ int replay_script(void)
 }
 
 char *help[] = {
+" Mobibench "VERSION_NUM,
+" ",
 "    Usage: mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]",
 "                     [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]",
 "                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-g replay_script] [-q]",
@@ -2015,7 +2031,7 @@ void show_help()
 }
 
 extern char *optarg;
-#define USAGE  "\tUsage: For usage information type mobibench -h \n\n"
+#define USAGE  "\tMobibench "VERSION_NUM"\n\n\tUsage: For usage information type mobibench -h \n\n"
 
 int main( int argc, char **argv)
 {
@@ -2051,11 +2067,12 @@ int main( int argc, char **argv)
 	db_init_show = 0;
 	b_quiet = 0;
 	b_replay_script = 0;
+	db_interval= 0;
 	clearState();
 
 	optind = 1;
 
-	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:hq")) != EOF){
+	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hq")) != EOF){
 		switch(cret){
 			case 'p':
 				strcpy(pathname, optarg);
@@ -2099,6 +2116,9 @@ int main( int argc, char **argv)
 				script_path=optarg;
 				b_replay_script = 1;
 				break;
+			case 'i':
+				db_interval = atoi(optarg);
+				break;
 			default:
 				return 1;
 				break;
@@ -2107,6 +2127,17 @@ int main( int argc, char **argv)
 
 	if(b_replay_script == 1)
 	{
+		DIR* dir;
+		dir = opendir(pathname);
+		if(dir == NULL)
+		{	
+			printf("Invalid path name %s\n", pathname);
+			setState(ERROR, "path name error");
+			goto out;
+		}
+		
+		strcat(pathname, "/mobigen_temp");
+		mkdir(pathname, S_IRWXU | S_IRWXG | S_IRWXO);
 		replay_script();
 		goto out;
 	}	
