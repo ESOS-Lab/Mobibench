@@ -1,3 +1,4 @@
+
 package esos.MobiBench;
 
 import java.io.BufferedReader;
@@ -20,6 +21,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
+import android.graphics.drawable.AnimationDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -42,6 +44,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -129,6 +132,12 @@ public class TabMain extends TabActivity {
 	private static long free_space = 0;
 	private static String free_suffix = null;
 
+	
+	/* For Animation*/
+	public AnimationDrawable anidrawable;
+	public static boolean g_animation = true;
+	public ImageView image = null;
+	
 	Handler mHandler = new Handler(){
 		public void handleMessage(Message msg){
 
@@ -147,6 +156,11 @@ public class TabMain extends TabActivity {
 			}
 			else if(msg.what == 444)
 			{
+				//while(image.getId() != R.drawable.bg_mea_middle06 ){
+					anidrawable.stop();
+				//}
+				
+				image.setImageResource(R.drawable.bg_mea_middle06);
 				if(msg.arg1 == 1)
 				{
 					print_error(1);
@@ -162,6 +176,7 @@ public class TabMain extends TabActivity {
 				Log.d(DEBUG_TAG, "[JWGOM] join end");
 
 				btn_clk_check = true;
+				
 			}
 		}
 	};	
@@ -170,9 +185,9 @@ public class TabMain extends TabActivity {
 
 	// For Database
 	public static NotesDbAdapter dbAdapter;
+	
 
-
-
+	
 	protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		Log.d(DEBUG_TAG, "**********onCreate");
@@ -198,6 +213,16 @@ public class TabMain extends TabActivity {
 		tabHost.addTab(tabHost.newTabSpec("history").setIndicator("",getResources().getDrawable(R.drawable.tab_history)).setContent(R.id.history));
 		tabHost.addTab(tabHost.newTabSpec("setting").setIndicator("",getResources().getDrawable(R.drawable.tab_help)).setContent(R.id.help));
 
+		/* For Animation*/
+		image = (ImageView)findViewById(R.id.position_mea);
+		image.setBackgroundResource(R.anim.aniimage);
+		anidrawable = (AnimationDrawable)image.getBackground();
+		//image.post(new StartAni());
+
+
+		
+		
+		
 		/* Preference Control */
 		prefs = getSharedPreferences("Setting", MODE_PRIVATE);
 		root_flag = prefs.getBoolean("init_flag", true);
@@ -829,6 +854,7 @@ public class TabMain extends TabActivity {
 		if(btn_clk_check == false){
 			print_error(0);
 		}else{
+			image.post(new StartAni());
 			btn_clk_check = false;
 			Log.d(DEBUG_TAG, "[TM] BTN_CLICK:TRUE" + "[" + btn_clk_check + "]");
 			storeValue();
@@ -841,6 +867,8 @@ public class TabMain extends TabActivity {
 			}
 
 			set_configuration();
+			DialogActivity.g_def = check_default();
+			
 			DialogActivity.ClearResult(dbAdapter);
 
 			m_exe.setMobiBenchExe(type);	
@@ -878,10 +906,12 @@ public class TabMain extends TabActivity {
 				startMobibenchExe(1);
 				break;
 			case R.id.btn_sqlite:
+				//image.post(new StartAni());
 				// For Database
 				startMobibenchExe(2);
 				break;
 			case R.id.btn_custom:
+				//image.post(new StartAni());
 				if( btn_clk_check == true && checkbox_counting() == false){
 					print_exp(4);
 				}else{
@@ -902,7 +932,7 @@ public class TabMain extends TabActivity {
 			sp_partition.setSelection(prefs.getInt("p_target_partition", 0));
 		}
 		et_threadnum.setText(String.valueOf(prefs.getInt("p_threadnum", 1)));
-		et_filesize_w.setText(String.valueOf(prefs.getInt("p_filesize_w", 1)));
+		et_filesize_w.setText(String.valueOf(prefs.getInt("p_filesize_w", 10)));
 		et_filesize_r.setText(String.valueOf(prefs.getInt("p_filesize_r", 32)));
 		//et_io_size.setText(String.valueOf(prefs.getInt("p_io_size", 4)));
 		sp_io_size.setSelection(prefs.getInt("p_io_size", 0));
@@ -917,7 +947,7 @@ public class TabMain extends TabActivity {
 			set.set_target_partition(prefs.getInt("p_target_partition", 0));
 		}
 		set.set_thread_num(prefs.getInt("p_threadnum", 1));	
-		set.set_filesize_write(prefs.getInt("p_filesize_w", 1));
+		set.set_filesize_write(prefs.getInt("p_filesize_w", 10));
 		set.set_filesize_read(prefs.getInt("p_filesize_r", 32));		
 		set.set_io_size(prefs.getInt("p_io_size", 0));
 		set.set_file_sync_mode(prefs.getInt("p_file_sync_mode", 3));
@@ -1010,8 +1040,8 @@ public class TabMain extends TabActivity {
 		set.set_target_partition(0);
 		editor.putInt("p_threadnum", 1);
 		set.set_thread_num(1);			
-		editor.putInt("p_filesize_w", 1);
-		set.set_filesize_write(1);
+		editor.putInt("p_filesize_w", 10);
+		set.set_filesize_write(10);
 		editor.putInt("p_filesize_r", 32);
 		set.set_filesize_read(32);		
 		editor.putInt("p_io_size", 0);
@@ -1045,10 +1075,6 @@ public class TabMain extends TabActivity {
 		editor.putBoolean("p_cb_insert",false);
 		editor.putBoolean("p_cb_update",false);
 		editor.putBoolean("p_cb_delete",false);
-
-
-
-
 
 		editor.commit();			
 	}
@@ -1194,6 +1220,49 @@ public class TabMain extends TabActivity {
 		 */
 		return ;
 	}
-
+	
+	public String check_default(){
+		String tmp_result = "1";
+		
+		if( !(sp_partition.getSelectedItemPosition() == 0)) tmp_result = "0";
+			//Log.d(DEBUG_TAG, "[JWGOM] ------------sp_partition " + (sp_partition.getSelectedItemPosition() == 0) + "[" + tmp_result + "]");
+		if(!(et_threadnum.getText().toString().equals("1"))) tmp_result = "0";
+		//	Log.d(DEBUG_TAG, "[JWGOM] ------------et_threadnum " + et_threadnum.getText().toString().equals("1") + "[" + tmp_result + "]");
+		if(!(et_filesize_w.getText().toString().equals("10"))) tmp_result = "0";
+		//	Log.d(DEBUG_TAG, "[JWGOM] -----------et_filesize_w " + et_filesize_w.getText().toString().equals("10") + "[" + tmp_result + "]");
+		if(!(et_filesize_r.getText().toString().equals("32"))) tmp_result = "0";
+		//	Log.d(DEBUG_TAG, "[JWGOM] -----------et_filesize_r " + et_filesize_r.getText().toString().equals("32") + "[" + tmp_result + "]");
+		
+		if(!(sp_io_size.getSelectedItemPosition() == 0)) tmp_result = "0";
+			//Log.d(DEBUG_TAG, "[JWGOM] --------------sp_io_size " + (sp_io_size.getSelectedItemPosition() == 0) + "[" + tmp_result + "]");
+		if(!(sp_file_sync.getSelectedItemPosition() == 3)) tmp_result = "0";
+		//	Log.d(DEBUG_TAG, "[JWGOM] ------------sp_file_sync " + (sp_file_sync.getSelectedItemPosition() == 3) + "[" + tmp_result + "]");
+		
+		if(!(et_transaction.getText().toString().equals("100"))) tmp_result = "0";
+		//	Log.d(DEBUG_TAG, "[JWGOM] ----------et_transaction " + et_transaction.getText().toString().equals("100") + "[" + tmp_result + "]");
+		
+		if(!(sp_sql_sync.getSelectedItemPosition() == 2)) tmp_result = "0";
+		//	Log.d(DEBUG_TAG, "[JWGOM] -------------sp_sql_sync " + (sp_sql_sync.getSelectedItemPosition() == 2) + "[" + tmp_result + "]");
+		if(!(sp_journal.getSelectedItemPosition() == 1)) tmp_result = "0";		
+		//	Log.d(DEBUG_TAG, "[JWGOM] -------------sp_journal " + (sp_journal.getSelectedItemPosition() == 1) + "[" + tmp_result + "]");
+		
+		
+		
+		
+		
+		
+		
+		//Log.d(DEBUG_TAG, "[JWGOM] ------------ Return value is : " +tmp_result);
+		return tmp_result;
+	}
+	
+	class StartAni implements Runnable {
+	    public void run() {
+	      	anidrawable.start();  
+	    }
+	    public void stop(){
+	    	
+	    }
+	}
 
 }

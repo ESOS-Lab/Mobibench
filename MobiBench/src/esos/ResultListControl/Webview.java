@@ -24,19 +24,19 @@ public class Webview extends Activity{
 
 
 		if(DialogActivity.G_EXP_CHOICE.equals("Seq.Write")){
-			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_seq_write.php");
+			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_seq_write.php?mysn=" + DialogActivity.dev_num);
 		}else if(DialogActivity.G_EXP_CHOICE.equals("Seq.read")){
-			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_seq_read.php");
+			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_seq_read.php?mysn="+ DialogActivity.dev_num);
 		}else if(DialogActivity.G_EXP_CHOICE.equals("Rand.Write")){
-			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_ran_write.php");
+			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_ran_write.php?mysn="+ DialogActivity.dev_num);
 		}else if(DialogActivity.G_EXP_CHOICE.equals("Rand.Read")){
-			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_ran_read.php");
+			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_ran_read.php?mysn="+ DialogActivity.dev_num);
 		}else if(DialogActivity.G_EXP_CHOICE.equals("SQLite.Insert")){
-			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_sqlite_insert.php");
+			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_sqlite_insert.php?mysn="+ DialogActivity.dev_num);
 		}else if(DialogActivity.G_EXP_CHOICE.equals("SQLite.Update")){
-			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_sqlite_update.php");
+			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_sqlite_update.php?mysn="+ DialogActivity.dev_num);
 		}else if(DialogActivity.G_EXP_CHOICE.equals("SQLite.Delete")){
-			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_sqlite_delete.php");
+			mWebView.loadUrl("http://mobibench.dothome.co.kr/rank_sqlite_delete.php?mysn="+ DialogActivity.dev_num);
 		}else{
 			mWebView.loadUrl("http://mobibench.co.kr/");
 		}

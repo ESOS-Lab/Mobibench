@@ -95,7 +95,9 @@ public class DialogActivity extends Activity {
 	public static String g_transaction_mode=null;
 	public static String g_sqlite_mode=null;
 	public static String g_sqlite_journal=null;  
+	public static String g_def = null;
 	public static String G_EXP_CHOICE = "default_g_exp_choice";
+	
 	public static int check_using_db = 0;
 	public static boolean isWifiAvail = false;
 	public static boolean isWifiConn = false;
@@ -153,7 +155,7 @@ public class DialogActivity extends Activity {
 						+ ResultCPU_iow[idx]+","+ResultCPU_idl[idx]+"\n"+" ▪ CTX_SW: "+ResultCS_tot[idx]
 								+ "("+ResultCS_vol[idx]+")\n\n";
 				if(check_using_db == 1){
-					Log.d(DEBUG_TAG, "addItem / checkusing is 1 : idx/expname " + idx + " " + ResultExpName[idx]);	
+					//Log.d(DEBUG_TAG, "addItem / checkusing is 1 : idx/expname " + idx + " " + ResultExpName[idx]);	
 					db.insert_DB(db_index, ResultDate, ResultType[idx], 1, ResultCPU_act[idx], ResultCPU_iow[idx]
 							, ResultCPU_idl[idx], ResultCS_tot[idx], ResultCS_vol[idx],  ResultThrp[idx], ResultExpName[idx]);
 				}
@@ -205,8 +207,8 @@ public class DialogActivity extends Activity {
 								u_data.HttpPostData(tmp_string[0],tmp_string[1],tmp_string[2],tmp_string[3]
 										,tmp_string[4],tmp_string[5],tmp_string[6], dev_num
 										, g_partition.substring(1), g_thread, g_file_size_w, g_file_size_r, g_io_size, g_file_mode
-										,g_transaction_mode, g_sqlite_mode, g_sqlite_journal, StorageOptions.GetFileSystemName());
-
+										,g_transaction_mode, g_sqlite_mode, g_sqlite_journal, StorageOptions.GetFileSystemName(),g_def);
+								Log.d(DEBUG_TAG, "DEFAULT : " + g_def);
 								Toast.makeText(DialogActivity.this, "send result to server", Toast.LENGTH_SHORT).show();
 							}
 						})

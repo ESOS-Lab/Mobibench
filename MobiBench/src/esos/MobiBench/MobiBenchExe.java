@@ -5,12 +5,13 @@ import java.io.File;
 import esos.ResultListControl.DialogActivity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import esos.Database.*;
-
+import esos.MobiBench.TabMain;
 public class MobiBenchExe extends Thread{
 
 	private int exp_id;
@@ -21,9 +22,11 @@ public class MobiBenchExe extends Thread{
 	private Context con = null;
 	private static Intent intent = null;
 	private NotesDbAdapter db = null;
+	
 	public MobiBenchExe(Context context, Handler handler){
 		mHandler = handler;
 		con = context;
+		
 
 	}
 
@@ -38,6 +41,7 @@ public class MobiBenchExe extends Thread{
 				break;
 			}
 			this.RunSqlite();
+			
 			intent = new Intent(con,DialogActivity.class);	
 			DialogActivity.check_using_db = 1;
 			con.startActivity(intent);
@@ -72,6 +76,7 @@ public class MobiBenchExe extends Thread{
 				break;
 			}
 			Log.d(DEBUG_TAG, "[RunSQL] - work done");
+			
 			intent = new Intent(con,DialogActivity.class);		
 			DialogActivity.check_using_db = 1;
 			con.startActivity(intent);					

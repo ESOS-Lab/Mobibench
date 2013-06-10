@@ -3,7 +3,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
 <ScrollView android:id="@+id/help"
-     xmlns:android="http://schemas.android.com/apk/res/android"
+     
      android:layout_height="fill_parent"
      android:layout_width="fill_parent"
      
@@ -235,7 +235,7 @@
    			    android:imeOptions="actionNext"
    			    android:inputType="number"
    			    android:selectAllOnFocus="true"
-   			    android:text="1"
+   			    android:text="10"
   			    android:maxLength="6"
   			    android:layout_toRightOf="@id/fs_w"
   			    android:layout_alignBaseline="@id/fs_w"
@@ -491,7 +491,7 @@
 	           android:layout_height="wrap_content"
 	           android:layout_centerHorizontal="true"
 	           android:layout_centerVertical="true"
-	            android:src="@drawable/bg_mea_middle"
+	            android:src="@drawable/bg_mea_middle06"
 	            android:scaleType="fitXY"
 	          ></ImageView>
 	       

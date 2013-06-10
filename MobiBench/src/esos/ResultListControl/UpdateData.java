@@ -22,7 +22,7 @@ public class UpdateData extends Activity {
 	public void HttpPostData(String seq_w, String seq_r, String ran_w, String ran_r, String sq_in
 			, String sq_up, String sq_del, String sn, String c_partition, String c_thread, String c_file_size_w
 			, String c_file_size_r, String c_io_size, String c_file_mode, String c_tran, String c_sqlite_mode
-			, String c_sqlite_journal, String c_filesystem) {
+			, String c_sqlite_journal, String c_filesystem, String def) {
 		try {
 			URL url = new URL(
 					"http://mobibench.dothome.co.kr/insert_data.php"); // URL
@@ -59,7 +59,8 @@ public class UpdateData extends Activity {
 			buffer.append("c_tran").append("=").append(c_tran).append("&");
 			buffer.append("c_sqlite_mode").append("=").append(c_sqlite_mode).append("&");
 			buffer.append("c_sqlite_journal").append("=").append(c_sqlite_journal).append("&");
-			buffer.append("c_filesystem").append("=").append(c_filesystem);
+			buffer.append("c_filesystem").append("=").append(c_filesystem).append("&");
+			buffer.append("def").append("=").append(def);
 
 
 			OutputStreamWriter outStream = new OutputStreamWriter(
