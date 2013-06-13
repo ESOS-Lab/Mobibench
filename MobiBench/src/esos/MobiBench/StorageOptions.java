@@ -82,17 +82,17 @@ public class StorageOptions {
 	}
 
 	public static String GetFileSystemName() {
-		String ret_str = "none";
+		String ret_str = "unknown";
 
 		try {
 			Scanner scanner = new Scanner(new File("/proc/mounts"));
 			while (scanner.hasNext()) {
 				String line = scanner.nextLine();
-				if (line.contains("/data")) {
-					String[] lineElements = line.split(" ");
-					ret_str = lineElements[2];
-
-				}
+		         String[] lineElements = line.split(" ");
+		         if (lineElements[1].contentEquals("/data")) {
+		           ret_str = lineElements[2];
+		           break;
+		         }
 			}
 		} catch (Exception e) {
 			// Auto-generated catch block
