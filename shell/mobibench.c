@@ -1252,6 +1252,12 @@ int thread_main_db(void* arg)
 		show_progress(i*100/db_transactions);
 	}
 
+	/* Forced checkpointing for WAL mode */
+	if(db_journal_mode == 3)
+	{
+		sqlite3_wal_checkpoint(db, NULL);
+	}
+
 	show_progress(100);
 
 	if(num_threads == 1)
