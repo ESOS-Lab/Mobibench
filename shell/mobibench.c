@@ -5,7 +5,9 @@
  * History
  * 2012. 1 created by Kisung Lee <kisunglee@hanyang.ac.kr>
  * 2012. 8 modified by Sooman Jeong <77smart@hanyang.ac.kr>
- *
+ * Jun 03, 2013 version 1.0.0 by Sooman Jeong
+ * Jul 02, 2013 forced checkpointing for WAL mode by Sooman Jeong
+ * Aug 22, 2013 fix buffer-overflow on replaying mobigen script by Sooman Jeong [version 1.0.1]
  */
 
 #include <stdio.h>
@@ -30,7 +32,7 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
-#define VERSION_NUM	"1.0.0"
+#define VERSION_NUM	"1.0.1"
 
 //#define DEBUG_SCRIPT
 
@@ -1747,6 +1749,7 @@ int replay_script(void)
 			gScriptEntry[i].args[args_num] = (char*)malloc(strlen(ptr)+1);
 			strcpy(gScriptEntry[i].args[args_num], ptr);
 			args_num++;
+			if(args_num == 3) break;
 		}
 		gScriptEntry[i].arg_num = args_num;
 
@@ -1988,14 +1991,14 @@ int replay_script(void)
 	free(thread_info);
 
 	for(i = 0; i < line_count; i++)
-	{
+	{	
 		free(gScriptEntry[i].cmd);
 		for(j = 0; j < gScriptEntry[i].arg_num ; j++)
 		{
 			free(gScriptEntry[i].args[j]);
 		}
 	}	
-	
+
 	free(gScriptEntry);
 	free(gScriptThreadTime);
 
