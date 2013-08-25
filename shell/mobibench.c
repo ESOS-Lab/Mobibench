@@ -1683,7 +1683,7 @@ int replay_script(void)
 	int max_read_size = 0;
 	long long total_io_time;
 	int total_io_count;
-	long long real_end_time;
+	long long real_end_time = 0;
 	int total_read;
 	int total_write;
 	
