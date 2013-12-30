@@ -1179,10 +1179,10 @@ public class TabMain extends TabActivity {
 		if( mgr.getDeviceId() == null){
 			Build bd = new Build();
 			final String serialNum = bd.SERIAL;
-			Toast.makeText(this, "Build serial " + serialNum, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(this, "Build serial " + serialNum, Toast.LENGTH_SHORT).show();
 			return serialNum;		
 		}else{
-			Toast.makeText(this, "Device Id " + mgr.getDeviceId(), Toast.LENGTH_SHORT).show();
+			//Toast.makeText(this, "Device Id " + mgr.getDeviceId(), Toast.LENGTH_SHORT).show();
 			return mgr.getDeviceId();	
 		}
 	} 
