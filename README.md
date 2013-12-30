@@ -5,8 +5,13 @@ Written by Kisung Lee <kisunglee@hanyang.ac.kr>, Sooman Jeong <77smart@hanyang.a
 and Jungwoo Hwang <tearoses@hanyang.ac.kr>
 
 
-Reference: Sooman Jeong, Kisung Lee, Jungwoo Hwang, Seongjin Lee, Youjip Won, "AndroStep: Android Storage Performance Analysis Tool", The 1st European Workshop on Mobile Engineering (ME'13), Feb. 26, 2013, Aachen, Germany 
+### Reference: 
+ * Sooman Jeong, Kisung Lee, Jungwoo Hwang, Seongjin Lee, Youjip Won, "AndroStep: Android Storage Performance Analysis Tool", The 1st European Workshop on Mobile Engineering (ME'13), Feb. 26, 2013, Aachen, Germany 
 <http://www.esos.hanyang.ac.kr/files/publication/conferences/international/AndroStep.pdf>
+
+ * Sooman Jeong, Kisung Lee, Jungwoo Hwang, Seongjin Lee, Youjip Won, "Framework for Analyzing Android I/O Stack Behavior: from Generating the Workload to Analyzing the Trace", Future Internet 2013, 5(4), Special Issue for "Mobile Engineering², MDPI(ISSN 1999-5903), 591-610; doi:10.3390/fi5040591 
+<http://www.mdpi.com/1999-5903/5/4/591/pdf>
+
 
 MobiBench (Application version)
 -----------------------------------
