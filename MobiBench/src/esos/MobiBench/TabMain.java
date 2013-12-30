@@ -3,6 +3,7 @@ package esos.MobiBench;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -25,6 +26,7 @@ import android.graphics.drawable.AnimationDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -1170,14 +1172,20 @@ public class TabMain extends TabActivity {
 		list.setAdapter(aa);                                                              // ListView에 ArrayAdapter 설정
 
 	}
+	
 	public String getDeviceId() 
-
 	{ 
-
 		TelephonyManager mgr = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE); 
-
-		return mgr.getDeviceId(); 
-
+		
+		if( mgr.getDeviceId() == null){
+			Build bd = new Build();
+			final String serialNum = bd.SERIAL;
+			Toast.makeText(this, "Build serial " + serialNum, Toast.LENGTH_SHORT).show();
+			return serialNum;		
+		}else{
+			Toast.makeText(this, "Device Id " + mgr.getDeviceId(), Toast.LENGTH_SHORT).show();
+			return mgr.getDeviceId();	
+		}
 	} 
 
 	public static String getMD5Hash(String s) {  
