@@ -969,7 +969,7 @@ int thread_main(void* arg)
 				
 			 	if(write(fd, buf, real_reclen)<0)
 			 	{
-					printf("File write error!!!\n");
+					printf("File write error!!! [%lu]\n", lseek(fd, 0, SEEK_CUR)/1024);
 					//exit(1);
 					setState(ERROR, "File write error");
 					signal_thread_status(thread_num, END, &thread_cond3);
