@@ -1,11 +1,16 @@
 
-CROSS=arm-none-linux-gnueabi-
+#CROSS=arm-none-linux-gnueabi-
 #CROSS=
 
 EXENAME = mobibench
 
 SRCS = mobibench.c \
 	  sqlite3.c
+
+INSTALL = install
+
+prefix = /usr/local
+bindir = $(prefix)/bin
 
 CFLAGS = -lpthread -ldl
 
@@ -35,4 +40,9 @@ CFLAGS += -DNDEBUG=1 \
 all :
 	$(CROSS)gcc -o $(EXENAME) $(SRCS) $(CFLAGS)
 
+clean :
+	@rm -rf mobibench
 
+install : $(EXENAME)
+	@$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
+	@$(INSTALL) $(EXENAME) $(DESTDIR)$(bindir)
