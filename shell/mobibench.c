@@ -8,6 +8,7 @@
  * Jun 03, 2013 version 1.0.0 by Sooman Jeong
  * Jul 02, 2013 forced checkpointing for WAL mode by Sooman Jeong
  * Aug 22, 2013 fix buffer-overflow on replaying mobigen script by Sooman Jeong [version 1.0.1]
+ * Dec 31, 2013 Modified to print Write error code by Seongjin Lee [version 1.0.11]
  */
 
 #include <stdio.h>
@@ -32,7 +33,7 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
-#define VERSION_NUM	"1.0.1"
+#define VERSION_NUM	"1.0.11"
 
 //#define DEBUG_SCRIPT
 
@@ -752,7 +753,7 @@ int init_file(char* filename, long long size)
 	{		
 		if(write(fd, buf, rec_len)<0)
 		{
-			printf("File write error!!!\n");
+			printf("\nFile write error!!! [no: %d, pos: %lu]\n", errno, lseek(fd, 0, SEEK_CUR)/1024 );
 			//exit(1);
 			setState(ERROR, "File write error");
 			return -1;
@@ -765,7 +766,7 @@ int init_file(char* filename, long long size)
 	{
 		if(write(fd, buf, rest_size)<0)
 		{
-			printf("File write error!!!\n");
+			printf("\nFile write error!!! [no: %d, pos: %lu]\n", errno, lseek(fd, 0, SEEK_CUR)/1024 );
 			//exit(1);
 			setState(ERROR, "File write error");
 			return -1;
@@ -969,7 +970,7 @@ int thread_main(void* arg)
 				
 			 	if(write(fd, buf, real_reclen)<0)
 			 	{
-					printf("File write error!!! [%lu]\n", lseek(fd, 0, SEEK_CUR)/1024);
+					printf("\nFile write error!!! [no: %d, pos: %lu]\n", errno, lseek(fd, 0, SEEK_CUR)/1024 );
 					//exit(1);
 					setState(ERROR, "File write error");
 					signal_thread_status(thread_num, END, &thread_cond3);
