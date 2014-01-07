@@ -5,7 +5,10 @@
  * History
  * 2012. 1 created by Kisung Lee <kisunglee@hanyang.ac.kr>
  * 2012. 8 modified by Sooman Jeong <77smart@hanyang.ac.kr>
- *
+ * Jun 03, 2013 version 1.0.0 by Sooman Jeong
+ * Jul 02, 2013 forced checkpointing for WAL mode by Sooman Jeong
+ * Aug 22, 2013 fix buffer-overflow on replaying mobigen script by Sooman Jeong [version 1.0.1]
+ * Dec 31, 2013 Modified to print Write error code by Seongjin Lee [version 1.0.11]
  */
 
 #include <stdio.h>
@@ -30,7 +33,7 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
-#define VERSION_NUM	"1.0.0"
+#define VERSION_NUM	"1.0.11"
 
 //#define DEBUG_SCRIPT
 
@@ -750,7 +753,7 @@ int init_file(char* filename, long long size)
 	{		
 		if(write(fd, buf, rec_len)<0)
 		{
-			printf("File write error!!!\n");
+			printf("\nFile write error!!! [no: %d, pos: %lu]\n", errno, lseek(fd, 0, SEEK_CUR)/1024 );
 			//exit(1);
 			setState(ERROR, "File write error");
 			return -1;
@@ -763,7 +766,7 @@ int init_file(char* filename, long long size)
 	{
 		if(write(fd, buf, rest_size)<0)
 		{
-			printf("File write error!!!\n");
+			printf("\nFile write error!!! [no: %d, pos: %lu]\n", errno, lseek(fd, 0, SEEK_CUR)/1024 );
 			//exit(1);
 			setState(ERROR, "File write error");
 			return -1;
@@ -967,7 +970,7 @@ int thread_main(void* arg)
 				
 			 	if(write(fd, buf, real_reclen)<0)
 			 	{
-					printf("File write error!!!\n");
+					printf("\nFile write error!!! [no: %d, pos: %lu]\n", errno, lseek(fd, 0, SEEK_CUR)/1024 );
 					//exit(1);
 					setState(ERROR, "File write error");
 					signal_thread_status(thread_num, END, &thread_cond3);
@@ -1250,6 +1253,12 @@ int thread_main_db(void* arg)
 		}
 		
 		show_progress(i*100/db_transactions);
+	}
+
+	/* Forced checkpointing for WAL mode */
+	if(db_journal_mode == 3)
+	{
+		sqlite3_wal_checkpoint(db, NULL);
 	}
 
 	show_progress(100);
@@ -1675,7 +1684,7 @@ int replay_script(void)
 	int max_read_size = 0;
 	long long total_io_time;
 	int total_io_count;
-	long long real_end_time;
+	long long real_end_time = 0;
 	int total_read;
 	int total_write;
 	
@@ -1741,6 +1750,7 @@ int replay_script(void)
 			gScriptEntry[i].args[args_num] = (char*)malloc(strlen(ptr)+1);
 			strcpy(gScriptEntry[i].args[args_num], ptr);
 			args_num++;
+			if(args_num == 3) break;
 		}
 		gScriptEntry[i].arg_num = args_num;
 
@@ -1982,14 +1992,14 @@ int replay_script(void)
 	free(thread_info);
 
 	for(i = 0; i < line_count; i++)
-	{
+	{	
 		free(gScriptEntry[i].cmd);
 		for(j = 0; j < gScriptEntry[i].arg_num ; j++)
 		{
 			free(gScriptEntry[i].args[j]);
 		}
 	}	
-	
+
 	free(gScriptEntry);
 	free(gScriptThreadTime);
 
