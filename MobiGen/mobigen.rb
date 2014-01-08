@@ -1,4 +1,4 @@
-﻿#Last modified : 20130503 13:25
+#Last modified : 20130503 13:25
 
 $input_name = ARGV[0]
 $pids = []
