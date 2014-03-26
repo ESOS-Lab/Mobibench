@@ -9,6 +9,7 @@
  * Jul 02, 2013 forced checkpointing for WAL mode by Sooman Jeong
  * Aug 22, 2013 fix buffer-overflow on replaying mobigen script by Sooman Jeong [version 1.0.1]
  * Dec 31, 2013 Modified to print Write error code by Seongjin Lee [version 1.0.11]
+ * Mar 26, 2014 Collect latency data for each I/O by Seongjin Lee [version 1.0.2]
  */
 
 #include <stdio.h>
@@ -33,7 +34,7 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
-#define VERSION_NUM	"1.0.1"
+#define VERSION_NUM	"1.0.2"
 
 //#define DEBUG_SCRIPT
 
@@ -159,6 +160,9 @@ struct script_fd_conv gScriptFdConv = {0, };
 long long time_start;
 char* script_write_buf;
 char* script_read_buf;
+int Latency_state = 0; // flag for printing latency
+FILE* Latency_fp; // latency output
+char REPORT_Latency[200]; // file name for latency output
 
 thread_status_t thread_status[MAX_THREADS] = {0, };
 pthread_mutex_t thread_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -167,6 +171,9 @@ pthread_cond_t thread_cond2 = PTHREAD_COND_INITIALIZER;
 pthread_cond_t thread_cond3 = PTHREAD_COND_INITIALIZER;
 
 pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
+
+long long get_current_utime(void); // get current time
+long long get_relative_utime(long long start); // and relative time
 
 void clearState(void)
 {
@@ -217,9 +224,11 @@ void print_time(struct timeval T1, struct timeval T2)
 	{
 		rate = kilo64*1024*num_threads/time;
 		printf("[TIME] :%8ld sec %06ldus. \t%.0f B/sec, \t%.2f KB/sec, \t%.2f MB/sec.",sec,usec, rate, rate/1024, rate/1024/1024);
+		if(Latency_state==1) fprintf(Latency_fp,"[TIME] :%8ld sec %06ldus. \t%.0f B/sec, \t%.2f KB/sec, \t%.2f MB/sec.",sec, usec, rate, rate/1024, rate/1024/1024);
 		if(g_access == MODE_RND_WRITE || g_access == MODE_RND_READ)
 		{
 			printf(" %.2f IOPS(%dKB) ", rate/1024/reclen, (int)reclen);
+			if(Latency_state==1) fprintf(Latency_fp," %.2f IOPS(%dKB) ", rate/1024/reclen, (int)reclen);
 		}
 		printf("\n");
 #ifdef ANDROID_APP
@@ -808,6 +817,9 @@ int thread_main(void* arg)
 	int page_size;
 	int open_flags = 0;
 
+	long long IO_Latency; 
+	if(Latency_state==1) fprintf(Latency_fp,"\n#In %d IO mode and %d sync mode\n",g_access, g_sync); // latency header
+
 	struct stat sb;
 
 	if(num_threads == 1)
@@ -968,6 +980,7 @@ int thread_main(void* arg)
 					}
 				}		
 				
+				if(Latency_state==1) IO_Latency=get_current_utime(); // get current time for latency
 			 	if(write(fd, buf, real_reclen)<0)
 			 	{
 					printf("File write error!!! [no: %d, pos: %lu]\n", errno, lseek(fd, 0, SEEK_CUR)/1024 );
@@ -981,6 +994,7 @@ int thread_main(void* arg)
 				{
 					fsync(fd);
 				}
+				if(Latency_state==1) fprintf(Latency_fp, "%.4f\tmsec\n", (float)((float)get_relative_utime(IO_Latency)/1000)); // measure the time difference
 		 	}
 			show_progress(i*100/numrecs64);
 		}	
@@ -1028,7 +1042,7 @@ int thread_main(void* arg)
 						return -1;
 					}
 				}		
-				
+				if(Latency_state==1) IO_Latency=get_current_utime(); // read latency 
 			 	if(read(fd, buf, real_reclen)<=0)
 			 	{
 					printf("File read error!!!\n");
@@ -1037,6 +1051,7 @@ int thread_main(void* arg)
 					signal_thread_status(thread_num, END, &thread_cond3);
 					return -1;
 			 	}
+				if(Latency_state==1) fprintf(Latency_fp,"%.4f\tmsec\n", (float)((float)get_relative_utime(IO_Latency)/1000)); // measure read latency
 		 	}
 			show_progress(i*100/numrecs64);
 		}	
@@ -2027,6 +2042,7 @@ char *help[] = {
 "           -s  set SQLite synchronous mode (0=OFF, 1=NORMAL, 2=FULL) (default=2)",
 "           -g  set replay script (output of MobiGen)",
 "           -q  do not display progress(%) message",
+"           -L  Make record on latency of each IO to a file (default=IO_latency.txt)",
 ""
 };
 
@@ -2078,11 +2094,12 @@ int main( int argc, char **argv)
 	b_quiet = 0;
 	b_replay_script = 0;
 	db_interval= 0;
+        strcpy(REPORT_Latency, "./IO_Latency.txt");
 	clearState();
 
 	optind = 1;
 
-	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hq")) != EOF){
+	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:")) != EOF){
 		switch(cret){
 			case 'p':
 				strcpy(pathname, optarg);
@@ -2129,6 +2146,10 @@ int main( int argc, char **argv)
 			case 'i':
 				db_interval = atoi(optarg);
 				break;
+			case 'L':
+				strcpy(REPORT_Latency, optarg);
+				Latency_state=1;
+				break;
 			default:
 				return 1;
 				break;
@@ -2171,6 +2192,15 @@ int main( int argc, char **argv)
 		g_sync = 3;		/* 3=O_DIRECT */
 	}
 #endif
+
+	if(Latency_state==1) // open a file to print latency output
+	{
+		if( (Latency_fp=fopen(REPORT_Latency,"a")) == 0 )
+		{
+			printf("Unable to open %s", REPORT_Latency);
+			perror("Failed to open a file");		
+		}
+	}
 	
 	printf("-----------------------------------------\n");
 	printf("[mobibench measurement setup]\n");
@@ -2269,6 +2299,8 @@ int main( int argc, char **argv)
 	}
 
 	setState(END, NULL);
+
+	if(Latency_state==1) fclose(Latency_fp); // close latency file
 
 out:
 
