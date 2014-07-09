@@ -1665,6 +1665,9 @@ int script_thread_main(void* arg)
 	return 0;
 }
 
+/*
+ * main function for Replay script
+ */
 int replay_script(void)
 {
 	FILE* fp;
@@ -1763,33 +1766,33 @@ int replay_script(void)
 
 	/*
 	* Get additional information from script entry.
-	* : number of thread, start/end time of threads, open count, MAX R/W size and original execution time
+	* : number of thread, start/end time of threads, open count, 
+	*  MAX R/W size and original execution time
 	*/
 
 	/* Number of thread */
 	script_thread_num = gScriptEntry[line_count-1].thread_num+1;
 	printf("script_thread_num: %d\n", script_thread_num);
 	
-	gScriptThreadTime = (struct script_thread_time*)malloc(script_thread_num*sizeof(struct script_thread_time));
-	if(gScriptThreadTime == NULL)
-	{
+	gScriptThreadTime = (struct script_thread_time*)malloc(script_thread_num * 
+		sizeof(struct script_thread_time));
+	if(gScriptThreadTime == NULL) {
 		printf("gScriptThreadTime malloc failed\n");
 		setState(ERROR, "malloc failed");
 		return -1;
 	}
 
-	for(i = 0; i < line_count; i++)
-	{
+	/* memset for gScriptThreadTime */
+	memset(gScriptThreadTime, 0x0, script_thread_num*sizeof(struct script_thread_time));
+
+	for(i = 0; i < line_count; i++) {
 		/* Start/end time of each thread */
-		if(old_thread_num != gScriptEntry[i].thread_num)
-		{
+		if(old_thread_num != gScriptEntry[i].thread_num) {
 			thread_index++;
 			old_thread_num = gScriptEntry[i].thread_num;
 			gScriptThreadTime[thread_index].start = gScriptEntry[i].time;
 			gScriptThreadTime[thread_index].thread_num = gScriptEntry[i].thread_num;
-		}
-		else
-		{
+		} else {
 			gScriptThreadTime[thread_index].end = gScriptEntry[i].time;
 		}
 		
@@ -1898,8 +1901,7 @@ int replay_script(void)
 	
 	time_start = get_current_utime();
 	
-	while(1)
-	{
+	while(1) {
 		time_current = get_relative_utime(time_start);
 		for(i = 0; i < 	script_thread_num; i++)
 		{
@@ -1918,8 +1920,7 @@ int replay_script(void)
 				}
 			}
 		}
-		if(thread_start_cnt >= script_thread_num)
-		{
+		if(thread_start_cnt >= script_thread_num) {
 			break;
 		}
 	}
