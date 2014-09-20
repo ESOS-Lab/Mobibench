@@ -10,6 +10,7 @@
  * Aug 22, 2013 fix buffer-overflow on replaying mobigen script by Sooman Jeong [version 1.0.1]
  * Dec 31, 2013 Modified to print Write error code by Seongjin Lee [version 1.0.11]
  * Mar 26, 2014 Collect latency data for each I/O by Seongjin Lee [version 1.0.2]
+ * Nov 20, 2014 Print IOPS on every second by Seongjin Lee [version 1.0.3]
  */
 
 #include <stdio.h>
@@ -163,6 +164,9 @@ char* script_read_buf;
 int Latency_state = 0; // flag for printing latency
 FILE* Latency_fp; // latency output
 char REPORT_Latency[200]; // file name for latency output
+int print_IOPS = 0; // flag for printing IOPS every second
+FILE* pIOPS_fp; // output for print IOPS every second 
+char REPORT_pIOPS[200]; // file name for IOPS output
 
 thread_status_t thread_status[MAX_THREADS] = {0, };
 pthread_mutex_t thread_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -707,6 +711,22 @@ void show_progress(int pro)
 }
 #endif
 
+void show_progress_IOPS(int pro, int IOC)
+{
+	static int old_pro = -1;
+	static int old_IOC = -1;
+
+	if(b_quiet) return;
+
+	if(old_pro == pro || old_IOC == IOC) return;
+	//if(old_pro == pro ) return;
+
+	old_pro = pro;
+        old_IOC = IOC;
+	printf("%02d%c\t\t%d\t%s\r", pro, '%', IOC, "IOPS");
+	fflush(stdout);
+}
+
 void drop_caches(void)
 {
 #ifndef ANDROID_APP
@@ -817,8 +837,12 @@ int thread_main(void* arg)
 	int page_size;
 	int open_flags = 0;
 
-	long long IO_Latency; 
+	long long IO_Latency;      // start time for measuring IO latency 
+	long long Delta_Latency;   // Delta time current_time - IO_Latency
+	long long second_hand = 0;     // cumulative Delta_Latency to measure IOPS
+	long long IO_Count = 0;              // IO counts in a second
 	if(Latency_state==1) fprintf(Latency_fp,"\n#In %d IO mode and %d sync mode\n",g_access, g_sync); // latency header
+	if(print_IOPS==1) fprintf(pIOPS_fp,"\n#In %d IO mode and %d sync mode\n",g_access, g_sync); // IOPS print header
 
 	struct stat sb;
 
@@ -979,11 +1003,13 @@ int thread_main(void* arg)
 						return -1;
 					}
 				}		
-				
-				if(Latency_state==1) IO_Latency=get_current_utime(); // get current time for latency
+				// get current time for latency
+				if(Latency_state==1 || print_IOPS == 1) IO_Latency=get_current_utime(); 
+
 			 	if(write(fd, buf, real_reclen)<0)
 			 	{
-					printf("File write error!!! [no: %d, pos: %lu]\n", errno, lseek(fd, 0, SEEK_CUR)/1024 );
+					printf("File write error!!! [no: %d, pos: %lu]\n", 
+							errno, lseek(fd, 0, SEEK_CUR)/1024 );
 					//exit(1);
 					setState(ERROR, "File write error");
 					signal_thread_status(thread_num, END, &thread_cond3);
@@ -994,9 +1020,42 @@ int thread_main(void* arg)
 				{
 					fsync(fd);
 				}
-				if(Latency_state==1) fprintf(Latency_fp, "%.4f\tmsec\n", (float)((float)get_relative_utime(IO_Latency)/1000)); // measure the time difference
+
+				// if we are checking for IO latency or IOPS
+				if(Latency_state == 1 || print_IOPS ==1)
+				{
+					// get Delta time for an IO
+					Delta_Latency = (float)((float)get_relative_utime(IO_Latency)); 
+					second_hand = second_hand + Delta_Latency ;
+					IO_Count++; // increase IO count
+					if(Latency_state==1) // measure the time difference
+						fprintf(Latency_fp, "%.0f\tusec\n", (float)Delta_Latency);
+
+                                	if(print_IOPS == 1 && second_hand > 1000000
+							&& g_access == MODE_RND_WRITE) // check time to print out iops
+					{
+						fprintf(pIOPS_fp, "%lld IOPS\n", IO_Count);
+						show_progress_IOPS(i*100/numrecs64, (int)IO_Count);
+						IO_Count = 0; 
+						second_hand = 0;
+					}
+					else if(print_IOPS == 1 && second_hand > 1000000
+							&& g_access == MODE_WRITE)
+					{
+						fprintf(pIOPS_fp, "%lld KB/s\n", IO_Count*i);
+						IO_Count = 0; 
+						second_hand = 0;
+					}
+				}
 		 	}
-			show_progress(i*100/numrecs64);
+			if(print_IOPS == 1) // IOPS on progress bar
+			{
+				//show_progress_IOPS(i*100/numrecs64, (int)IO_Count);
+			}
+			else
+			{
+				show_progress(i*100/numrecs64);
+			}
 		}	
 
 		/* Final sync */
@@ -1042,7 +1101,8 @@ int thread_main(void* arg)
 						return -1;
 					}
 				}		
-				if(Latency_state==1) IO_Latency=get_current_utime(); // read latency 
+				// start measuring latency 
+				if(Latency_state==1 || print_IOPS == 1) IO_Latency=get_current_utime(); 
 			 	if(read(fd, buf, real_reclen)<=0)
 			 	{
 					printf("File read error!!!\n");
@@ -1051,8 +1111,40 @@ int thread_main(void* arg)
 					signal_thread_status(thread_num, END, &thread_cond3);
 					return -1;
 			 	}
-				if(Latency_state==1) fprintf(Latency_fp,"%.4f\tmsec\n", (float)((float)get_relative_utime(IO_Latency)/1000)); // measure read latency
+				// if we are checking for IO latency or IOPS
+				if(Latency_state == 1 || print_IOPS ==1)
+				{
+					// get Delta time for an IO
+					Delta_Latency = (float)((float)get_relative_utime(IO_Latency)); 
+					second_hand = second_hand + Delta_Latency ;
+					IO_Count++; // increase IO count
+					if(Latency_state==1) // measure the time difference
+						fprintf(Latency_fp, "%.0f\tusec\n", (float)Delta_Latency);
+
+                                	if(print_IOPS == 1 && second_hand > 1000000
+							&& g_access == MODE_RND_READ) // check time to print out iops
+					{
+						fprintf(pIOPS_fp, "%lld IOPS\n", IO_Count);
+						IO_Count = 0; 
+						second_hand = 0;
+					}
+					else if (print_IOPS == 1 && second_hand > 1000000
+							&& g_access == MODE_READ)
+					{
+						fprintf(pIOPS_fp, "%lld KB/s\n", IO_Count*i);
+						IO_Count = 0; 
+						second_hand = 0;
+					}
+				}
 		 	}
+			if(print_IOPS == 1) // IOPS on progress bar
+			{
+				show_progress_IOPS(i*100/numrecs64, IO_Count);
+			}
+			else
+			{
+				show_progress(i*100/numrecs64);
+			}
 			show_progress(i*100/numrecs64);
 		}	
 	}
@@ -2027,6 +2119,7 @@ char *help[] = {
 "    Usage: mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]",
 "                     [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]",
 "                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-g replay_script] [-q]",
+"                     [-L IO_Latency_file] [-k IOPS_FILE]",
 " ",
 "           -p  set path name (default=./mobibench)",
 "           -f  set file size in KBytes (default=1024)",
@@ -2043,6 +2136,7 @@ char *help[] = {
 "           -g  set replay script (output of MobiGen)",
 "           -q  do not display progress(%) message",
 "           -L  Make record on latency of each IO to a file (default=IO_latency.txt)",
+"           -k  Print out IOPS of the file test (default=IO_latency.txt)",
 ""
 };
 
@@ -2095,11 +2189,12 @@ int main( int argc, char **argv)
 	b_replay_script = 0;
 	db_interval= 0;
         strcpy(REPORT_Latency, "./IO_Latency.txt");
+        strcpy(REPORT_pIOPS, "./IOPS.txt");
 	clearState();
 
 	optind = 1;
 
-	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:")) != EOF){
+	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:k:")) != EOF){
 		switch(cret){
 			case 'p':
 				strcpy(pathname, optarg);
@@ -2150,6 +2245,10 @@ int main( int argc, char **argv)
 				strcpy(REPORT_Latency, optarg);
 				Latency_state=1;
 				break;
+			case 'k':
+				strcpy(REPORT_pIOPS, optarg);
+				print_IOPS=1;
+				break;
 			default:
 				return 1;
 				break;
@@ -2198,6 +2297,15 @@ int main( int argc, char **argv)
 		if( (Latency_fp=fopen(REPORT_Latency,"a")) == 0 )
 		{
 			printf("Unable to open %s", REPORT_Latency);
+			perror("Failed to open a file");		
+		}
+	}
+	
+	if(print_IOPS==1) // open a file to print IOPS on every second
+	{
+		if( (pIOPS_fp=fopen(REPORT_pIOPS,"a")) == 0 )
+		{
+			printf("Unable to open %s", REPORT_pIOPS);
 			perror("Failed to open a file");		
 		}
 	}
@@ -2301,6 +2409,7 @@ int main( int argc, char **argv)
 	setState(END, NULL);
 
 	if(Latency_state==1) fclose(Latency_fp); // close latency file
+	if(print_IOPS==1) fclose(pIOPS_fp); // close latency file
 
 out:
 
