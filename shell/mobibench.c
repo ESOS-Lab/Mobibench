@@ -9,6 +9,9 @@
  * Jul 02, 2013 forced checkpointing for WAL mode by Sooman Jeong
  * Aug 22, 2013 fix buffer-overflow on replaying mobigen script by Sooman Jeong [version 1.0.1]
  * Dec 31, 2013 Modified to print Write error code by Seongjin Lee [version 1.0.11]
+ * Mar 26, 2014 Collect latency data for each I/O by Seongjin Lee [version 1.0.2]
+ * Nov 20, 2014 Print IOPS on every second by Seongjin Lee [version 1.0.3]
+ * Nov 20, 2014 Percentage overlap in Random workload by Jinsoo You [version 1.0.4]
  */
 
 #include <stdio.h>
@@ -33,7 +36,7 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
-#define VERSION_NUM	"1.0.11"
+#define VERSION_NUM	"1.0.4"
 
 //#define DEBUG_SCRIPT
 
@@ -159,6 +162,14 @@ struct script_fd_conv gScriptFdConv = {0, };
 long long time_start;
 char* script_write_buf;
 char* script_read_buf;
+int Latency_state = 0; // flag for printing latency
+FILE* Latency_fp; // latency output
+char REPORT_Latency[200]; // file name for latency output
+int print_IOPS = 0; // flag for printing IOPS every second
+FILE* pIOPS_fp; // output for print IOPS every second 
+char REPORT_pIOPS[200]; // file name for IOPS output
+
+int overlap_ratio = 0; // overlap ratio for random write
 
 thread_status_t thread_status[MAX_THREADS] = {0, };
 pthread_mutex_t thread_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -167,6 +178,9 @@ pthread_cond_t thread_cond2 = PTHREAD_COND_INITIALIZER;
 pthread_cond_t thread_cond3 = PTHREAD_COND_INITIALIZER;
 
 pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
+
+long long get_current_utime(void); // get current time
+long long get_relative_utime(long long start); // and relative time
 
 void clearState(void)
 {
@@ -217,9 +231,11 @@ void print_time(struct timeval T1, struct timeval T2)
 	{
 		rate = kilo64*1024*num_threads/time;
 		printf("[TIME] :%8ld sec %06ldus. \t%.0f B/sec, \t%.2f KB/sec, \t%.2f MB/sec.",sec,usec, rate, rate/1024, rate/1024/1024);
+		if(Latency_state==1) fprintf(Latency_fp,"[TIME] :%8ld sec %06ldus. \t%.0f B/sec, \t%.2f KB/sec, \t%.2f MB/sec.",sec, usec, rate, rate/1024, rate/1024/1024);
 		if(g_access == MODE_RND_WRITE || g_access == MODE_RND_READ)
 		{
 			printf(" %.2f IOPS(%dKB) ", rate/1024/reclen, (int)reclen);
+			if(Latency_state==1) fprintf(Latency_fp," %.2f IOPS(%dKB) ", rate/1024/reclen, (int)reclen);
 		}
 		printf("\n");
 #ifdef ANDROID_APP
@@ -698,6 +714,22 @@ void show_progress(int pro)
 }
 #endif
 
+void show_progress_IOPS(int pro, int IOC)
+{
+	static int old_pro = -1;
+	static int old_IOC = -1;
+
+	if(b_quiet) return;
+
+	if(old_pro == pro || old_IOC == IOC) return;
+	//if(old_pro == pro ) return;
+
+	old_pro = pro;
+        old_IOC = IOC;
+	printf("%02d%c\t\t%d\t%s\r", pro, '%', IOC, "IOPS");
+	fflush(stdout);
+}
+
 void drop_caches(void)
 {
 #ifndef ANDROID_APP
@@ -797,6 +829,7 @@ int thread_main(void* arg)
 	unsigned long long length=4;
 
 	long long *recnum= 0;
+	long long *tmp_recnum= 0;
 	long long i;
 	unsigned long long big_rand;
 	long long offset;
@@ -807,6 +840,13 @@ int thread_main(void* arg)
 	int block_open = 0;
 	int page_size;
 	int open_flags = 0;
+
+	long long IO_Latency;      // start time for measuring IO latency 
+	long long Delta_Latency;   // Delta time current_time - IO_Latency
+	long long second_hand = 0;     // cumulative Delta_Latency to measure IOPS
+	long long IO_Count = 0;              // IO counts in a second
+	if(Latency_state==1) fprintf(Latency_fp,"\n#In %d IO mode and %d sync mode\n",g_access, g_sync); // latency header
+	if(print_IOPS==1) fprintf(pIOPS_fp,"\n#In %d IO mode and %d sync mode\n",g_access, g_sync); // IOPS print header
 
 	struct stat sb;
 
@@ -839,14 +879,50 @@ int thread_main(void* arg)
 	init_by_array64(init, length);
 
 	recnum = (long long *)malloc(sizeof(*recnum)*numrecs64);
+	tmp_recnum = (long long *)malloc(sizeof(*recnum)*numrecs64);
 
-	if (recnum){
+	if(tmp_recnum == NULL || recnum == NULL){
+		fprintf(stderr,"Random uniqueness fallback.\n");
+	}
+	else{
+		long long n_overlap_entries = numrecs64 * overlap_ratio / 100;
+		long long n_other_entries = numrecs64 - n_overlap_entries;
+
 		/* pre-compute random sequence based on 
 		Fischer-Yates (Knuth) card shuffle */
-		for(i = 0; i < numrecs64; i++){
-			recnum[i] = i;
+
+		// initializing the array of random numbers
+		if(n_overlap_entries == 0){
+			for(i = 0; i < numrecs64; i++){
+				recnum[i] = i;
+			}
 		}
-		for(i = 0; i < numrecs64; i++) {
+		else{
+			for(i = 0; i < numrecs64; i++){ // initialization
+				tmp_recnum[i] = i;
+			}
+			for(i = 0; i < numrecs64; i++) { // shuffling the array
+				long long tmp;
+
+				big_rand=genrand64_int64();
+
+				big_rand = big_rand%numrecs64;
+				tmp = tmp_recnum[i];
+				tmp_recnum[i] = tmp_recnum[big_rand];
+				tmp_recnum[big_rand] = tmp;
+			}
+			for(i = 0; i < n_other_entries; i++){ // copy non-overlapped array
+				recnum[i] = tmp_recnum[i];
+			}
+			for(i = 0; i < n_overlap_entries; i++){ // randomly select from array
+				big_rand = genrand64_int64();
+				big_rand = big_rand%n_other_entries;
+
+				recnum[n_other_entries+i] = tmp_recnum[big_rand];
+			}
+		}
+		
+		for(i = 0; i < numrecs64; i++) { // re-shuffle the array
 			long long tmp;
 
 			big_rand=genrand64_int64();
@@ -856,10 +932,6 @@ int thread_main(void* arg)
 			recnum[i] = recnum[big_rand];
 			recnum[big_rand] = tmp;
 		}
-	}
-	else
-	{
-		fprintf(stderr,"Random uniqueness fallback.\n");
 	}
 
 	if(g_access == MODE_WRITE && block_open == 0)
@@ -967,7 +1039,9 @@ int thread_main(void* arg)
 						return -1;
 					}
 				}		
-				
+				// get current time for latency
+				if(Latency_state==1 || print_IOPS == 1) IO_Latency=get_current_utime(); 
+
 			 	if(write(fd, buf, real_reclen)<0)
 			 	{
 					printf("\nFile write error!!! [no: %d, pos: %lu]\n", errno, lseek(fd, 0, SEEK_CUR)/1024 );
@@ -981,8 +1055,38 @@ int thread_main(void* arg)
 				{
 					fsync(fd);
 				}
+
+				// if we are checking for IO latency or IOPS
+				if(Latency_state == 1 || print_IOPS ==1)
+				{
+					// get Delta time for an IO
+					Delta_Latency = (float)((float)get_relative_utime(IO_Latency)); 
+					second_hand = second_hand + Delta_Latency ;
+					IO_Count++; // increase IO count
+					if(Latency_state==1) // measure the time difference
+						fprintf(Latency_fp, "%.0f\tusec\n", (float)Delta_Latency);
+
+                                	if(print_IOPS == 1 && second_hand > 1000000
+							&& g_access == MODE_RND_WRITE) // check time to print out iops
+					{
+						fprintf(pIOPS_fp, "%lld IOPS\n", IO_Count);
+						show_progress_IOPS(i*100/numrecs64, (int)IO_Count);
+						IO_Count = 0; 
+						second_hand = 0;
+					}
+					else if(print_IOPS == 1 && second_hand > 1000000
+							&& g_access == MODE_WRITE)
+					{
+						fprintf(pIOPS_fp, "%lld KB/s\n", IO_Count*i);
+						IO_Count = 0; 
+						second_hand = 0;
+					}
+				}
 		 	}
-			show_progress(i*100/numrecs64);
+			if(print_IOPS == 0) // IOPS on progress bar
+			{
+				show_progress(i*100/numrecs64);
+			}
 		}	
 
 		/* Final sync */
@@ -1028,7 +1132,8 @@ int thread_main(void* arg)
 						return -1;
 					}
 				}		
-				
+				// start measuring latency 
+				if(Latency_state==1 || print_IOPS == 1) IO_Latency=get_current_utime(); 
 			 	if(read(fd, buf, real_reclen)<=0)
 			 	{
 					printf("File read error!!!\n");
@@ -1037,7 +1142,37 @@ int thread_main(void* arg)
 					signal_thread_status(thread_num, END, &thread_cond3);
 					return -1;
 			 	}
+				// if we are checking for IO latency or IOPS
+				if(Latency_state == 1 || print_IOPS ==1)
+				{
+					// get Delta time for an IO
+					Delta_Latency = (float)((float)get_relative_utime(IO_Latency)); 
+					second_hand = second_hand + Delta_Latency ;
+					IO_Count++; // increase IO count
+					if(Latency_state==1) // measure the time difference
+						fprintf(Latency_fp, "%.0f\tusec\n", (float)Delta_Latency);
+
+                                	if(print_IOPS == 1 && second_hand > 1000000
+							&& g_access == MODE_RND_READ) // check time to print out iops
+					{
+						fprintf(pIOPS_fp, "%lld IOPS\n", IO_Count);
+						show_progress_IOPS(i*100/numrecs64, IO_Count);
+						IO_Count = 0; 
+						second_hand = 0;
+					}
+					else if (print_IOPS == 1 && second_hand > 1000000
+							&& g_access == MODE_READ)
+					{
+						fprintf(pIOPS_fp, "%lld KB/s\n", IO_Count*i);
+						IO_Count = 0; 
+						second_hand = 0;
+					}
+				}
 		 	}
+			if(print_IOPS == 0) // IOPS on progress bar
+			{
+				show_progress(i*100/numrecs64);
+			}
 			show_progress(i*100/numrecs64);
 		}	
 	}
@@ -1062,6 +1197,9 @@ int thread_main(void* arg)
  
  	if(recnum)
 		free(recnum);
+
+	if(tmp_recnum)
+		free(tmp_recnum);
 
 //	printf("thread end\n");
 
@@ -2013,6 +2151,7 @@ char *help[] = {
 "    Usage: mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]",
 "                     [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]",
 "                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-g replay_script] [-q]",
+"                     [-L IO_Latency_file] [-k IOPS_FILE]  [-v overlap_ratio_%]",
 " ",
 "           -p  set path name (default=./mobibench)",
 "           -f  set file size in KBytes (default=1024)",
@@ -2028,6 +2167,10 @@ char *help[] = {
 "           -s  set SQLite synchronous mode (0=OFF, 1=NORMAL, 2=FULL) (default=2)",
 "           -g  set replay script (output of MobiGen)",
 "           -q  do not display progress(%) message",
+"           -L  Make record on latency of each IO to a file (default=IO_latency.txt)",
+"           -k  Print out IOPS of the file test (default=IO_latency.txt)",
+"	    -v  set overlap ratio(%) of random numbers for",
+"					random IO workload (default=0%)",
 ""
 };
 
@@ -2079,11 +2222,15 @@ int main( int argc, char **argv)
 	b_quiet = 0;
 	b_replay_script = 0;
 	db_interval= 0;
+        strcpy(REPORT_Latency, "./IO_Latency.txt");
+        strcpy(REPORT_pIOPS, "./IOPS.txt");
 	clearState();
 
 	optind = 1;
 
-	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hq")) != EOF){
+	overlap_ratio = 0;
+
+	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:k:v:")) != EOF){
 		switch(cret){
 			case 'p':
 				strcpy(pathname, optarg);
@@ -2130,6 +2277,17 @@ int main( int argc, char **argv)
 			case 'i':
 				db_interval = atoi(optarg);
 				break;
+			case 'L':
+				strcpy(REPORT_Latency, optarg);
+				Latency_state=1;
+				break;
+			case 'k':
+				strcpy(REPORT_pIOPS, optarg);
+				print_IOPS=1;
+				break;
+			case 'v':
+				overlap_ratio = atoi(optarg);
+				break;
 			default:
 				return 1;
 				break;
@@ -2172,6 +2330,24 @@ int main( int argc, char **argv)
 		g_sync = 3;		/* 3=O_DIRECT */
 	}
 #endif
+
+	if(Latency_state==1) // open a file to print latency output
+	{
+		if( (Latency_fp=fopen(REPORT_Latency,"a")) == 0 )
+		{
+			printf("Unable to open %s", REPORT_Latency);
+			perror("Failed to open a file");		
+		}
+	}
+	
+	if(print_IOPS==1) // open a file to print IOPS on every second
+	{
+		if( (pIOPS_fp=fopen(REPORT_pIOPS,"a")) == 0 )
+		{
+			printf("Unable to open %s", REPORT_pIOPS);
+			perror("Failed to open a file");		
+		}
+	}
 	
 	printf("-----------------------------------------\n");
 	printf("[mobibench measurement setup]\n");
@@ -2270,6 +2446,9 @@ int main( int argc, char **argv)
 	}
 
 	setState(END, NULL);
+
+	if(Latency_state==1) fclose(Latency_fp); // close latency file
+	if(print_IOPS==1) fclose(pIOPS_fp); // close latency file
 
 out:
 
