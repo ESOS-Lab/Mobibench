@@ -11,6 +11,7 @@
  * Dec 31, 2013 Modified to print Write error code by Seongjin Lee [version 1.0.11]
  * Mar 26, 2014 Collect latency data for each I/O by Seongjin Lee [version 1.0.2]
  * Nov 20, 2014 Print IOPS on every second by Seongjin Lee [version 1.0.3]
+ * Nov 20, 2014 Percentage overlap in Random workload by Jinsoo You [version 1.0.4]
  */
 
 #include <stdio.h>
@@ -35,7 +36,7 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
-#define VERSION_NUM	"1.0.2"
+#define VERSION_NUM	"1.0.4"
 
 //#define DEBUG_SCRIPT
 
@@ -167,6 +168,8 @@ char REPORT_Latency[200]; // file name for latency output
 int print_IOPS = 0; // flag for printing IOPS every second
 FILE* pIOPS_fp; // output for print IOPS every second 
 char REPORT_pIOPS[200]; // file name for IOPS output
+
+int overlap_ratio = 0; // overlap ratio for random write
 
 thread_status_t thread_status[MAX_THREADS] = {0, };
 pthread_mutex_t thread_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -826,6 +829,7 @@ int thread_main(void* arg)
 	unsigned long long length=4;
 
 	long long *recnum= 0;
+	long long *tmp_recnum= 0;
 	long long i;
 	unsigned long long big_rand;
 	long long offset;
@@ -875,14 +879,50 @@ int thread_main(void* arg)
 	init_by_array64(init, length);
 
 	recnum = (long long *)malloc(sizeof(*recnum)*numrecs64);
+	tmp_recnum = (long long *)malloc(sizeof(*recnum)*numrecs64);
 
-	if (recnum){
+	if(tmp_recnum == NULL || recnum == NULL){
+		fprintf(stderr,"Random uniqueness fallback.\n");
+	}
+	else{
+		long long n_overlap_entries = numrecs64 * overlap_ratio / 100;
+		long long n_other_entries = numrecs64 - n_overlap_entries;
+
 		/* pre-compute random sequence based on 
 		Fischer-Yates (Knuth) card shuffle */
-		for(i = 0; i < numrecs64; i++){
-			recnum[i] = i;
+
+		// initializing the array of random numbers
+		if(n_overlap_entries == 0){
+			for(i = 0; i < numrecs64; i++){
+				recnum[i] = i;
+			}
 		}
-		for(i = 0; i < numrecs64; i++) {
+		else{
+			for(i = 0; i < numrecs64; i++){ // initialization
+				tmp_recnum[i] = i;
+			}
+			for(i = 0; i < numrecs64; i++) { // shuffling the array
+				long long tmp;
+
+				big_rand=genrand64_int64();
+
+				big_rand = big_rand%numrecs64;
+				tmp = tmp_recnum[i];
+				tmp_recnum[i] = tmp_recnum[big_rand];
+				tmp_recnum[big_rand] = tmp;
+			}
+			for(i = 0; i < n_other_entries; i++){ // copy non-overlapped array
+				recnum[i] = tmp_recnum[i];
+			}
+			for(i = 0; i < n_overlap_entries; i++){ // randomly select from array
+				big_rand = genrand64_int64();
+				big_rand = big_rand%n_other_entries;
+
+				recnum[n_other_entries+i] = tmp_recnum[big_rand];
+			}
+		}
+		
+		for(i = 0; i < numrecs64; i++) { // re-shuffle the array
 			long long tmp;
 
 			big_rand=genrand64_int64();
@@ -892,10 +932,6 @@ int thread_main(void* arg)
 			recnum[i] = recnum[big_rand];
 			recnum[big_rand] = tmp;
 		}
-	}
-	else
-	{
-		fprintf(stderr,"Random uniqueness fallback.\n");
 	}
 
 	if(g_access == MODE_WRITE && block_open == 0)
@@ -1048,11 +1084,7 @@ int thread_main(void* arg)
 					}
 				}
 		 	}
-			if(print_IOPS == 1) // IOPS on progress bar
-			{
-				//show_progress_IOPS(i*100/numrecs64, (int)IO_Count);
-			}
-			else
+			if(print_IOPS == 0) // IOPS on progress bar
 			{
 				show_progress(i*100/numrecs64);
 			}
@@ -1125,6 +1157,7 @@ int thread_main(void* arg)
 							&& g_access == MODE_RND_READ) // check time to print out iops
 					{
 						fprintf(pIOPS_fp, "%lld IOPS\n", IO_Count);
+						show_progress_IOPS(i*100/numrecs64, IO_Count);
 						IO_Count = 0; 
 						second_hand = 0;
 					}
@@ -1137,11 +1170,7 @@ int thread_main(void* arg)
 					}
 				}
 		 	}
-			if(print_IOPS == 1) // IOPS on progress bar
-			{
-				show_progress_IOPS(i*100/numrecs64, IO_Count);
-			}
-			else
+			if(print_IOPS == 0) // IOPS on progress bar
 			{
 				show_progress(i*100/numrecs64);
 			}
@@ -1169,6 +1198,9 @@ int thread_main(void* arg)
  
  	if(recnum)
 		free(recnum);
+
+	if(tmp_recnum)
+		free(tmp_recnum);
 
 //	printf("thread end\n");
 
@@ -2119,7 +2151,7 @@ char *help[] = {
 "    Usage: mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]",
 "                     [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]",
 "                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-g replay_script] [-q]",
-"                     [-L IO_Latency_file] [-k IOPS_FILE]",
+"                     [-L IO_Latency_file] [-k IOPS_FILE]  [-v overlap_ratio_%]",
 " ",
 "           -p  set path name (default=./mobibench)",
 "           -f  set file size in KBytes (default=1024)",
@@ -2137,6 +2169,8 @@ char *help[] = {
 "           -q  do not display progress(%) message",
 "           -L  Make record on latency of each IO to a file (default=IO_latency.txt)",
 "           -k  Print out IOPS of the file test (default=IO_latency.txt)",
+"	    -v  set overlap ratio(%) of random numbers for",
+"					random IO workload (default=0%)",
 ""
 };
 
@@ -2194,7 +2228,9 @@ int main( int argc, char **argv)
 
 	optind = 1;
 
-	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:k:")) != EOF){
+	overlap_ratio = 0;
+
+	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:k:v:")) != EOF){
 		switch(cret){
 			case 'p':
 				strcpy(pathname, optarg);
@@ -2248,6 +2284,9 @@ int main( int argc, char **argv)
 			case 'k':
 				strcpy(REPORT_pIOPS, optarg);
 				print_IOPS=1;
+				break;
+			case 'v':
+				overlap_ratio = atoi(optarg);
 				break;
 			default:
 				return 1;
