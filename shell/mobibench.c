@@ -11,7 +11,7 @@
  * Dec 31, 2013 Modified to print Write error code by Seongjin Lee [version 1.0.11]
  * Mar 26, 2014 Collect latency data for each I/O by Seongjin Lee [version 1.0.2]
  * Nov 20, 2014 Print IOPS on every second by Seongjin Lee [version 1.0.3]
- * Nov 20, 2014 Percentage overlap in Random workload by Jinsoo You [version 1.0.4]
+ * Nov 20, 2014 Percentage overlap in Random workload by Jinsoo Yoo [version 1.0.4]
  */
 
 #include <stdio.h>
@@ -726,7 +726,11 @@ void show_progress_IOPS(int pro, int IOC)
 
 	old_pro = pro;
         old_IOC = IOC;
-	printf("%02d%c\t\t%d\t%s\r", pro, '%', IOC, "IOPS");
+	if (g_access == MODE_RND_WRITE || g_access == MODE_RND_READ)
+		printf("%02d%c\t\t%d\t%s\r", pro, '%', IOC, "IOPS");
+	else if (g_access == MODE_WRITE || g_access == MODE_READ)
+		printf("%02d%c\t\t%d\t%s\r", pro, '%', IOC, "KB/sec");
+
 	fflush(stdout);
 }
 
@@ -1078,6 +1082,7 @@ int thread_main(void* arg)
 							&& g_access == MODE_WRITE)
 					{
 						fprintf(pIOPS_fp, "%lld KB/s\n", IO_Count*i);
+						show_progress_IOPS(i*100/numrecs64, (int)IO_Count);
 						IO_Count = 0; 
 						second_hand = 0;
 					}
@@ -1156,7 +1161,7 @@ int thread_main(void* arg)
 							&& g_access == MODE_RND_READ) // check time to print out iops
 					{
 						fprintf(pIOPS_fp, "%lld IOPS\n", IO_Count);
-						show_progress_IOPS(i*100/numrecs64, IO_Count);
+						show_progress_IOPS(i*100/numrecs64, (int)IO_Count);
 						IO_Count = 0; 
 						second_hand = 0;
 					}
@@ -1164,6 +1169,7 @@ int thread_main(void* arg)
 							&& g_access == MODE_READ)
 					{
 						fprintf(pIOPS_fp, "%lld KB/s\n", IO_Count*i);
+						show_progress_IOPS(i*100/numrecs64, (int)IO_Count);
 						IO_Count = 0; 
 						second_hand = 0;
 					}
@@ -1171,9 +1177,8 @@ int thread_main(void* arg)
 		 	}
 			if(print_IOPS == 0) // IOPS on progress bar
 			{
-				show_progress(i*100/numrecs64);
+				show_progress_IOPS(i*100/numrecs64);
 			}
-			show_progress(i*100/numrecs64);
 		}	
 	}
 
