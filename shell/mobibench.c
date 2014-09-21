@@ -1177,7 +1177,7 @@ int thread_main(void* arg)
 		 	}
 			if(print_IOPS == 0) // IOPS on progress bar
 			{
-				show_progress_IOPS(i*100/numrecs64);
+				show_progress(i*100/numrecs64);
 			}
 		}	
 	}
