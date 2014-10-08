@@ -1,9 +1,8 @@
 Mobile benchmark tool (mobibench)
 ================================
 
-Written by Kisung Lee <kisunglee@hanyang.ac.kr>, Sooman Jeong <77smart@hanyang.ac.kr>, 
-and Jungwoo Hwang <tearoses@hanyang.ac.kr>
-
+* Maintainer : Sooman Jeong (smartzzz77@gmail.com)
+* Contributor : Kisung Lee (kisunglee@hanyang.ac.kr), Jungwoo Hwang (tearoses@hanyang.ac.kr), ChanHyun Park (parkch0708@hanyang.ac.kr), and Seongsu Lee (su880214@hanyang.ac.kr)
 
 ### Reference: 
  * Sooman Jeong, Kisung Lee, Jungwoo Hwang, Seongjin Lee, Youjip Won, "AndroStep: Android Storage Performance Analysis Tool", The 1st European Workshop on Mobile Engineering (ME'13), Feb. 26, 2013, Aachen, Germany 
