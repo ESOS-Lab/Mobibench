@@ -2,7 +2,6 @@ package esos.ResultListControl;
 
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
 
 import android.app.*;
 import android.os.*;
@@ -38,30 +37,10 @@ public class UpdateData extends Activity {
 			http.setRequestProperty("content-type","application/x-www-form-urlencoded");
 
 			StringBuffer buffer = new StringBuffer();
-			String model = Build.MODEL;
-			String android_ver = "Android " + Build.VERSION.RELEASE;
-			String kernel_ver = System.getProperty("os.name") + System.getProperty("os.version");
+			String device = Build.MODEL + " - " + "Android " + Build.VERSION.RELEASE;
 
-			//total memory
-			String totalmem = "unknown";
-			Scanner m_scanner = new Scanner(new File("/proc/meminfo"));
-			while (m_scanner.hasNext()) {
-				String line = m_scanner.nextLine();
-				String[] lineElements = line.replaceAll("\\p{Space}","").split(":");
-				
-				if (lineElements[0].contentEquals("MemTotal")) {
-					totalmem = lineElements[1];
-					break;
-		         }
-			}
 
-			//eMMC chip number
-			String emmc_num = "unknown";
-			Scanner e_scanner = new Scanner(new File("/sys/class/block/mmcblk0/device/cid"));
-			emmc_num = e_scanner.nextLine();
-
-			buffer.append("model").append("=").append(model).append("&");
-			buffer.append("android_ver").append("=").append(android_ver).append("&");
+			buffer.append("device").append("=").append(device).append("&");
 			buffer.append("seq_w").append("=").append(seq_w).append("&");
 			buffer.append("seq_r").append("=").append(seq_r).append("&");
 			buffer.append("ran_w").append("=").append(ran_w).append("&");
@@ -81,10 +60,7 @@ public class UpdateData extends Activity {
 			buffer.append("c_sqlite_mode").append("=").append(c_sqlite_mode).append("&");
 			buffer.append("c_sqlite_journal").append("=").append(c_sqlite_journal).append("&");
 			buffer.append("c_filesystem").append("=").append(c_filesystem).append("&");
-			buffer.append("def").append("=").append(def).append("&");
-			buffer.append("kernel_ver").append("=").append(kernel_ver).append("&");
-			buffer.append("totalmem").append("=").append(totalmem).append("&");
-			buffer.append("emmc_num").append("=").append(emmc_num);
+			buffer.append("def").append("=").append(def);
 
 
 			OutputStreamWriter outStream = new OutputStreamWriter(
