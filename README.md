@@ -12,7 +12,7 @@
 <http://www.mdpi.com/1999-5903/5/4/591/pdf>
 
 ### Release
-#Version 1.04
+######Version 1.04
 Followings are updated for the performance rank system.
  * Customized benchmark results can be registered to the performance rank server.
  * Average performance of the users with the same device is shown in the rank page.
