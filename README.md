@@ -1,4 +1,4 @@
-Mobile benchmark tool (mobibench)
+﻿Mobile benchmark tool (mobibench)
 ================================
 
 * Maintainer : Sooman Jeong (smartzzz77@gmail.com)
@@ -10,6 +10,14 @@ Mobile benchmark tool (mobibench)
 
  * Sooman Jeong, Kisung Lee, Jungwoo Hwang, Seongjin Lee, Youjip Won, "Framework for Analyzing Android I/O Stack Behavior: from Generating the Workload to Analyzing the Trace", Future Internet 2013, 5(4), Special Issue for "Mobile Engineering², MDPI(ISSN 1999-5903), 591-610; doi:10.3390/fi5040591 
 <http://www.mdpi.com/1999-5903/5/4/591/pdf>
+
+### Release
+ ####Version 1.04
+Followings are updated for the performance rank system.
+ * Customized benchmark results can be registered to the performance rank server.
+ * Average performance of the users with the same device is shown in the rank page.
+ * The best, median, and the worst performance of a device is shown in the details page under the rank.
+ * eMMC serial number, memory size, and kernel version for each device is shown in the details page.
 
 
 MobiBench (Application version)
