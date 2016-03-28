@@ -2,7 +2,7 @@
 ================================
 
 * Maintainer : Sooman Jeong (smartzzz77@gmail.com)
-* Contributor : Kisung Lee (kisunglee@hanyang.ac.kr), Seongjin Lee (insight@hanyang.ac.kr), Dongil Park (idoitlpg@hanyang.ac.kr), Jungwoo Hwang (tearoses@hanyang.ac.kr), and Chanhyun Park (chanhyun0708@gmail.com)
+* Contributor : Kisung Lee (kisunglee@hanyang.ac.kr), Seongjin Lee (insight@hanyang.ac.kr), Dongil Park (idoitlpg@hanyang.ac.kr), Jungwoo Hwang (tearoses@hanyang.ac.kr), and Chanhyun Park (chanhyun0708@gmail.com, Hankeun Son (hself@hanyang.ac.kr)
 
 ### Reference: 
  * Sooman Jeong, Kisung Lee, Jungwoo Hwang, Seongjin Lee, Youjip Won, "AndroStep: Android Storage Performance Analysis Tool", The 1st European Workshop on Mobile Engineering (ME'13), Feb. 26, 2013, Aachen, Germany 
@@ -73,7 +73,8 @@ The tab provides set of detailed configurable options for each benchmark. It pro
   * Sync+direct : Each write() call is synchronously written to the storage device via fsync() system call in O_DIRECT mode.
   * mmap: On this option, benchmark program mmaps the created file to virtual address space. Then, the program copies the specified size record, e.g. 4KB, to the mmaped memory region. Upon completing copy of all memory copy, this mode flushes file through msync() to storage device.
   * mmap+MS_ASYNC: Uses mmap mode with MS_ASYNC flag. Each memory copy of an IO size is synchronized to storage device with msync() system call asynchronously. 
-  * mmap+MS_SYNC: Uses mmap mode with MS_SYNC flag. Each memory copy of an IO size is synchronized to storage device with msync() system call synchronously. 
+  * mmap+MS_SYNC: Uses mmap mode with MS_SYNC flag. Each memory copy of an IO size is synchronized to storage device with msync() system call synchronously.
+  * fdatasync: Each write() call is synchronously written to the storage device via fdatasync() system call.
                   
 ### Transaction(SQLite)
  Sets number of SQLite transactions, where default number of transactions is 100. Maximum number of transaction is 10,000. 
@@ -112,7 +113,7 @@ Usage (shell version)
 * -r  set record size in KBytes (default=4)
 * -a  set access mode (0=Write, 1=Random Write, 2=Read, 3=Random Read) (default=0)
 * -y  set sync mode (0=Normal, 1=O_SYNC, 2=fsync, 3=O_DIRECT, 4=Sync+direct,
-                     5=mmap, 6=mmap+MS_ASYNC, 7=mmap+MS_SYNC) (default=0)
+                     5=mmap, 6=mmap+MS_ASYNC, 7=mmap+MS_SYNC 8=fdatasync) (default=0)
 * -t  set number of thread for test (default=1)
 * -d  enable DB test mode (0=insert, 1=update, 2=delete)
 * -n  set number of DB transaction (default=10)

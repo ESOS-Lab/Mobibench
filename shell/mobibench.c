@@ -12,6 +12,7 @@
  * Mar 26, 2014 Collect latency data for each I/O by Seongjin Lee [version 1.0.2]
  * Nov 20, 2014 Print IOPS on every second by Seongjin Lee [version 1.0.3]
  * Nov 20, 2014 Percentage overlap in Random workload by Jinsoo Yoo [version 1.0.4]
+ * Mar 28, 2015 fdatasync sync mode for file write by Hankeun Son [version 1.0.5]
  */
 
 #include <stdio.h>
@@ -89,6 +90,7 @@ typedef enum
   MMAP,
   MMAP_AS,
   MMAP_S,
+  FDATASYNC,
 } file_sync_mode_t;
 
 typedef enum
@@ -1059,7 +1061,11 @@ int thread_main(void* arg)
 				{
 					fsync(fd);
 				}
-
+				
+				if(g_sync == FDATASYNC)
+				{
+					fdatasync(fd);
+				}
 				// if we are checking for IO latency or IOPS
 				if(Latency_state == 1 || print_IOPS ==1)
 				{
@@ -2163,7 +2169,7 @@ char *help[] = {
 "           -r  set record size in KBytes (default=4)",
 "           -a  set access mode (0=Write, 1=Random Write, 2=Read, 3=Random Read) (default=0)",
 "           -y  set sync mode (0=Normal, 1=O_SYNC, 2=fsync, 3=O_DIRECT, 4=Sync+direct,",
-"                              5=mmap, 6=mmap+MS_ASYNC, 7=mmap+MS_SYNC) (default=0)",
+"                              5=mmap, 6=mmap+MS_ASYNC, 7=mmap+MS_SYNC 8=fdatasync) (default=0)",
 "           -t  set number of thread for test (default=1)",
 "           -d  enable DB test mode (0=insert, 1=update, 2=delete)",
 "           -n  set number of DB transaction (default=10)",
