@@ -13,6 +13,7 @@
  * Nov 20, 2014 Print IOPS on every second by Seongjin Lee [version 1.0.3]
  * Nov 20, 2014 Percentage overlap in Random workload by Jinsoo Yoo [version 1.0.4]
  * Mar 28, 2015 fdatasync sync mode for file write by Hankeun Son [version 1.0.5]
+ * Jun 26, 2017 Modified to extend the minimum database size by Sundoo Kim [version 1.0.6]
  */
 
 #include <stdio.h>
@@ -37,7 +38,7 @@
 /* for sqlite3 */
 #include "sqlite3.h"
 
-#define VERSION_NUM	"1.0.4"
+#define VERSION_NUM	"1.0.6"
 
 //#define DEBUG_SCRIPT
 
@@ -68,10 +69,12 @@ float tps = 0;
 #define SIZE_4KB 4096
 #define SIZE_1KB 1024
 #define MAX_THREADS 100
-
-#define INSERT_STR "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj"
-#define UPDATE_STR "ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjjaaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee"
-
+#define MIN_DATABASE_SIZE 40*1024 /*Database minimum default size is 40KB for updating or deleting operation */ 
+#define RECORD_PAGE_COUNT 37 
+#define MIN_CHECK ((MIN_DATABASE_SIZE/SIZE_4KB)-4)*RECORD_PAGE_COUNT /*Database minimum size check*/
+#define RANDOM_MAX 256 /*Max random value*/
+#define RANDOM()(rand()%RANDOM_MAX)  
+#define RANDOMIZE(n,m)({n = RANDOM(); m = RANDOM();})
 typedef enum
 {
   MODE_WRITE,
@@ -183,6 +186,9 @@ pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
 
 long long get_current_utime(void); // get current time
 long long get_relative_utime(long long start); // and relative time
+
+unsigned char INSERT_STR[] = "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj";
+unsigned char UPDATE_STR[] = "ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjjaaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee";
 
 void clearState(void)
 {
@@ -1235,13 +1241,15 @@ int sql_cb(void* data, int ncols, char** values, char** headers)
 int init_db_for_update(sqlite3* db, char* filename, int trs)
 {
 	int i;
-
+    char sql[1024]={0,};
 	printf("%s\n", __func__);
 	printf("trs : %d\n", trs);
 
 	for(i = 0; i < trs; i++) 
 	{
-		exec_sql(db, "INSERT INTO tblMyList(Value) VALUES('"INSERT_STR"');", NULL);
+        RANDOMIZE(INSERT_STR[0],INSERT_STR[1]);		
+		sprintf(sql,"INSERT INTO tblMyList(Value) VALUES('%s');",INSERT_STR);
+		exec_sql(db,sql, NULL);
 		show_progress(i*100/trs);
 	}
 
@@ -1291,7 +1299,9 @@ int thread_main_db(void* arg)
 	sqlite3 *db;
 	int rc;
 	int i;
+	int column_count = 0;
 	char sql[1024] = {0, };
+	struct stat statbuf;
 
 	if(num_threads == 1)
 	{
@@ -1347,7 +1357,8 @@ int thread_main_db(void* arg)
 		char** result;
 		char* errmsg;
 		int rows, columns;
-		int column_count = 0;
+		//int column_count = 0;
+		int numberOfTransaction;
 		sprintf(sql, "SELECT count(*) from tblMyList;");
 		rc = sqlite3_get_table(db, sql, &result, &rows, &columns, &errmsg);
 		column_count = atoi(result[1]);
@@ -1356,12 +1367,19 @@ int thread_main_db(void* arg)
 
 		if(column_count < db_transactions)
 		{
-			init_db_for_update(db, filename, db_transactions - column_count);
+			numberOfTransaction = db_transactions - column_count;
+			if(db_transactions < MIN_CHECK) numberOfTransaction = MIN_CHECK - column_count;
+			init_db_for_update(db, filename, numberOfTransaction);
 		}
+		/*print current database size*/
+		/*If databas size is smaller than 40KB, extand database size to 40KB */
+		stat(filename,&statbuf);
+		printf("[Current DB file Size] -> %d Byte\n",statbuf.st_size);
+		
+		column_count = column_count + numberOfTransaction;
 	}
 
 	//sqlite3_db_release_memory(db);
-	
 	signal_thread_status(thread_num, READY, &thread_cond1);
 	wait_thread_status(thread_num, EXEC, &thread_cond2);
 
@@ -1373,19 +1391,24 @@ int thread_main_db(void* arg)
 
 	for(i = 0; i < db_transactions; i++) 
 	{
+		srand(i);
 		if(db_mode == 0)
 		{
-			exec_sql(db, "INSERT INTO tblMyList(Value) VALUES('"INSERT_STR"');", NULL);
+			RANDOMIZE(INSERT_STR[0],INSERT_STR[1]);/*Make INSERT VALUE of 2^16 combination using the first 2byte */
+			sprintf(sql,"INSERT INTO tblMyList(Value) VALUES('%s');",INSERT_STR);
+			exec_sql(db, sql, NULL);
 		}
 		else if(db_mode == 1)
 		{
-			srand(i);
-			sprintf(sql, "UPDATE tblMyList SET Value = '%s' WHERE id = %d;", UPDATE_STR, rand()%db_transactions + 1);
-			exec_sql(db, sql, NULL);
+			RANDOMIZE(INSERT_STR[0],INSERT_STR[1]);/*Make UPDATE VALUE of 2^16 combination using the first 2byte */
+			int ran = rand()%column_count +1 ;
+			sprintf(sql, "UPDATE tblMyList SET Value = '%s' WHERE id = %d;", UPDATE_STR, ran);
+			exec_sql(db, sql, NULL);	
+			//printf("!!!%d!!!  \n",ran); /*To debug piking a random value*/
 		}
 		else if(db_mode == 2)
 		{
-			sprintf(sql, "DELETE FROM tblMyList WHERE id=%d;", i);
+			sprintf(sql, "DELETE FROM tblMyList WHERE id=%d;",i);
 			exec_sql(db, sql, NULL);
 		}
 		else
