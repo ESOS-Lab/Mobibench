@@ -174,7 +174,7 @@ FILE* pIOPS_fp; // output for print IOPS every second
 char REPORT_pIOPS[200]; // file name for IOPS output
 int numberOfTable; // number of table
 int overlap_ratio = 0; // overlap ratio for random write
-
+char random_insert; // random_insert flag 
 thread_status_t thread_status[MAX_THREADS] = {0, };
 pthread_mutex_t thread_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t thread_cond1 = PTHREAD_COND_INITIALIZER;
@@ -1237,7 +1237,7 @@ int sql_cb(void* data, int ncols, char** values, char** headers)
 
 #define exec_sql(db, sql, cb)	sqlite3_exec(db, sql, cb, NULL, NULL);
 
-int init_db_for_update(sqlite3* db, char* filename, int trs)
+int init_db_for_update(sqlite3* db, char* filename,int start ,int trs)
 {
 	int i,j,length;
     char sql[4096]={0,};
@@ -1245,12 +1245,12 @@ int init_db_for_update(sqlite3* db, char* filename, int trs)
 	printf("trs : %d\n", trs);
 
 
-	for(i = 0; i < trs; i++) 
+	for(i = start; i < trs; i++) 
 	{
 	    length =0;
 		length += sprintf(sql+length,"BEGIN;");
 		for(j=0;j<numberOfTable;j++){
-			length+=sprintf(sql+length,"INSERT INTO tblMyList%d(Value) VALUES('%s');",j,INSERT_STR);
+			length+=sprintf(sql+length,"INSERT INTO tblMyList%d(id,Value) VALUES(%d,'%s');",j,i,INSERT_STR);
 		
 		}		
 		strcat(sql,"COMMIT;");	
@@ -1375,11 +1375,11 @@ int thread_main_db(void* arg)
 	length += sprintf(sql+length,"BEGIN;");
 
 	random_check = (char*)calloc(db_transactions,sizeof(char));
-	
+		
 	for(i=0;i< numberOfTable ;i++){
 		length += sprintf(sql+length," CREATE TABLE IF NOT EXISTS tblMyList%d (id INTEGER PRIMARY KEY, Value TEXT not null, creation_date long);",i);	
-	
 	}
+
 	length += sprintf(sql+length,"COMMIT;");
 	exec_sql(db,sql,NULL);
 
@@ -1423,7 +1423,7 @@ int thread_main_db(void* arg)
 			if(db_transactions < MIN_CHECK) {
 				numberOfTransaction = (MIN_CHECK- column_count);
 			}
-			init_db_for_update(db, filename, numberOfTransaction);
+			init_db_for_update(db, filename,column_count,numberOfTransaction);
 
 		}
 		
@@ -1449,7 +1449,9 @@ int thread_main_db(void* arg)
 		length+=sprintf(sql,"BEGIN;");
 		if(db_mode == 0)
 		{
-			ran = get_random_id(random_check,db_transactions);
+			if(random_insert){
+			   ran = get_random_id(random_check,db_transactions);
+			}else ran = i;
 			for(j=0 ; j < numberOfTable ; j++){	
 				length +=sprintf(sql+length,"INSERT INTO tblMyList%d(id,Value) VALUES(%d,'%s');",j,ran,INSERT_STR);
 			}
@@ -2330,7 +2332,7 @@ int main( int argc, char **argv)
 
 	overlap_ratio = 0;
 
-	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:k:v:T:")) != EOF){
+	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:k:v:T:R:")) != EOF){
 		switch(cret){
 			case 'p':
 				strcpy(pathname, optarg);
@@ -2391,7 +2393,10 @@ int main( int argc, char **argv)
 			case 'T':
 				numberOfTable = atoi(optarg);
 				if(numberOfTable > 20) numberOfTable = 20;
-				else if (numberOfTable < 3) numberOfTable = 3;
+				else if (numberOfTable < 1) numberOfTable = 1;
+				break;
+			case 'R':
+				random_insert = 1; // random insert to watch btree split
 				break;
 			default:
 				return 1;
