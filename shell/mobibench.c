@@ -952,7 +952,7 @@ int thread_main(void* arg)
 //			printf("Unlink %s failed\n", filename);
 	}
 
-	if(g_access == MODE_READ || g_access == MODE_RND_READ || g_access == MODE_RND_WRITE)
+	if(g_access == MODE_READ || g_access == MODE_RND_READ || g_access == MODE_RND_WRITE || g_access == MODE_WRITE)
 	{
 		stat(filename, &sb);
 		//printf("sb.st_size: %d\n", (int)sb.st_size);
@@ -1485,7 +1485,8 @@ int thread_main_db(void* arg)
 
 		if(db_interval)
 		{
-			sleep(db_interval);
+			/*set time interval in millisecond*/
+			usleep(db_interval*1000);
 		}
 		
 		show_progress(i*100/db_transactions);
@@ -2251,8 +2252,9 @@ char *help[] = {
 " ",
 "    Usage: mobibench [-p pathname] [-f file_size_Kb] [-r record_size_Kb] [-a access_mode] [-h]",
 "                     [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]",
-"                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-g replay_script] [-q]",
-"                     [-L IO_Latency_file] [-k IOPS_FILE]  [-v overlap_ratio_%] [-T Table_count]",
+"                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-i db_time_interval]",
+"		     [-g replay_script] [-q] [-L IO_Latency_file] [-k IOPS_FILE]", 
+"		     [-v overlap_ratio_%] [-T Table_count]",
 " ",
 "           -p  set path name (default=./mobibench)",
 "           -f  set file size in KBytes (default=1024)",
@@ -2263,6 +2265,7 @@ char *help[] = {
 "           -t  set number of thread for test (default=1)",
 "           -d  enable DB test mode (0=insert, 1=update, 2=delete)",
 "           -n  set number of DB transaction (default=10)",
+"           -i  set ms(Millisecond) time interval in database transaction",
 "           -j  set SQLite journal mode (0=DELETE, 1=TRUNCATE, 2=PERSIST, 3=WAL, 4=MEMORY, ",
 "                                        5=OFF) (default=1)",
 "           -s  set SQLite synchronous mode (0=OFF, 1=NORMAL, 2=FULL) (default=2)",
@@ -2473,12 +2476,12 @@ int main( int argc, char **argv)
 	else
 	{
 		printf("DB teset mode enabled.\n");
+		if(db_interval) printf("DB time interval : %d ms\n",db_interval);
 		printf("Operation : %d\n", db_mode);
 		printf("Transactions per thread: %d\n", db_transactions);
 		printf("# of Tables : %d\n",numberOfTable);
 	}
-	printf("# of Threads : %d\n", num_threads);
- 
+	printf("# of Threads : %d\n", num_threads); 
 	/* Creating threads */
 	for(i = 0; i < num_threads; i++)
 	{
