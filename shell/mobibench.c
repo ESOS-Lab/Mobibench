@@ -2381,6 +2381,7 @@ int main( int argc, char **argv)
 				break;
 			case 'i':
 				db_interval = atoi(optarg);
+				if(db_interval > 10000) db_interval = 10000;
 				break;
 			case 'L':
 				strcpy(REPORT_Latency, optarg);
