@@ -173,6 +173,7 @@ int print_IOPS = 0; // flag for printing IOPS every second
 FILE* pIOPS_fp; // output for print IOPS every second 
 char REPORT_pIOPS[200]; // file name for IOPS output
 int numberOfTable; // number of table
+int numberOfDB; // number of DB
 int overlap_ratio = 0; // overlap ratio for random write
 char random_insert; // random_insert flag 
 thread_status_t thread_status[MAX_THREADS] = {0, };
@@ -1240,18 +1241,17 @@ int sql_cb(void* data, int ncols, char** values, char** headers)
 int init_db_for_update(sqlite3* db, char* filename,int start ,int trs)
 {
 	int i,j,length;
-    char sql[4096]={0,};
+	char sql[4096]={0,};
+
 	printf("%s\n", __func__);
 	printf("trs : %d\n", trs);
 
-
 	for(i = start; i < trs; i++) 
 	{
-	    length =0;
+		length =0;
 		length += sprintf(sql+length,"BEGIN;");
 		for(j=0;j<numberOfTable;j++){
 			length+=sprintf(sql+length,"INSERT INTO tblMyList%d(id,Value) VALUES(%d,'%s');",j,i,INSERT_STR);
-		
 		}		
 		strcat(sql,"COMMIT;");	
 		exec_sql(db,sql, NULL);
@@ -1297,141 +1297,184 @@ char* get_journal_mode_string(int journal_mode)
 	return ret_str;
 }
 /*get random id using sampling without replacement*/
-int get_random_id(char * random_check,int random_count){
-	
+int get_random_id(char * random_check,int random_count)
+{
 	int id = rand()%random_count;
-		while(1){
-			if(random_check[id] == 0){
-				random_check[id] = 1;
-				break;}
-			else id = rand()%random_count;
+
+	while(1)
+	{
+		if(random_check[id] == 0)
+		{
+			random_check[id] = 1;
+			break;
 		}
+		else
+			id = rand()%random_count;
+	}
 
 	return id;
 }
 
 int thread_main_db(void* arg)
 {
-
 	int thread_num = *((int*)arg);
-	char filename[128] = {0, };
-	sqlite3 *db;
-	int rc;
-	int i,j;
+	char filename[20][128];
+	sqlite3 *db[20];
+	int rc, ran;
+	int db_i, tbl_i, tx_i;
 	int column_count = 0;
 	char sql[4096] = {0, };
 	struct stat statbuf;
 	int length = 0;
-	char * random_check;
+	char * random_check[20];
+
 	if(num_threads == 1)
 	{
 		storage_count = 0;
 		get_path(getpid(), syscall(__NR_gettid));
 	}
 
-//	printf("db thread start\n");
-
-	sprintf(filename, "%s/test.db%d", pathname, thread_num);
-//	printf("open db : %s\n", filename);
-
-	rc = sqlite3_open(filename, &db);
-
-	if(SQLITE_OK != rc)
+	for (db_i = 0; db_i<numberOfDB; db_i++)
 	{
-		fprintf(stderr, "rc = %d\n", rc);
-		fprintf(stderr, "sqlite3_open error :%s\n", sqlite3_errmsg(db));
-		//exit(EXIT_FAILURE);
-		setState(ERROR, "sqlite3_open error");
-		signal_thread_status(thread_num, READY, &thread_cond1);
-		return -1;
-	}
+		/* Create database file. */
+		sprintf(filename[db_i], "%s/test.db%d_%d", pathname, thread_num, db_i);
+		rc = sqlite3_open(filename[db_i], &db[db_i]);
 
-	exec_sql(db, "PRAGMA page_size = 4096;", NULL);
-	sprintf(sql, "PRAGMA journal_mode=%s;", get_journal_mode_string(db_journal_mode));
-	exec_sql(db, sql, NULL);
-	sprintf(sql, "PRAGMA synchronous=%d;", db_sync_mode);
-	exec_sql(db, sql, NULL);
+		/* If the creation of db file fails, it returns error, -1. */
+		if (SQLITE_OK != rc)
+		{
+			fprintf(stderr, "rc = %d\n", rc);
+			fprintf(stderr, "sqlite3_open error :%s\n", sqlite3_errmsg(db[db_i]));
+
+			for (; 0<db_i; db_i--)
+				sqlite3_close(db[db_i-1]);
+
+			setState(ERROR, "sqlite3_open error");
+			signal_thread_status(thread_num, READY, &thread_cond1);
+
+			return -1;
+		}
+
+		/* Initialize database (Set page size, journal mode, synch mode. */
+		exec_sql(db[db_i], "PRAGMA page_size = 4096;", NULL);
+		sprintf(sql, "PRAGMA journal_mode=%s;", get_journal_mode_string(db_journal_mode));
+		exec_sql(db[db_i], sql, NULL);
+		sprintf(sql, "PRAGMA synchronous=%d;", db_sync_mode);
+		exec_sql(db[db_i], sql, NULL);
+
+		/* If a db have not empty table, drops them. */
+		if(db_mode == 0)
+		{
+			for(tbl_i = 0; tbl_i<numberOfTable; tbl_i++){
+				sprintf(sql,"DROP TABLE IF EXISTS tblMyList%d;", tbl_i);
+				exec_sql(db[db_i], sql, NULL);
+			}
+		}
+
+		/* Create tables in db. */
+		length = sprintf(sql,"BEGIN;");
+		random_check[db_i] = (char*)calloc(db_transactions,sizeof(char));
+
+		for(tbl_i = 0; tbl_i < numberOfTable; tbl_i++){
+			length += sprintf(sql+length," CREATE TABLE IF NOT EXISTS tblMyList%d (id INTEGER PRIMARY KEY, Value TEXT not null, creation_date long);", tbl_i);
+		}
+
+		length += sprintf(sql+length,"COMMIT;");
+		rc = exec_sql(db[db_i],sql,NULL);
+
+		if (SQLITE_OK != rc)
+		{
+			fprintf(stderr, "rc = %d\n", rc);
+			fprintf(stderr, "exec_sql error :%s\n", sqlite3_errmsg(db[db_i]));
+
+			for (; 0<db_i; db_i--)
+				sqlite3_close(db[db_i-1]);
+
+			setState(ERROR, "exec_sql error");
+			signal_thread_status(thread_num, READY, &thread_cond1);
+
+			return -1;
+		}
+
+		/* check column count */
+		if(db_mode != 0)
+		{
+			char** result;
+			char* errmsg;
+			int rows, columns;
+			int numberOfTransaction;
+			int currentTableCount;
+
+			/* check new tables count if it is smaller than old talbes count, make record */
+			for(tbl_i=0; tbl_i<numberOfTable; tbl_i++)
+			{
+				sprintf(sql, "SELECT count(*) from tblMyList%d;", tbl_i);
+				rc = sqlite3_get_table(db[db_i], sql, &result, &rows, &columns, &errmsg);
+
+				if(tbl_i == 0)
+				{
+					column_count = atoi(result[1]);	
+					sqlite3_free_table(result);
+					continue;
+				}
+				else if(column_count > atoi(result[1]))
+				{ 
+					int column_i;
+					printf("Filling in the missing record in Table...\n");
+					for(column_i = atoi(result[1]); column_i<column_count; column_i++)
+					{
+						srand(column_i);
+						sprintf(sql,"INSERT INTO TblMyList%d(id,Value) VALUES(%d,'%s');", tbl_i, column_i, INSERT_STR);
+						exec_sql(db[db_i],sql,NULL);
+					}
+					sqlite3_free_table(result);
+				}
+			}
+
+			printf("%d\n", MIN_DATABASE_SIZE*numberOfTable);
+
+			/* If size of tables is smaller than 40KB, it extend each table to 40KB */
+			stat(filename[db_i], &statbuf);
+			if(column_count < db_transactions || statbuf.st_size < (MIN_DATABASE_SIZE*numberOfTable))
+			{
+				printf("%d\n", MIN_DATABASE_SIZE*numberOfTable);
+				numberOfTransaction = db_transactions - column_count;
+				if(db_transactions < MIN_CHECK)
+				{
+					numberOfTransaction = (MIN_CHECK- column_count);
+				}
+				init_db_for_update(db[db_i], filename[db_i], column_count, numberOfTransaction);
+
+			}
+
+			column_count = column_count + numberOfTransaction;
+			if(db_mode == 2) random_check[db_i]=(char*)realloc(random_check[db_i],column_count);/*extend random buffer to use sampling without replacement*/
+		}
+	}
 
 	if(db_init_show == 0)
 	{
-		db_init_show = 1;
-		printf("-----------------------------------------\n");		
-		printf("[DB information]\n");
-		printf("-----------------------------------------\n");
-		exec_sql(db, "select sqlite_version() AS sqlite_version;", sql_cb);
-		exec_sql(db, "PRAGMA page_size;", sql_cb);
-		exec_sql(db, "PRAGMA journal_mode;", sql_cb);
-		exec_sql(db, "PRAGMA synchronous;", sql_cb);		
-	}
-
-	if(db_mode == 0)
-	{
-		for(i=0;i<numberOfTable;i++){
-			sprintf(sql,"DROP TABLE IF EXISTS tblMyList%d;",i);
-			exec_sql(db,sql, NULL);
-		}
-	}
-	
-	length += sprintf(sql+length,"BEGIN;");
-
-	random_check = (char*)calloc(db_transactions,sizeof(char));
-		
-	for(i=0;i< numberOfTable ;i++){
-		length += sprintf(sql+length," CREATE TABLE IF NOT EXISTS tblMyList%d (id INTEGER PRIMARY KEY, Value TEXT not null, creation_date long);",i);	
-	}
-
-	length += sprintf(sql+length,"COMMIT;");
-	exec_sql(db,sql,NULL);
-
-	/* check column count */
-	if(db_mode != 0)
-	{
-		char** result;
-		char* errmsg;
-		int rows, columns;
-		int numberOfTransaction;
-		int currentTableCount;
-		/*check new tables count if it is smaller than old talbes count, make record*/
-		for(i=0;i<numberOfTable;i++){
-			sprintf(sql, "SELECT count(*) from tblMyList%d;",i);
-			rc = sqlite3_get_table(db, sql, &result, &rows, &columns, &errmsg);
-
-			if(i==0){
-				column_count = atoi(result[1]);	
-				sqlite3_free_table(result);
-				continue;
-			}
-			else if(column_count > atoi(result[1])){ 
-				printf("Filling in the missing record in Table...\n");
-				for(j= atoi(result[1]); j < column_count ; j++){
-					srand(j);
-					sprintf(sql,"INSERT INTO TblMyList%d(id,Value) VALUES(%d,'%s');",i,j,INSERT_STR);
-					exec_sql(db,sql,NULL);
-				}
-				sqlite3_free_table(result);
-			}
-		}
-
-		
-			printf("%d\n", MIN_DATABASE_SIZE*numberOfTable);
-		/*If size of tables is smaller than 40KB, it extend each table to 40KB */	
-		stat(filename,&statbuf);
-		if(column_count < db_transactions || statbuf.st_size < (MIN_DATABASE_SIZE *numberOfTable))
+		for (db_i = 0; db_i<numberOfDB; db_i++)
 		{
-			printf("%d\n", MIN_DATABASE_SIZE*numberOfTable);
-			numberOfTransaction = db_transactions - column_count;
-			if(db_transactions < MIN_CHECK) {
-				numberOfTransaction = (MIN_CHECK- column_count);
-			}
-			init_db_for_update(db, filename,column_count,numberOfTransaction);
-
+			db_init_show = 1;
+			printf("-----------------------------------------\n");
+			printf("[DB information of db %s]\n", filename[db_i]);
+			printf("-----------------------------------------\n");
+			exec_sql(db[db_i], "select sqlite_version() AS sqlite_version;", sql_cb);
+			exec_sql(db[db_i], "PRAGMA page_size;", sql_cb);
+			exec_sql(db[db_i], "PRAGMA journal_mode;", sql_cb);
+			exec_sql(db[db_i], "PRAGMA synchronous;", sql_cb);
 		}
-		
-		column_count = column_count + numberOfTransaction;
-		if(db_mode == 2) random_check=(char*)realloc(random_check,column_count);/*extend random buffer to use sampling without replacement*/
 	}
 
-	//sqlite3_db_release_memory(db);
+	for (db_i=1; db_i<numberOfDB; db_i++)
+	{
+		sprintf(sql,"ATTACH DATABASE '%s' AS 'db%d'", filename[db_i], db_i);
+		exec_sql(db[0], sql, NULL);
+		sprintf(sql,"PRAGMA db%d.journal_mode=%s", db_i, get_journal_mode_string(db_journal_mode));
+		exec_sql(db[0], sql, NULL);
+	}
+
 	signal_thread_status(thread_num, READY, &thread_cond1);
 	wait_thread_status(thread_num, EXEC, &thread_cond2);
 
@@ -1441,39 +1484,63 @@ int thread_main_db(void* arg)
 		get_con_switches();		
 	}
 
-	int ran;
-	for(i = 0; i < db_transactions; i++) 
+	for(tx_i = 0; tx_i < db_transactions; tx_i++) 
 	{
-		srand(i);
+		srand(tx_i);
 		length=0;
 		length+=sprintf(sql,"BEGIN;");
+
 		if(db_mode == 0)
 		{
-			if(random_insert){
-			   ran = get_random_id(random_check,db_transactions);
-			}else ran = i;
-			for(j=0 ; j < numberOfTable ; j++){	
-				length +=sprintf(sql+length,"INSERT INTO tblMyList%d(id,Value) VALUES(%d,'%s');",j,ran,INSERT_STR);
+			for (db_i = 0; db_i<numberOfDB; db_i++)
+			{
+				if(random_insert)
+					ran = get_random_id(random_check[db_i],db_transactions);
+				else 
+					ran = tx_i;
+
+				for(tbl_i = 0; tbl_i < numberOfTable ; tbl_i++)
+				{
+					if (db_i == 0)
+						length +=sprintf(sql+length,"INSERT INTO tblMyList%d(id,Value) VALUES(%d,'%s');", tbl_i, ran, INSERT_STR);
+					else
+						length +=sprintf(sql+length,"INSERT INTO db%d.tblMyList%d(id,Value) VALUES(%d,'%s');", db_i, tbl_i, ran, INSERT_STR);
+				}
 			}
 			strcat(sql,"COMMIT;");
-			exec_sql(db, sql, NULL);
+			exec_sql(db[0], sql, NULL);
 		}
 		else if(db_mode == 1)
 		{
-			for(j=0; j<numberOfTable; j++){
-				length += sprintf(sql+length, "UPDATE tblMyList%d SET Value = '%s' WHERE id = %d;",j,UPDATE_STR,rand()%column_count+1);
+			for(db_i = 0; db_i<numberOfDB; db_i++)
+			{
+				for(tbl_i = 0; tbl_i<numberOfTable; tbl_i++)
+				{
+					if (db_i == 0)
+						length += sprintf(sql+length, "UPDATE tblMyList%d SET Value = '%s' WHERE id = %d;", tbl_i, UPDATE_STR, rand()%column_count+1);
+					else
+						length += sprintf(sql+length, "UPDATE db%d.tblMyList%d SET Value = '%s' WHERE id = %d;", db_i, tbl_i, UPDATE_STR, rand()%column_count+1);
+				}
 			}
 			strcat(sql,"COMMIT;");
-			exec_sql(db,sql,NULL);
+			exec_sql(db[0],sql,NULL);
 		}
 		else if(db_mode == 2)
 		{
-			ran = get_random_id(random_check,column_count);
-			for(j=0; j<numberOfTable ; j++){
-				length+=sprintf(sql+length, "DELETE FROM tblMyList%d WHERE id=%d;",j,ran);
+			for (db_i = 0; db_i<numberOfDB; db_i++)
+			{
+				ran = get_random_id(random_check[db_i],column_count);
+
+				for(tbl_i=0; tbl_i<numberOfTable; tbl_i++)
+				{
+					if (db_i == 0)
+						length+=sprintf(sql+length, "DELETE FROM tblMyList%d WHERE id=%d;", tbl_i, ran);
+					else
+						length+=sprintf(sql+length, "DELETE FROM db%d.tblMyList%d WHERE id=%d;", db_i, tbl_i, ran);
+				}
 			}
 			strcat(sql,"COMMIT;");
-			exec_sql(db, sql, NULL);
+			exec_sql(db[0], sql, NULL);
 		}
 		else
 		{
@@ -1489,13 +1556,14 @@ int thread_main_db(void* arg)
 			usleep(db_interval*1000);
 		}
 		
-		show_progress(i*100/db_transactions);
+		show_progress(tx_i*100/db_transactions);
 	}
 
 	/* Forced checkpointing for WAL mode */
 	if(db_journal_mode == 3)
 	{
-		sqlite3_wal_checkpoint(db, NULL);
+		for (db_i = 0; db_i<numberOfDB; db_i++)
+			sqlite3_wal_checkpoint(db[db_i], NULL);
 	}
 
 	show_progress(100);
@@ -1510,30 +1578,38 @@ int thread_main_db(void* arg)
 
 	if(db_mode == 2)
 	{
-		for(i=0;i<numberOfTable;i++){
-			sprintf(sql,"DROP TABLE IF EXISTS tblMyList%d;",i);
-			exec_sql(db,sql, NULL);
+		for (db_i = 0; db_i<numberOfDB; db_i++)
+		{
+			for(tbl_i=0;tbl_i<numberOfTable;tbl_i++){
+				if (db_i == 0)
+					sprintf(sql,"DROP TABLE IF EXISTS tblMyList%d;", tbl_i);
+				else
+					sprintf(sql,"DROP TABLE IF EXISTS db%d.tblMyList%d;", db_i, tbl_i);
+
+				exec_sql(db[db_i],sql, NULL);
+			}
 		}
 	}
 
-	rc = sqlite3_close(db);
-
-	if(SQLITE_OK != rc)
+	for (db_i = 0; db_i<numberOfDB; db_i++)
 	{
-		fprintf(stderr, "rc = %d\n", rc);
-		fprintf(stderr, "sqlite3_close error :%s\n", sqlite3_errmsg(db));
-		return -1;
-	}	
+		rc = sqlite3_close(db[db_i]);
+
+		if(SQLITE_OK != rc)
+		{
+			fprintf(stderr, "rc = %d\n", rc);
+			fprintf(stderr, "sqlite3_close error :%s\n", sqlite3_errmsg(db[db_i]));
+			return -1;
+		}
+	}
 
 	if(db_mode == 2)
 	{
-		unlink(filename);
+		for (db_i = 0; db_i<numberOfDB; db_i++)
+			unlink(filename[db_i]);
 	}
 
-//	printf("db thread end\n");
-
 	return 0;
-
 }
 
 int readline(FILE *f, char *buffer, size_t len)
@@ -2254,7 +2330,7 @@ char *help[] = {
 "                     [-y sync_mode] [-t thread_num] [-d db_mode] [-n db_transcations]",
 "                     [-j SQLite_journalmode] [-s SQLite_syncmode] [-i db_time_interval]",
 "		     [-g replay_script] [-q] [-L IO_Latency_file] [-k IOPS_FILE]", 
-"		     [-v overlap_ratio_%] [-T Table_count]",
+"		     [-v overlap_ratio_%] [-T Table_count] [-D Database_count]",
 " ",
 "           -p  set path name (default=./mobibench)",
 "           -f  set file size in KBytes (default=1024)",
@@ -2276,6 +2352,7 @@ char *help[] = {
 "	    -v  set overlap ratio(%) of random numbers for",
 "					random IO workload (default=0%)",
 "	   -T  set number of tables (default=3, limit=20)",
+"	   -D  set number of databases (default=3, limit=20)",
 ""
 };
 
@@ -2299,17 +2376,15 @@ int main( int argc, char **argv)
 	struct timeval T1, T2;
 	int i = 0;
 	char* maddr;
-	pthread_t	thread_id[MAX_THREADS];
+	pthread_t thread_id[MAX_THREADS];
 	void* res;
 	int thread_info[MAX_THREADS];	
 	int cret;
 
-#if 1
 	if(argc <=1){
 		printf(USAGE);
 		return 0;
 	}
-#endif
 
 	/* set default */
 	strcpy(pathname, "./mobibench");
@@ -2331,11 +2406,12 @@ int main( int argc, char **argv)
         strcpy(REPORT_pIOPS, "./IOPS.txt");
 	clearState();
 	numberOfTable = 3; /* TABLE COUNT*/
+	numberOfDB = 1; /* DB COUNT */
 	optind = 1;
 
 	overlap_ratio = 0;
 
-	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:k:v:T:R:")) != EOF){
+	while((cret = getopt(argc,argv,"p:f:r:a:y:t:d:n:j:s:g:i:hqL:k:v:T:D:R:")) != EOF){
 		switch(cret){
 			case 'p':
 				strcpy(pathname, optarg);
@@ -2399,6 +2475,11 @@ int main( int argc, char **argv)
 				if(numberOfTable > 20) numberOfTable = 20;
 				else if (numberOfTable < 1) numberOfTable = 1;
 				break;
+			case 'D':
+				numberOfDB = atoi(optarg);
+				if(numberOfDB > 20) numberOfDB = 20;
+				else if (numberOfDB < 1) numberOfDB = 1;
+				break;
 			case 'R':
 				random_insert = 1; // random insert to watch btree split
 				break;
@@ -2433,7 +2514,7 @@ int main( int argc, char **argv)
 	real_reclen = reclen*SIZE_1KB;
   	kilo64 /= num_threads;
 	db_transactions /= num_threads;
-    numrecs64 = kilo64/reclen;	
+	numrecs64 = kilo64/reclen;	
 	filebytes64 = numrecs64*real_reclen; 
 	
 	mkdir(pathname, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -2481,6 +2562,7 @@ int main( int argc, char **argv)
 		printf("Operation : %d\n", db_mode);
 		printf("Transactions per thread: %d\n", db_transactions);
 		printf("# of Tables : %d\n",numberOfTable);
+		printf("# of Databases : %d\n",numberOfDB);
 	}
 	printf("# of Threads : %d\n", num_threads); 
 	/* Creating threads */
@@ -2498,11 +2580,9 @@ int main( int argc, char **argv)
 		if(ret < 0)
 		{
 			perror("pthread_create failed");
-			//exit(EXIT_FAILURE);
 			setState(ERROR, "pthread_create failed");
 			return -1;
 		}
-		//printf("pthread_create id : %d\n", (int)thread_id[i]);
 	}
 
 	setState(READY, NULL);
@@ -2522,17 +2602,13 @@ int main( int argc, char **argv)
 	signal_thread_status(-1, EXEC, &thread_cond2);
 
 	if(getState() == ERROR)
-	{
 		goto out;
-	}
 
 	/* Wait until all threads done */
 	wait_thread_status(-1, END, &thread_cond3);
 
 	if(getState() == ERROR)
-	{
 		goto out;
-	}
 
 	printf("-----------------------------------------\n");
 	printf("[Messurement Result]\n");
@@ -2542,9 +2618,7 @@ int main( int argc, char **argv)
 	print_time(T1, T2);
 
 	if(num_threads == 1)
-	{
 		print_con_switches();	
-	}
 	
 	/* Join threads */
 	for(i = 0; i < num_threads; i++)
@@ -2557,7 +2631,6 @@ int main( int argc, char **argv)
 			setState(ERROR, "pthread_join failed");
 			return -1;
 		}
-		//free(res);
 	}
 
 	setState(END, NULL);
@@ -2566,8 +2639,6 @@ int main( int argc, char **argv)
 	if(print_IOPS==1) fclose(pIOPS_fp); // close latency file
 
 out:
-
 	printf("Err string : %s\n", g_err_string);
-
 	return 0;
 }
