@@ -16,6 +16,8 @@
  * Jun 26, 2017 Modified to extend the minimum database size by Sundoo Kim [version 1.0.6]
  * Jul 06, 2017 Appended "-T" option to be passed number of table as an argument by Sundoo Kim [version 1.0.7] 
  * Jul 09, 2017 Modified sequential primary key value to random primary value by Sundoo Kim [version 1.0.8]  
+ * Apr 15, 2019 Appended "-T" option to be passed number of databases as an argument by Joontaek Oh [version 1.0.81]
+ * May 06, 2020 Appended new access mode, "append", which is allocating sequential write by Joontaek Oh [version 1.0.9]
  */
 
 #include <stdio.h>
@@ -80,6 +82,7 @@ typedef enum
   MODE_RND_WRITE,
   MODE_READ,
   MODE_RND_READ,
+  MODE_APPEND,
 } file_test_mode_t;
 
 typedef enum
@@ -736,7 +739,7 @@ void show_progress_IOPS(int pro, int IOC)
         old_IOC = IOC;
 	if (g_access == MODE_RND_WRITE || g_access == MODE_RND_READ)
 		printf("%02d%c\t\t%d\t%s\r", pro, '%', IOC, "IOPS");
-	else if (g_access == MODE_WRITE || g_access == MODE_READ)
+	else if (g_access == MODE_WRITE || g_access == MODE_READ || g_access == MODE_APPEND)
 		printf("%02d%c\t\t%d\t%s\r", pro, '%', IOC, "KB/sec");
 
 	fflush(stdout);
@@ -946,7 +949,7 @@ int thread_main(void* arg)
 		}
 	}
 
-	if(g_access == MODE_WRITE && block_open == 0)
+	if(g_access == MODE_APPEND && block_open == 0)
 	{
 		ret = unlink(filename);
 //		if(ret != 0)
@@ -1010,7 +1013,7 @@ int thread_main(void* arg)
 		get_con_switches();		
 	}
 
-	if(g_access == MODE_WRITE || g_access == MODE_RND_WRITE)
+	if(g_access == MODE_WRITE || g_access == MODE_RND_WRITE || g_access == MODE_APPEND)
 	{
 		for(i=0; i<numrecs64; i++)
 		{
@@ -1091,7 +1094,7 @@ int thread_main(void* arg)
 						second_hand = 0;
 					}
 					else if(print_IOPS == 1 && second_hand > 1000000
-							&& g_access == MODE_WRITE)
+							&& (g_access == MODE_WRITE || g_access == MODE_APPEND))
 					{
 						fprintf(pIOPS_fp, "%lld KB/s\n", IO_Count*i);
 						show_progress_IOPS(i*100/numrecs64, (int)IO_Count);
@@ -2335,7 +2338,7 @@ char *help[] = {
 "           -p  set path name (default=./mobibench)",
 "           -f  set file size in KBytes (default=1024)",
 "           -r  set record size in KBytes (default=4)",
-"           -a  set access mode (0=Write, 1=Random Write, 2=Read, 3=Random Read) (default=0)",
+"           -a  set access mode (0=Write, 1=Random Write, 2=Read, 3=Random Read, 4=Append) (default=0)",
 "           -y  set sync mode (0=Normal, 1=O_SYNC, 2=fsync, 3=O_DIRECT, 4=Sync+direct,",
 "                              5=mmap, 6=mmap+MS_ASYNC, 7=mmap+MS_SYNC 8=fdatasync) (default=0)",
 "           -t  set number of thread for test (default=1)",
