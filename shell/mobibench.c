@@ -96,6 +96,8 @@ typedef enum
   MMAP_AS,
   MMAP_S,
   FDATASYNC,
+  FBARRIER,
+  FDATABARRIER,
 } file_sync_mode_t;
 
 typedef enum
@@ -1070,11 +1072,19 @@ int thread_main(void* arg)
 				{
 					fsync(fd);
 				}
-				
-				if(g_sync == FDATASYNC)
+				else if(g_sync == FDATASYNC)
 				{
 					fdatasync(fd);
 				}
+				else if(g_sync == FBARRIER)
+				{
+					syscall(548, fd);
+				}
+				else if(g_sync == FDATABARRIER)
+				{
+					syscall(549, fd);
+				}
+
 				// if we are checking for IO latency or IOPS
 				if(Latency_state == 1 || print_IOPS ==1)
 				{
