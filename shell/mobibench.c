@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define _FILE_OFFSET_BITS 64
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -36,6 +37,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <sys/syscall.h>
+#include <sys/time.h>
 #include <dirent.h>
 
 
@@ -1912,9 +1914,9 @@ int do_script(struct script_entry* se, struct script_thread_time* st)
 		replay_pathname[strlen(replay_pathname)-1]='\0';
 
 		io_time_start = get_current_utime();
-		ret = stat64(replay_pathname,  &stat_buf);
+		ret = stat(replay_pathname,  &stat_buf);
 		io_time = get_relative_utime(io_time_start);
-		SCRIPT_PRINT("stat64 %s --> %d\n", replay_pathname, ret);
+		SCRIPT_PRINT("stat %s --> %d\n", replay_pathname, ret);
 	}
 	else if( strncmp(se->cmd, "lstat", 5) == 0)
 	{
@@ -1923,9 +1925,9 @@ int do_script(struct script_entry* se, struct script_thread_time* st)
 		replay_pathname[strlen(replay_pathname)-1]='\0';
 
 		io_time_start = get_current_utime();
-		ret = lstat64(replay_pathname,  &stat_buf);
+		ret = lstat(replay_pathname,  &stat_buf);
 		io_time = get_relative_utime(io_time_start);
-		SCRIPT_PRINT("lstat64 %s --> %d\n", replay_pathname, ret);
+		SCRIPT_PRINT("lstat%s --> %d\n", replay_pathname, ret);
 	}
 	else if( strncmp(se->cmd, "fstat", 5) == 0)
 	{
@@ -1935,9 +1937,9 @@ int do_script(struct script_entry* se, struct script_thread_time* st)
 		if(fd_new > 0)
 		{
 			io_time_start = get_current_utime();
-			ret = fstat64(fd_new,  &stat_buf);
+			ret = fstat(fd_new,  &stat_buf);
 			io_time = get_relative_utime(io_time_start);
-			SCRIPT_PRINT("fstat64 %d --> %d\n", fd_new, ret);
+			SCRIPT_PRINT("fstat%d --> %d\n", fd_new, ret);
 		}
 	}
 	else if( strncmp(se->cmd, "unlink", 6) == 0)
